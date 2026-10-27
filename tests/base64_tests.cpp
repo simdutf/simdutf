@@ -340,6 +340,64 @@ TEST(issue_node_anything_goes) {
        text);
 }
 
+TEST(base64_every_byte_value_in_a_block) {
+  const simdutf::base64_options options[] = {
+      simdutf::base64_default,
+      simdutf::base64_url,
+      simdutf::base64_default_or_url,
+      simdutf::base64_default_accept_garbage,
+      simdutf::base64_url_accept_garbage,
+      simdutf::base64_default_or_url_accept_garbage};
+  for (simdutf::base64_options option : options) {
+    const bool url = option == simdutf::base64_url ||
+                     option == simdutf::base64_url_accept_garbage;
+    const bool both = option == simdutf::base64_default_or_url ||
+                      option == simdutf::base64_default_or_url_accept_garbage;
+    const bool garbage =
+        option == simdutf::base64_default_accept_garbage ||
+        option == simdutf::base64_url_accept_garbage ||
+        option == simdutf::base64_default_or_url_accept_garbage;
+    for (int c = 0; c < 256; c++) {
+      if (c == '=') {
+        continue;
+      }
+      const bool alpha = (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
+                         (c >= '0' && c <= '9');
+      const bool extra = ((c == '+' || c == '/') && (!url || both)) ||
+                         ((c == '-' || c == '_') && (url || both));
+      const bool space =
+          c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f';
+      for (size_t pos : {size_t(0), size_t(31), size_t(63)}) {
+        std::string input(128, 'A');
+        input[pos] = char(c);
+        std::vector<char> out(96);
+        simdutf::result r = implementation.base64_to_binary(
+            input.data(), input.size(), out.data(), option);
+        if (alpha || extra) {
+          ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+          ASSERT_EQUAL(r.count, 96);
+        } else if (space || garbage) {
+          ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+          ASSERT_EQUAL(r.count, 95);
+        } else {
+          ASSERT_EQUAL(r.error, simdutf::error_code::INVALID_BASE64_CHARACTER);
+          ASSERT_EQUAL(r.count, pos);
+        }
+      }
+    }
+  }
+}
+
+TEST(base64_default_or_url_only_garbage) {
+  const std::string input = "[[" + std::string(62, '!');
+  std::vector<char> out(48);
+  simdutf::result r = implementation.base64_to_binary(
+      input.data(), input.size(), out.data(),
+      simdutf::base64_default_or_url_accept_garbage);
+  ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+  ASSERT_EQUAL(r.count, 0);
+}
+
 TEST(issue_dash) {
   const std::string input = "Iw==";
   std::vector<char> back(1);
