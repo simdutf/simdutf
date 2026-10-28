@@ -451,6 +451,15 @@ public:
     return m0 | (m1 << 16) | (m2 << 32) | (m3 << 48);
   }
 
+  simdutf_really_inline uint64_t equal_sign_mask() const {
+    const vector_u8 equal('=');
+    const uint64_t m0 = (b.chunks[0] == equal).to_bitmask();
+    const uint64_t m1 = (b.chunks[1] == equal).to_bitmask();
+    const uint64_t m2 = (b.chunks[2] == equal).to_bitmask();
+    const uint64_t m3 = (b.chunks[3] == equal).to_bitmask();
+    return m0 | (m1 << 16) | (m2 << 32) | (m3 << 48);
+  }
+
   simdutf_really_inline void copy_block(char *output) {
     b.store(reinterpret_cast<uint8_t *>(output));
   }

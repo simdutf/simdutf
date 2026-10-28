@@ -11,7 +11,17 @@ constexpr std::array options = {
     simdutf::base64_url,
     simdutf::base64_default_no_padding,
     simdutf::base64_url_with_padding,
+    simdutf::base64_default_or_url,
+    simdutf::base64_default_accept_garbage,
+    simdutf::base64_url_accept_garbage,
+    simdutf::base64_default_or_url_accept_garbage,
 };
+
+constexpr bool accepts_garbage(simdutf::base64_options option) {
+  return option == simdutf::base64_default_accept_garbage ||
+         option == simdutf::base64_url_accept_garbage ||
+         option == simdutf::base64_default_or_url_accept_garbage;
+}
 
 constexpr std::array last_chunk = {
     simdutf::last_chunk_handling_options::loose,
@@ -58,6 +68,7 @@ void decode(std::span<const FromChar> base64_, const auto selected_option,
     // stop_before_partial reports 2 but decodes 0). Only assert equality for
     // loose to avoid false positives.
     if (last_chunk_option == simdutf::last_chunk_handling_options::loose &&
+        !accepts_garbage(selected_option) &&
         r.convertresult.error == simdutf::error_code::SUCCESS &&
         binarylength != r.convertresult.count) {
       std::cerr << "binary_length_from_base64 (" << binarylength
@@ -279,7 +290,12 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   switch (action) {
   case 0: {
     const std::span<const char> chardata{(const char*)data, size};
-    roundtrip(chardata, selected_option, selected_last_chunk, line_length);
+    const auto encode_option =
+        (selected_option == simdutf::base64_default_or_url ||
+         accepts_garbage(selected_option))
+            ? simdutf::base64_default
+            : selected_option;
+    roundtrip(chardata, encode_option, selected_last_chunk, line_length);
   } break;
   case 1: {
     const std::span<const char> chardata{(const char*)data, size};

@@ -433,7 +433,10 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       default_or_url ? tables::base64::to_base64_default_or_url_value
                      : (base64_url ? tables::base64::to_base64_url_value
                                    : tables::base64::to_base64_value);
-  auto ri = simdutf::scalar::base64::find_end(src, srclen, options);
+  auto ri =
+      ignore_garbage
+          ? simdutf::scalar::base64::reduced_input{0, srclen, srclen, srclen}
+          : simdutf::scalar::base64::find_end(src, srclen, options);
   size_t equallocation = ri.equallocation;
   size_t padding_characters = ri.equalsigns;
   srclen = ri.srclen;
@@ -446,7 +449,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
   }
   const chartype *const srcinit = src;
   const char *const dstinit = dst;
-  const chartype *const srcend = src + srclen;
+  const chartype *srcend = src + srclen;
 
   // A 64-byte store writes 16 bytes past the 48 valid bytes it produces, so it
   // is only allowed when at least 16 more bytes of real output follow it. We
@@ -570,6 +573,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     while (src <= srcend64) {
       block64 b;
       load_block(&b, src);
+      const __m512i raw = b.chunks[0];
       src += 64;
       uint64_t error = 0;
       uint64_t badcharmask =
@@ -579,6 +583,25 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
         size_t error_offset = _tzcnt_u64(error);
         return {error_code::INVALID_BASE64_CHARACTER,
                 size_t(src - srcinit + error_offset), size_t(dst - dstinit)};
+      }
+      if (ignore_garbage && badcharmask != 0) {
+        const uint64_t equals =
+            _mm512_cmpeq_epi8_mask(raw, _mm512_set1_epi8('='));
+        if (equals != 0) {
+          const size_t offset = _tzcnt_u64(equals);
+          equallocation = size_t(src - 64 - srcinit) + offset;
+          padding_characters = 1;
+          srclen = equallocation;
+          full_input_length = equallocation + 1;
+          if (srclen == 0) {
+            return {SUCCESS, full_input_length, 0};
+          }
+          srcend = srcinit + srclen;
+          src = srcend;
+          bufferptr += compress_block(
+              &b, badcharmask | (~uint64_t(0) << offset), bufferptr);
+          break;
+        }
       }
       if (badcharmask != 0) {
         // optimization opportunity: check for simple masks like those made of
@@ -613,6 +636,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
     __mmask64 input_mask = ((__mmask64)1 << last_block_len) - 1;
     block64 b;
     load_block_partial(&b, src, input_mask);
+    const __m512i raw = b.chunks[0];
     uint64_t error = 0;
     uint64_t badcharmask = to_base64_mask<ignore_garbage>(&b, &error, lookup0,
                                                           lookup1, input_mask);
@@ -620,6 +644,23 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
       size_t error_offset = _tzcnt_u64(error);
       return {error_code::INVALID_BASE64_CHARACTER,
               size_t(src - srcinit + error_offset), size_t(dst - dstinit)};
+    }
+    if (ignore_garbage) {
+      const uint64_t equals =
+          _mm512_mask_cmpeq_epi8_mask(input_mask, raw, _mm512_set1_epi8('='));
+      if (equals != 0) {
+        const size_t offset = _tzcnt_u64(equals);
+        equallocation = size_t(src - srcinit) + offset;
+        padding_characters = 1;
+        srclen = equallocation;
+        full_input_length = equallocation + 1;
+        if (srclen == 0) {
+          return {SUCCESS, full_input_length, 0};
+        }
+        srcend = srcinit + srclen;
+        badcharmask |= ~uint64_t(0) << offset;
+        last_block_len = int(offset);
+      }
     }
     src += last_block_len;
     bufferptr += compress_block(&b, badcharmask, bufferptr);

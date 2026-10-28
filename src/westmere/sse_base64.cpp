@@ -438,6 +438,19 @@ public:
   }
 
 public:
+  simdutf_really_inline uint64_t equal_sign_mask() const {
+    const __m128i equal = _mm_set1_epi8('=');
+    const uint64_t m0 =
+        uint16_t(_mm_movemask_epi8(_mm_cmpeq_epi8(chunks[0], equal)));
+    const uint64_t m1 =
+        uint16_t(_mm_movemask_epi8(_mm_cmpeq_epi8(chunks[1], equal)));
+    const uint64_t m2 =
+        uint16_t(_mm_movemask_epi8(_mm_cmpeq_epi8(chunks[2], equal)));
+    const uint64_t m3 =
+        uint16_t(_mm_movemask_epi8(_mm_cmpeq_epi8(chunks[3], equal)));
+    return m0 | (m1 << 16) | (m2 << 32) | (m3 << 48);
+  }
+
   simdutf_really_inline void copy_block(char *output) {
     _mm_storeu_si128(reinterpret_cast<__m128i *>(output), chunks[0]);
     _mm_storeu_si128(reinterpret_cast<__m128i *>(output + 16), chunks[1]);
