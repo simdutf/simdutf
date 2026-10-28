@@ -138,7 +138,10 @@ template <typename F> constexpr auto with_char_output(auto &&output, F &&f) {
   if constexpr (std::is_same_v<T, char>) {
     return f(output.data());
   } else {
-    char *copy = new char[output.size()]();
+    char *copy = new char[output.size()];
+    for (std::size_t i = 0; i < output.size(); i++) {
+      copy[i] = 0;
+    }
     auto r = f(copy);
     for (std::size_t i = 0; i < output.size(); i++) {
       output.data()[i] = static_cast<T>(copy[i]);
