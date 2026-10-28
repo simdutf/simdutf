@@ -245,9 +245,8 @@ simdutf_constexpr23 full_result base64_tail_decode_impl(
       dst[7] = static_cast<char>(x2 >> 8);
       dst[8] = static_cast<char>(x2 >> 16);
 #else
-      const uint64_t word = uint64_t(x0 & 0x00FFFFFF) |
-                            (uint64_t(x1 & 0x00FFFFFF) << 24) |
-                            (uint64_t(x2 & 0xFFFF) << 48);
+      const uint64_t word =
+          uint64_t(x0) | (uint64_t(x1) << 24) | (uint64_t(x2) << 48);
   #if SIMDUTF_CPLUSPLUS23
       if (std::is_constant_evaluated()) {
         dst[0] = static_cast<char>(x0);
