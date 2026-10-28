@@ -8,8 +8,12 @@ var annotated_dup =
       ] ],
       [ "full_result", "structsimdutf_1_1full__result.html", null ],
       [ "implementation", "classsimdutf_1_1implementation.html", "classsimdutf_1_1implementation" ],
-      [ "result", "structsimdutf_1_1result.html", null ]
+      [ "result", "structsimdutf_1_1result.html", null ],
+      [ "utf8_result", "structsimdutf_1_1utf8__result.html", null ],
+      [ "utf8_to_utf16_result", "structsimdutf_1_1utf8__to__utf16__result.html", null ]
     ] ],
     [ "simdutf_full_result", "structsimdutf__full__result.html", null ],
-    [ "simdutf_result", "structsimdutf__result.html", null ]
+    [ "simdutf_result", "structsimdutf__result.html", null ],
+    [ "simdutf_utf8_result", "structsimdutf__utf8__result.html", null ],
+    [ "simdutf_utf8_to_utf16_result", "structsimdutf__utf8__to__utf16__result.html", null ]
 ];
