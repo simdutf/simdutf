@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <array>
 #include <cstring>
 #include <type_traits>
 
@@ -217,8 +218,6 @@ simdutf_constexpr23 full_result base64_tail_decode_impl(
   size_t idx;
   uint8_t buffer[4];
   while (true) {
-    // Decode three clean quartets together. On exceptional input, leave the
-    // complete block to the policy-aware path below.
     while (srcend - src >= 12 && (!check_capacity || dstend - dst >= 9) &&
            is_eight_byte(src[0]) && is_eight_byte(src[1]) &&
            is_eight_byte(src[2]) && is_eight_byte(src[3]) &&
@@ -573,10 +572,38 @@ simdutf_really_inline simdutf_constexpr23 size_t tail_encode_base64_short_impl(
 #undef SIMDUTF_BASE64_ENCODE_QUANTUM
 }
 
-simdutf_constexpr23 size_t tail_encode_base64_long_impl(char *dst,
-                                                        const char *src,
-                                                        size_t srclen,
-                                                        base64_options options);
+simdutf_never_inline simdutf_constexpr23 size_t tail_encode_base64_long_impl(
+    char *dst, const char *src, size_t srclen, base64_options options) {
+  const auto *pairs = (options & base64_url)
+                          ? tables::base64::base64_url::encode_pairs.data()
+                          : tables::base64::base64_default::encode_pairs.data();
+  char *out = dst;
+  size_t i = 0;
+  for (; i + 11 < srclen; i += 12) {
+    const uint32_t v0 = (uint32_t(uint8_t(src[i])) << 16) |
+                        (uint32_t(uint8_t(src[i + 1])) << 8) |
+                        uint8_t(src[i + 2]);
+    const uint32_t v1 = (uint32_t(uint8_t(src[i + 3])) << 16) |
+                        (uint32_t(uint8_t(src[i + 4])) << 8) |
+                        uint8_t(src[i + 5]);
+    const uint32_t v2 = (uint32_t(uint8_t(src[i + 6])) << 16) |
+                        (uint32_t(uint8_t(src[i + 7])) << 8) |
+                        uint8_t(src[i + 8]);
+    const uint32_t v3 = (uint32_t(uint8_t(src[i + 9])) << 16) |
+                        (uint32_t(uint8_t(src[i + 10])) << 8) |
+                        uint8_t(src[i + 11]);
+    copy_encode_pair(out, pairs[v0 >> 12]);
+    copy_encode_pair(out + 2, pairs[v0 & 0xFFF]);
+    copy_encode_pair(out + 4, pairs[v1 >> 12]);
+    copy_encode_pair(out + 6, pairs[v1 & 0xFFF]);
+    copy_encode_pair(out + 8, pairs[v2 >> 12]);
+    copy_encode_pair(out + 10, pairs[v2 & 0xFFF]);
+    copy_encode_pair(out + 12, pairs[v3 >> 12]);
+    copy_encode_pair(out + 14, pairs[v3 & 0xFFF]);
+    out += 16;
+  }
+  return size_t(out - dst);
+}
 
 // Returns the number of bytes written. The destination buffer must be large
 // enough. It will add padding (=) if needed.
@@ -584,7 +611,15 @@ template <bool use_lines = false>
 simdutf_constexpr23 size_t tail_encode_base64_impl(
     char *dst, const char *src, size_t srclen, base64_options options,
     size_t line_length = simdutf::default_line_length, size_t line_offset = 0) {
-  if constexpr (use_lines) {
+  if constexpr (!use_lines) {
+    if (srclen < 12) {
+      return tail_encode_base64_short_impl(dst, src, srclen, options);
+    }
+    const size_t i = srclen - srclen % 12;
+    const size_t written = tail_encode_base64_long_impl(dst, src, i, options);
+    return written + tail_encode_base64_short_impl(dst + written, src + i,
+                                                   srclen - i, options);
+  } else {
     // sanitize line_length and starting_line_offset.
     // line_length must be greater than 3.
     if (line_length < 4) {
@@ -592,43 +627,35 @@ simdutf_constexpr23 size_t tail_encode_base64_impl(
     }
     simdutf_log_assert(line_offset <= line_length,
                        "line_offset should be less than line_length");
-  }
-  // By default, we use padding if we are not using the URL variant.
-  // This is check with ((options & base64_url) == 0) which returns true if we
-  // are not using the URL variant. However, we also allow 'inversion' of the
-  // convention with the base64_reverse_padding option. If the
-  // base64_reverse_padding option is set, we use padding if we are using the
-  // URL variant, and we omit it if we are not using the URL variant. This is
-  // checked with
-  // ((options & base64_reverse_padding) == base64_reverse_padding).
-  bool use_padding =
-      ((options & base64_url) == 0) ^
-      ((options & base64_reverse_padding) == base64_reverse_padding);
-  // This looks like 3 branches, but we expect the compiler to resolve this to
-  // a single branch:
-  const char *e0 = (options & base64_url) ? tables::base64::base64_url::e0
-                                          : tables::base64::base64_default::e0;
-  const char *e1 = (options & base64_url) ? tables::base64::base64_url::e1
-                                          : tables::base64::base64_default::e1;
-  const char *e2 = (options & base64_url) ? tables::base64::base64_url::e2
-                                          : tables::base64::base64_default::e2;
-  char *out = dst;
-  size_t i = 0;
-  uint8_t t1, t2, t3;
-  if constexpr (!use_lines) {
-    if (srclen < 12) {
-      return tail_encode_base64_short_impl(dst, src, srclen, options);
-    }
-    i = srclen - srclen % 12;
-    out += tail_encode_base64_long_impl(dst, src, i, options);
-    return size_t(out - dst) +
-           tail_encode_base64_short_impl(out, src + i, srclen - i, options);
-  }
-  for (; i + 2 < srclen; i += 3) {
-    t1 = uint8_t(src[i]);
-    t2 = uint8_t(src[i + 1]);
-    t3 = uint8_t(src[i + 2]);
-    if constexpr (use_lines) {
+    // By default, we use padding if we are not using the URL variant.
+    // This is check with ((options & base64_url) == 0) which returns true if we
+    // are not using the URL variant. However, we also allow 'inversion' of the
+    // convention with the base64_reverse_padding option. If the
+    // base64_reverse_padding option is set, we use padding if we are using the
+    // URL variant, and we omit it if we are not using the URL variant. This is
+    // checked with
+    // ((options & base64_reverse_padding) == base64_reverse_padding).
+    bool use_padding =
+        ((options & base64_url) == 0) ^
+        ((options & base64_reverse_padding) == base64_reverse_padding);
+    // This looks like 3 branches, but we expect the compiler to resolve this to
+    // a single branch:
+    const char *e0 = (options & base64_url)
+                         ? tables::base64::base64_url::e0
+                         : tables::base64::base64_default::e0;
+    const char *e1 = (options & base64_url)
+                         ? tables::base64::base64_url::e1
+                         : tables::base64::base64_default::e1;
+    const char *e2 = (options & base64_url)
+                         ? tables::base64::base64_url::e2
+                         : tables::base64::base64_default::e2;
+    char *out = dst;
+    size_t i = 0;
+    uint8_t t1, t2, t3;
+    for (; i + 2 < srclen; i += 3) {
+      t1 = uint8_t(src[i]);
+      t2 = uint8_t(src[i + 1]);
+      t3 = uint8_t(src[i + 2]);
       if (line_offset + 3 >= line_length) {
         if (line_offset == line_length) {
           *out++ = '\n';
@@ -666,19 +693,12 @@ simdutf_constexpr23 size_t tail_encode_base64_impl(
         *out++ = e2[t3];
         line_offset += 4;
       }
-    } else {
-      *out++ = e0[t1];
-      *out++ = e1[((t1 & 0x03) << 4) | ((t2 >> 4) & 0x0F)];
-      *out++ = e1[((t2 & 0x0F) << 2) | ((t3 >> 6) & 0x03)];
-      *out++ = e2[t3];
     }
-  }
-  switch (srclen - i) {
-  case 0:
-    break;
-  case 1:
-    t1 = uint8_t(src[i]);
-    if constexpr (use_lines) {
+    switch (srclen - i) {
+    case 0:
+      break;
+    case 1:
+      t1 = uint8_t(src[i]);
       if (use_padding) {
         if (line_offset + 3 >= line_length) {
           if (line_offset == line_length) {
@@ -732,19 +752,10 @@ simdutf_constexpr23 size_t tail_encode_base64_impl(
           *out++ = e1[(uint8_t(src[i]) & 0x03) << 4];
         }
       }
-    } else {
-      *out++ = e0[t1];
-      *out++ = e1[(t1 & 0x03) << 4];
-      if (use_padding) {
-        *out++ = '=';
-        *out++ = '=';
-      }
-    }
-    break;
-  default: /* case 2 */
-    t1 = uint8_t(src[i]);
-    t2 = uint8_t(src[i + 1]);
-    if constexpr (use_lines) {
+      break;
+    default: /* case 2 */
+      t1 = uint8_t(src[i]);
+      t2 = uint8_t(src[i + 1]);
       if (use_padding) {
         if (line_offset + 3 >= line_length) {
           if (line_offset == line_length) {
@@ -807,53 +818,9 @@ simdutf_constexpr23 size_t tail_encode_base64_impl(
           *out++ = e2[(t2 & 0x0F) << 2];
         }
       }
-    } else {
-      *out++ = e0[t1];
-      *out++ = e1[((t1 & 0x03) << 4) | ((t2 >> 4) & 0x0F)];
-      *out++ = e2[(t2 & 0x0F) << 2];
-      if (use_padding) {
-        *out++ = '=';
-      }
     }
+    return (size_t)(out - dst);
   }
-  return (size_t)(out - dst);
-}
-
-simdutf_never_inline simdutf_constexpr23 size_t tail_encode_base64_long_impl(
-    char *dst, const char *src, size_t srclen, base64_options options) {
-  // Keep this loop out of tail_encode_base64_impl so short tails retain the
-  // smaller register set and stack frame. srclen is a nonzero multiple of 12.
-  // Two 12-bit lookups encode each three-byte quantum. Processing four
-  // independent quanta per iteration reduces lookup and loop overhead.
-  const auto *pairs = (options & base64_url)
-                          ? tables::base64::base64_url::encode_pairs.data()
-                          : tables::base64::base64_default::encode_pairs.data();
-  char *out = dst;
-  size_t i = 0;
-  for (; i + 11 < srclen; i += 12) {
-    const uint32_t v0 = (uint32_t(uint8_t(src[i])) << 16) |
-                        (uint32_t(uint8_t(src[i + 1])) << 8) |
-                        uint8_t(src[i + 2]);
-    const uint32_t v1 = (uint32_t(uint8_t(src[i + 3])) << 16) |
-                        (uint32_t(uint8_t(src[i + 4])) << 8) |
-                        uint8_t(src[i + 5]);
-    const uint32_t v2 = (uint32_t(uint8_t(src[i + 6])) << 16) |
-                        (uint32_t(uint8_t(src[i + 7])) << 8) |
-                        uint8_t(src[i + 8]);
-    const uint32_t v3 = (uint32_t(uint8_t(src[i + 9])) << 16) |
-                        (uint32_t(uint8_t(src[i + 10])) << 8) |
-                        uint8_t(src[i + 11]);
-    copy_encode_pair(out, pairs[v0 >> 12]);
-    copy_encode_pair(out + 2, pairs[v0 & 0xFFF]);
-    copy_encode_pair(out + 4, pairs[v1 >> 12]);
-    copy_encode_pair(out + 6, pairs[v1 & 0xFFF]);
-    copy_encode_pair(out + 8, pairs[v2 >> 12]);
-    copy_encode_pair(out + 10, pairs[v2 & 0xFFF]);
-    copy_encode_pair(out + 12, pairs[v3 >> 12]);
-    copy_encode_pair(out + 14, pairs[v3 & 0xFFF]);
-    out += 16;
-  }
-  return size_t(out - dst);
 }
 
 // Returns the number of bytes written. The destination buffer must be large

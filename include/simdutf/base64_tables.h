@@ -70,7 +70,6 @@ constexpr char e2[256] = {
     '/'};
 
 constexpr std::array<std::array<char, 2>, 4096> make_encode_pairs() {
-  // Map two six-bit values to the corresponding two output characters.
   std::array<std::array<char, 2>, 4096> pairs{};
   for (size_t i = 0; i < pairs.size(); i++) {
     pairs[i][0] = e1[i >> 6];
@@ -325,7 +324,6 @@ constexpr char e2[256] = {
     '_'};
 
 constexpr std::array<std::array<char, 2>, 4096> make_encode_pairs() {
-  // Map two six-bit values to the corresponding two output characters.
   std::array<std::array<char, 2>, 4096> pairs{};
   for (size_t i = 0; i < pairs.size(); i++) {
     pairs[i][0] = e1[i >> 6];
