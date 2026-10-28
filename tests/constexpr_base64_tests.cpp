@@ -644,6 +644,32 @@ template <typename T> constexpr bool check_byte_like_spans_at_compile_time() {
   return true;
 }
 
+template <typename T> constexpr bool check_uninitialized_byte_like_output() {
+  constexpr auto &bin = byte_like_binary;
+  constexpr auto &b64 = byte_like_base64;
+  std::array<T, b64.size()> encoded;
+  if (simdutf::binary_to_base64(bin, encoded) != b64.size()) {
+    return false;
+  }
+  std::array<T, bin.size()> out;
+  const auto r = simdutf::base64_to_binary(encoded, out);
+  if (r.error != simdutf::error_code::SUCCESS || r.count != bin.size()) {
+    return false;
+  }
+  std::array<T, bin.size()> out2;
+  const auto [r2, outlen] = simdutf::base64_to_binary_safe(encoded, out2);
+  if (r2.error != simdutf::error_code::SUCCESS || outlen != bin.size()) {
+    return false;
+  }
+  for (std::size_t i = 0; i < bin.size(); i++) {
+    if (static_cast<unsigned char>(out[i]) != bin[i] ||
+        static_cast<unsigned char>(out2[i]) != bin[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 } // namespace
 
 TEST(run_time_base64_byte_like_spans) {
@@ -660,6 +686,13 @@ TEST(compile_time_base64_byte_like_spans) {
   static_assert(check_byte_like_spans_at_compile_time<signed char>());
   static_assert(check_byte_like_spans_at_compile_time<char8_t>());
   static_assert(check_byte_like_spans_at_compile_time<std::byte>());
+}
+
+TEST(compile_time_base64_uninitialized_byte_like_output) {
+  static_assert(check_uninitialized_byte_like_output<unsigned char>());
+  static_assert(check_uninitialized_byte_like_output<signed char>());
+  static_assert(check_uninitialized_byte_like_output<char8_t>());
+  static_assert(check_uninitialized_byte_like_output<std::byte>());
 }
 
 #else
