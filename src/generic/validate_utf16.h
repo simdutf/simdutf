@@ -59,13 +59,19 @@ const result validate_utf16_with_errors(const char16_t *input, size_t size) {
   const auto v_fc = simd8<uint8_t>::splat(0xfc);
   const auto v_dc = simd8<uint8_t>::splat(0xdc);
 
-  while (input + simd16<uint16_t>::SIZE * 2 < end) {
+  // Each iteration gathers the high bytes of two registers into one byte
+  // register: N code units, one mask bit each.
+  constexpr size_t N = simd16<uint16_t>::SIZE;
+  static_assert(N == 16 || N == 32, "one mask bit per code unit");
+  using mask_t = std::conditional_t<N == 32, uint32_t, uint16_t>;
+  constexpr mask_t all = mask_t(~mask_t(0));
+
+  while (input + N <= end) {
     // 0. Load data: since the validation takes into account only higher
     //    byte of each word, we compress the two vectors into one which
     //    consists only the higher bytes.
     auto in0 = simd16<uint16_t>(input);
-    auto in1 =
-        simd16<uint16_t>(input + simd16<uint16_t>::SIZE / sizeof(char16_t));
+    auto in1 = simd16<uint16_t>(input + N / 2);
 
     // Function `utf16_gather_high_bytes` consumes two vectors of UTF-16
     // and yields a single vector having only higher bytes of characters.
@@ -73,10 +79,10 @@ const result validate_utf16_with_errors(const char16_t *input, size_t size) {
 
     // 1. Check whether we have any 0xD800..DFFF word (0b1101'1xxx'yyyy'yyyy).
     const auto surrogates_wordmask = (in & v_f8) == v_d8;
-    const uint16_t surrogates_bitmask =
-        static_cast<uint16_t>(surrogates_wordmask.to_bitmask());
-    if (surrogates_bitmask == 0x0000) {
-      input += 16;
+    const mask_t surrogates_bitmask =
+        static_cast<mask_t>(surrogates_wordmask.to_bitmask());
+    if (surrogates_bitmask == 0) {
+      input += N;
     } else {
       // 2. We have some surrogates that have to be distinguished:
       //    - low  surrogates: 0b1101'10xx'yyyy'yyyy (0xD800..0xDBFF)
@@ -86,36 +92,36 @@ const result validate_utf16_with_errors(const char16_t *input, size_t size) {
 
       // V - non-surrogate code units
       //     V = not surrogates_wordmask
-      const uint16_t V = static_cast<uint16_t>(~surrogates_bitmask);
+      const mask_t V = static_cast<mask_t>(~surrogates_bitmask);
 
       // H - word-mask for high surrogates: the six highest bits are 0b1101'11
       const auto vH = (in & v_fc) == v_dc;
-      const uint16_t H = static_cast<uint16_t>(vH.to_bitmask());
+      const mask_t H = static_cast<mask_t>(vH.to_bitmask());
 
       // L - word mask for low surrogates
       //     L = not H and surrogates_wordmask
-      const uint16_t L = static_cast<uint16_t>(~H & surrogates_bitmask);
+      const mask_t L = static_cast<mask_t>(~H & surrogates_bitmask);
 
-      const uint16_t a = static_cast<uint16_t>(
+      const mask_t a = static_cast<mask_t>(
           L & (H >> 1)); // A low surrogate must be followed by high one.
                          // (A low surrogate placed in the 7th register's word
                          // is an exception we handle.)
-      const uint16_t b = static_cast<uint16_t>(
+      const mask_t b = static_cast<mask_t>(
           a << 1); // Just mark that the opinput - startite fact is hold,
                    // thanks to that we have only two masks for valid case.
-      const uint16_t c = static_cast<uint16_t>(
+      const mask_t c = static_cast<mask_t>(
           V | a | b); // Combine all the masks into the final one.
 
-      if (c == 0xffff) {
+      if (c == all) {
         // The whole input register contains valid UTF-16, i.e.,
         // either single code units or proper surrogate pairs.
-        input += 16;
-      } else if (c == 0x7fff) {
-        // The 15 lower code units of the input register contains valid UTF-16.
-        // The 15th word may be either a low or high surrogate. It the next
-        // iteration we 1) check if the low surrogate is followed by a high
-        // one, 2) reject sole high surrogate.
-        input += 15;
+        input += N;
+      } else if (c == all >> 1) {
+        // The N - 1 lower code units of the input register contain valid
+        // UTF-16. The last word may be either a low or high surrogate. In the
+        // next iteration we 1) check if the low surrogate is followed by a
+        // high one, 2) reject sole high surrogate.
+        input += N - 1;
       } else {
         return result(error_code::SURROGATE, input - start);
       }
