@@ -670,6 +670,75 @@ template <typename T> constexpr bool check_uninitialized_byte_like_output() {
   return true;
 }
 
+template <typename T> constexpr bool check_byte_like_output_past_written() {
+  constexpr auto &bin = byte_like_binary;
+  constexpr auto &b64 = byte_like_base64;
+  constexpr T mark = static_cast<T>(0x5a);
+  std::array<T, bin.size()> binary{};
+  fill_from<T>(bin, binary);
+  std::array<T, b64.size()> encoded{};
+  fill_from<T>(b64, encoded);
+  std::array<char16_t, b64.size()> encoded16{};
+  fill_from<char16_t>(b64, encoded16);
+  const auto marked_from = [&](const auto &out, std::size_t n) {
+    for (std::size_t i = n; i < out.size(); i++) {
+      if (out[i] != mark) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  std::array<T, 1> one{mark};
+  (void)simdutf::binary_to_base64(std::span<const T>(), one);
+  if (!marked_from(one, 0)) {
+    return false;
+  }
+  std::array<T, b64.size() + 2> enc_out;
+  enc_out.fill(mark);
+  (void)simdutf::binary_to_base64(binary, enc_out);
+  if (!marked_from(enc_out, b64.size())) {
+    return false;
+  }
+  enc_out.fill(mark);
+  (void)simdutf::binary_to_base64_with_lines(binary, enc_out);
+  if (!marked_from(enc_out, b64.size())) {
+    return false;
+  }
+
+  std::array<T, bin.size() + 2> out;
+  out.fill(mark);
+  (void)simdutf::base64_to_binary(encoded, out);
+  if (!marked_from(out, bin.size())) {
+    return false;
+  }
+  out.fill(mark);
+  (void)simdutf::base64_to_binary(std::span<const char16_t>(encoded16), out);
+  if (!marked_from(out, bin.size())) {
+    return false;
+  }
+  out.fill(mark);
+  (void)simdutf::base64_to_binary_details(encoded, out);
+  if (!marked_from(out, bin.size())) {
+    return false;
+  }
+  out.fill(mark);
+  (void)simdutf::base64_to_binary_details(std::span<const char16_t>(encoded16),
+                                          out);
+  if (!marked_from(out, bin.size())) {
+    return false;
+  }
+  out.fill(mark);
+  (void)simdutf::base64_to_binary_safe(encoded, out);
+  if (!marked_from(out, bin.size())) {
+    return false;
+  }
+  out.fill(mark);
+  (void)simdutf::base64_to_binary_safe(std::span<const char16_t>(encoded16),
+                                       out);
+  return marked_from(out, bin.size());
+}
+
 } // namespace
 
 TEST(run_time_base64_byte_like_spans) {
@@ -693,6 +762,14 @@ TEST(compile_time_base64_uninitialized_byte_like_output) {
   static_assert(check_uninitialized_byte_like_output<signed char>());
   static_assert(check_uninitialized_byte_like_output<char8_t>());
   static_assert(check_uninitialized_byte_like_output<std::byte>());
+}
+
+TEST(compile_time_base64_byte_like_output_past_written) {
+  static_assert(check_byte_like_output_past_written<char>());
+  static_assert(check_byte_like_output_past_written<unsigned char>());
+  static_assert(check_byte_like_output_past_written<signed char>());
+  static_assert(check_byte_like_output_past_written<char8_t>());
+  static_assert(check_byte_like_output_past_written<std::byte>());
 }
 
 #else
