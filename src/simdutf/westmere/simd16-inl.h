@@ -226,6 +226,18 @@ template <typename T> struct simd16x32 {
   }
 
   simdutf_really_inline uint64_t not_in_range(const T low, const T high) const {
+    const T span = static_cast<T>(high - low);
+    if ((span & static_cast<T>(span + 1)) == 0 && (low & span) == 0) {
+      // Aligned power-of-two block, such as the surrogates: one AND and
+      // one compare, instead of a min/max and a compare per bound.
+      const simd16<T> keep = simd16<T>::splat(static_cast<T>(~span));
+      const simd16<T> base = simd16<T>::splat(low);
+      return ~simd16x32<bool>((this->chunks[0] & keep) == base,
+                              (this->chunks[1] & keep) == base,
+                              (this->chunks[2] & keep) == base,
+                              (this->chunks[3] & keep) == base)
+                  .to_bitmask();
+    }
     const simd16<T> mask_low = simd16<T>::splat(static_cast<T>(low - 1));
     const simd16<T> mask_high = simd16<T>::splat(static_cast<T>(high + 1));
     return simd16x32<bool>(
