@@ -1,10 +1,10 @@
 var namespacesimdutf =
 [
-    [ "full_result", "structsimdutf_1_1full__result.html", null ],
-    [ "implementation", "classsimdutf_1_1implementation.html", "classsimdutf_1_1implementation" ],
     [ "result", "structsimdutf_1_1result.html", null ],
+    [ "full_result", "structsimdutf_1_1full__result.html", null ],
     [ "utf8_result", "structsimdutf_1_1utf8__result.html", null ],
     [ "utf8_to_utf16_result", "structsimdutf_1_1utf8__to__utf16__result.html", null ],
+    [ "implementation", "classsimdutf_1_1implementation.html", "classsimdutf_1_1implementation" ],
     [ "autodetect_encoding", "namespacesimdutf.html#afc62d1eaa359b0cf19dddb5ed9130b6a", null ],
     [ "base64_ignorable", "namespacesimdutf.html#a0bd2c80917b6adbf5b692c148711a035", null ],
     [ "base64_length_from_binary", "namespacesimdutf.html#a0840933d2a92a1f74fc6626af5ec76ef", null ],

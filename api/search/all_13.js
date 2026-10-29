@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['usage_0',['Real-World Usage',['../index.html#autotoc_md1',1,'']]],
+  ['usage_0',['Usage',['../index.html#autotoc_md1',1,'Real-World Usage'],['../index.html#autotoc_md4',1,'Usage (Usage)']]],
   ['usage_20cmake_1',['Usage (CMake)',['../index.html#autotoc_md6',1,'']]],
   ['usage_20in_20simdutf_2',['C++20 and std::span usage in simdutf',['../index.html#autotoc_md17',1,'']]],
   ['usage_20usage_3',['Usage (Usage)',['../index.html#autotoc_md4',1,'']]],
@@ -16,11 +16,11 @@ var searchData=
   ['utf8_5flength_5ffrom_5flatin1_13',['utf8_length_from_latin1',['../classsimdutf_1_1implementation.html#aff358bb1f0b909cd1e9a6227656ee5d7',1,'simdutf::implementation::utf8_length_from_latin1()'],['../namespacesimdutf.html#a5194aa301dbaac84a6d4fdbe56bad188',1,'simdutf::utf8_length_from_latin1(const char *input, size_t length) noexcept']]],
   ['utf8_5flength_5ffrom_5futf16_14',['utf8_length_from_utf16',['../namespacesimdutf.html#af94bd238016344ff84fc64dd59c11db8',1,'simdutf']]],
   ['utf8_5flength_5ffrom_5futf16_5fwith_5freplacement_15',['utf8_length_from_utf16_with_replacement',['../namespacesimdutf.html#a477fc442ecc7c0de526ccacff409b911',1,'simdutf']]],
-  ['utf8_5flength_5ffrom_5futf16be_16',['utf8_length_from_utf16be',['../namespacesimdutf.html#a7694416b37ad013dad68752afdfd7b44',1,'simdutf::utf8_length_from_utf16be()'],['../classsimdutf_1_1implementation.html#abce2ef1ff8ab5ffd3999d545f703a2fd',1,'simdutf::implementation::utf8_length_from_utf16be()']]],
-  ['utf8_5flength_5ffrom_5futf16be_5fwith_5freplacement_17',['utf8_length_from_utf16be_with_replacement',['../namespacesimdutf.html#a6c9c28ff73ad4e35226104ef8382a5aa',1,'simdutf::utf8_length_from_utf16be_with_replacement()'],['../classsimdutf_1_1implementation.html#a5b7e749811eecce33c3a2167962ed405',1,'simdutf::implementation::utf8_length_from_utf16be_with_replacement(const char16_t *input, size_t length) const noexcept=0']]],
-  ['utf8_5flength_5ffrom_5futf16le_18',['utf8_length_from_utf16le',['../classsimdutf_1_1implementation.html#a446248e71fc872b071d25a27673139f5',1,'simdutf::implementation::utf8_length_from_utf16le()'],['../namespacesimdutf.html#a60198c318e878c68771e2af4c60fb0ab',1,'simdutf::utf8_length_from_utf16le(const char16_t *input, size_t length) noexcept']]],
-  ['utf8_5flength_5ffrom_5futf16le_5fwith_5freplacement_19',['utf8_length_from_utf16le_with_replacement',['../namespacesimdutf.html#a4c1cc7b3a369feda8fb221adea99bf53',1,'simdutf::utf8_length_from_utf16le_with_replacement()'],['../classsimdutf_1_1implementation.html#a4f362d3ac73b9955d4065b10028cd8d3',1,'simdutf::implementation::utf8_length_from_utf16le_with_replacement()']]],
-  ['utf8_5flength_5ffrom_5futf32_20',['utf8_length_from_utf32',['../namespacesimdutf.html#a10f3924e36387a861736ae870ebf8721',1,'simdutf::utf8_length_from_utf32()'],['../classsimdutf_1_1implementation.html#a2f39ff7d49c8864a9035c626825edad0',1,'simdutf::implementation::utf8_length_from_utf32()']]],
+  ['utf8_5flength_5ffrom_5futf16be_16',['utf8_length_from_utf16be',['../classsimdutf_1_1implementation.html#abce2ef1ff8ab5ffd3999d545f703a2fd',1,'simdutf::implementation::utf8_length_from_utf16be()'],['../namespacesimdutf.html#a7694416b37ad013dad68752afdfd7b44',1,'simdutf::utf8_length_from_utf16be()']]],
+  ['utf8_5flength_5ffrom_5futf16be_5fwith_5freplacement_17',['utf8_length_from_utf16be_with_replacement',['../classsimdutf_1_1implementation.html#a5b7e749811eecce33c3a2167962ed405',1,'simdutf::implementation::utf8_length_from_utf16be_with_replacement()'],['../namespacesimdutf.html#a6c9c28ff73ad4e35226104ef8382a5aa',1,'simdutf::utf8_length_from_utf16be_with_replacement()']]],
+  ['utf8_5flength_5ffrom_5futf16le_18',['utf8_length_from_utf16le',['../classsimdutf_1_1implementation.html#a446248e71fc872b071d25a27673139f5',1,'simdutf::implementation::utf8_length_from_utf16le()'],['../namespacesimdutf.html#a60198c318e878c68771e2af4c60fb0ab',1,'simdutf::utf8_length_from_utf16le()']]],
+  ['utf8_5flength_5ffrom_5futf16le_5fwith_5freplacement_19',['utf8_length_from_utf16le_with_replacement',['../classsimdutf_1_1implementation.html#a4f362d3ac73b9955d4065b10028cd8d3',1,'simdutf::implementation::utf8_length_from_utf16le_with_replacement()'],['../namespacesimdutf.html#a4c1cc7b3a369feda8fb221adea99bf53',1,'simdutf::utf8_length_from_utf16le_with_replacement()']]],
+  ['utf8_5flength_5ffrom_5futf32_20',['utf8_length_from_utf32',['../classsimdutf_1_1implementation.html#a2f39ff7d49c8864a9035c626825edad0',1,'simdutf::implementation::utf8_length_from_utf32()'],['../namespacesimdutf.html#a10f3924e36387a861736ae870ebf8721',1,'simdutf::utf8_length_from_utf32(const char32_t *input, size_t length) noexcept']]],
   ['utf8_5fresult_21',['utf8_result',['../structsimdutf_1_1utf8__result.html',1,'simdutf']]],
   ['utf8_5fto_5futf16_5fresult_22',['utf8_to_utf16_result',['../structsimdutf_1_1utf8__to__utf16__result.html',1,'simdutf']]]
 ];
