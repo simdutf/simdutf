@@ -13,7 +13,7 @@ lsx_convert_utf16_to_latin1(const char16_t *buf, size_t len,
     if (__lsx_bz_v(__lsx_vpickod_b(in1, in))) {
       // 1. pack the bytes
       __m128i latin1_packed = __lsx_vpickev_b(in1, in);
-      // 2. store (8 bytes)
+      // 2. store (16 bytes)
       __lsx_vst(latin1_packed, reinterpret_cast<uint8_t *>(latin1_output), 0);
       // 3. adjust pointers
       buf += 16;
@@ -41,7 +41,7 @@ lsx_convert_utf16_to_latin1_with_errors(const char16_t *buf, size_t len,
     if (__lsx_bz_v(__lsx_vpickod_b(in1, in))) {
       // 1. pack the bytes
       __m128i latin1_packed = __lsx_vpickev_b(in1, in);
-      // 2. store (8 bytes)
+      // 2. store (16 bytes)
       __lsx_vst(latin1_packed, reinterpret_cast<uint8_t *>(latin1_output), 0);
       // 3. adjust pointers
       buf += 16;

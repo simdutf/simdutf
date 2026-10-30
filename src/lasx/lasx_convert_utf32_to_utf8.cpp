@@ -59,7 +59,7 @@ lasx_convert_utf32_to_utf8(const char32_t *buf, size_t len, char *utf8_out) {
         // obviously suboptimal.
         __m256i utf8_packed = __lasx_xvpermi_d(
             __lasx_xvpickev_b(utf16_packed, utf16_packed), 0b00001000);
-        // 2. store (8 bytes)
+        // 2. store (16 bytes)
         __lsx_vst(lasx_extracti128_lo(utf8_packed), utf8_output, 0);
         // 3. adjust pointers
         buf += 16;
@@ -354,7 +354,7 @@ lasx_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
         // obviously suboptimal.
         __m256i utf8_packed = __lasx_xvpermi_d(
             __lasx_xvpickev_b(utf16_packed, utf16_packed), 0b00001000);
-        // 2. store (8 bytes)
+        // 2. store (16 bytes)
         __lsx_vst(lasx_extracti128_lo(utf8_packed), utf8_output, 0);
         // 3. adjust pointers
         buf += 16;

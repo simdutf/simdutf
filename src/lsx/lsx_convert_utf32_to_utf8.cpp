@@ -28,7 +28,7 @@ lsx_convert_utf32_to_utf8(const char32_t *buf, size_t len, char *utf8_out) {
         // 1. pack the bytes
         // obviously suboptimal.
         __m128i utf8_packed = __lsx_vpickev_b(utf16_packed, utf16_packed);
-        // 2. store (8 bytes)
+        // 2. store (16 bytes)
         __lsx_vst(utf8_packed, utf8_output, 0);
         // 3. adjust pointers
         buf += 8;
@@ -257,7 +257,7 @@ lsx_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
         // 1. pack the bytes
         // obviously suboptimal.
         __m128i utf8_packed = __lsx_vpickev_b(utf16_packed, utf16_packed);
-        // 2. store (8 bytes)
+        // 2. store (16 bytes)
         __lsx_vst(utf8_packed, utf8_output, 0);
         // 3. adjust pointers
         buf += 8;

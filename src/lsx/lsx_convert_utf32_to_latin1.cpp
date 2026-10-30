@@ -13,7 +13,7 @@ lsx_convert_utf32_to_latin1(const char32_t *buf, size_t len,
     if (__lsx_bz_v(__lsx_vslt_wu(v_ff, in12))) {
       // 1. pack the bytes
       __m128i latin1_packed = __lsx_vshuf_b(in2, in1, (__m128i)shuf_mask);
-      // 2. store (8 bytes)
+      // 2. store (16 bytes)
       __lsx_vst(latin1_packed, reinterpret_cast<uint8_t *>(latin1_output), 0);
       // 3. adjust pointers
       buf += 8;
@@ -43,7 +43,7 @@ lsx_convert_utf32_to_latin1_with_errors(const char32_t *buf, size_t len,
     if (__lsx_bz_v(__lsx_vslt_wu(v_ff, in12))) {
       // 1. pack the bytes
       __m128i latin1_packed = __lsx_vshuf_b(in2, in1, (__m128i)shuf_mask);
-      // 2. store (8 bytes)
+      // 2. store (16 bytes)
       __lsx_vst(latin1_packed, reinterpret_cast<uint8_t *>(latin1_output), 0);
       // 3. adjust pointers
       buf += 8;
