@@ -17,7 +17,7 @@ lasx_convert_utf32_to_latin1(const char32_t *buf, size_t len,
       latin1_packed_tmp = __lasx_xvpermi_d(latin1_packed_tmp, 0b00001000);
       __m128i latin1_packed = lasx_extracti128_lo(latin1_packed_tmp);
       latin1_packed = __lsx_vpermi_w(latin1_packed, latin1_packed, 0b11011000);
-      // 2. store (8 bytes)
+      // 2. store (16 bytes)
       __lsx_vst(latin1_packed, reinterpret_cast<uint8_t *>(latin1_output), 0);
       // 3. adjust pointers
       buf += 16;
@@ -50,7 +50,7 @@ lasx_convert_utf32_to_latin1_with_errors(const char32_t *buf, size_t len,
       latin1_packed_tmp = __lasx_xvpermi_d(latin1_packed_tmp, 0b00001000);
       __m128i latin1_packed = lasx_extracti128_lo(latin1_packed_tmp);
       latin1_packed = __lsx_vpermi_w(latin1_packed, latin1_packed, 0b11011000);
-      // 2. store (8 bytes)
+      // 2. store (16 bytes)
       __lsx_vst(latin1_packed, reinterpret_cast<uint8_t *>(latin1_output), 0);
       // 3. adjust pointers
       buf += 16;
