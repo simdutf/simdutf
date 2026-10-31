@@ -86,12 +86,13 @@ size_t latin1_to_utf8_avx512_start(const char *buf, size_t len,
                                    char *utf8_output) {
   char *start = utf8_output;
   size_t pos = 0;
-  // if there's at least 128 bytes remaining, we don't need to mask the output
-  for (; pos + 128 <= len; pos += 64) {
+  // if there are at least 96 bytes remaining, we do not need to mask the
+  // output, see formal/safety_margins
+  for (; pos + 96 <= len; pos += 64) {
     __m512i input = _mm512_loadu_si512((__m512i *)(buf + pos));
     utf8_output += latin1_to_utf8_avx512_branch(input, utf8_output);
   }
-  // in the last 128 bytes, the first 64 may require masking the output
+  // in the last 96 bytes, the first 64 may require masking the output
   if (pos + 64 <= len) {
     __m512i input = _mm512_loadu_si512((__m512i *)(buf + pos));
     utf8_output += latin1_to_utf8_avx512_vec(input, 64, utf8_output, 1);

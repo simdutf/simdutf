@@ -12,7 +12,7 @@ simdutf_warn_unused size_t convert_valid(const char *input, size_t size,
   // generic directory.
   size_t pos = 0;
   char16_t *start{utf16_output};
-  const size_t safety_margin = 16; // to avoid overruns!
+  const size_t safety_margin = 9; // proved in formal/safety_margins
   while (pos + 64 + safety_margin <= size) {
     // this loop could be unrolled further. For example, we could process the
     // mask far more than 64 bytes.

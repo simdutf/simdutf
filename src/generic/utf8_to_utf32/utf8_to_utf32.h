@@ -169,13 +169,14 @@ struct validating_transcoder {
     // last 16 bytes, and if the data is valid, then it is entirely safe because
     // 16 UTF-8 bytes generate at least 4 words. However, you cannot
     // generally assume that you have valid UTF-8 input, so we are going to go
-    // back from the end counting 8 leading bytes, to give us a good margin.
+    // back from the end counting 3 leading bytes, the margin proved in
+    // formal/safety_margins.
     size_t leading_byte = 0;
     size_t margin = size;
-    for (; margin > 0 && leading_byte < 8; margin--) {
+    for (; margin > 0 && leading_byte < 3; margin--) {
       leading_byte += (int8_t(in[margin - 1]) > -65);
     }
-    // If the input is long enough, then we have that margin is the eighth
+    // If the input is long enough, then we have that margin is the third
     // last leading byte.
     const size_t safety_margin = size - margin + 1; // to avoid overruns!
     while (pos + 64 + safety_margin <= size) {
@@ -263,13 +264,14 @@ struct validating_transcoder {
     // last 16 bytes, and if the data is valid, then it is entirely safe because
     // 16 UTF-8 bytes generate at least 4 words. However, you cannot
     // generally assume that you have valid UTF-8 input, so we are going to go
-    // back from the end counting 8 leading bytes, to give us a good margin.
+    // back from the end counting 3 leading bytes, the margin proved in
+    // formal/safety_margins.
     size_t leading_byte = 0;
     size_t margin = size;
-    for (; margin > 0 && leading_byte < 8; margin--) {
+    for (; margin > 0 && leading_byte < 3; margin--) {
       leading_byte += (int8_t(in[margin - 1]) > -65);
     }
-    // If the input is long enough, then we have that margin is the eighth
+    // If the input is long enough, then we have that margin is the third
     // last leading byte.
     const size_t safety_margin = size - margin + 1; // to avoid overruns!
     while (pos + 64 + safety_margin <= size) {

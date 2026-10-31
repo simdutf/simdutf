@@ -11,15 +11,15 @@ simdutf_really_inline size_t convert_valid(const char *in, size_t size,
   // In the worst case, we have the haswell kernel which can cause an overflow
   // of 4 bytes when calling convert_masked_utf8_to_latin1. If you skip the last
   // 16 bytes, then it is entirely safe because 16 valid UTF-8 bytes generate
-  // at least 4 bytes. We go back from the end counting 8 leading bytes, which
-  // gives us a good margin.
+  // at least 4 bytes. We go back from the end counting 3 leading bytes, the
+  // margin proved in formal/safety_margins.
   size_t leading_byte = 0;
   size_t margin = size;
-  for (; margin > 0 && leading_byte < 8; margin--) {
+  for (; margin > 0 && leading_byte < 3; margin--) {
     leading_byte += (int8_t(in[margin - 1]) >
                      -65); // twos complement of -65 is 1011 1111 ...
   }
-  // If the input is long enough, then we have that margin is the eighth last
+  // If the input is long enough, then we have that margin is the third last
   // leading byte.
   const size_t safety_margin = size - margin + 1; // to avoid overruns!
   while (pos + 64 + safety_margin <= size) {

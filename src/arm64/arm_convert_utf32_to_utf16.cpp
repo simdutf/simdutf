@@ -72,8 +72,7 @@ arm_convert_utf32_to_utf16(const char32_t *buf, size_t len,
   const char32_t *end = buf + len;
 
   uint16x8_t forbidden_bytemask = vmovq_n_u16(0x0);
-  // To avoid buffer overflow while writing compressed_v
-  const size_t safety_margin = 4;
+  const size_t safety_margin = 4; // proved in formal/safety_margins
   while (end - buf >= std::ptrdiff_t(8 + safety_margin)) {
     uint32x4x2_t in = vld1q_u32_x2(reinterpret_cast<const uint32_t *>(buf));
 
@@ -127,8 +126,7 @@ arm_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
   const char32_t *start = buf;
   const char32_t *end = buf + len;
 
-  // To avoid buffer overflow while writing compressed_v
-  const size_t safety_margin = 4;
+  const size_t safety_margin = 4; // proved in formal/safety_margins
   while (end - buf >= std::ptrdiff_t(8 + safety_margin)) {
     uint32x4x2_t in = vld1q_u32_x2(reinterpret_cast<const uint32_t *>(buf));
 

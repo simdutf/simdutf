@@ -7,11 +7,9 @@ std::pair<const char *, char *>
 lasx_convert_latin1_to_utf8(const char *latin1_input, size_t len,
                             char *utf8_out) {
   uint8_t *utf8_output = reinterpret_cast<uint8_t *>(utf8_out);
-  const size_t safety_margin = 12;
+  const size_t safety_margin = 8; // proved in formal/safety_margins
   const char *end = latin1_input + len;
 
-  // We always write 16 bytes, of which at least the first 8 bytes
-  // are valid. A safety margin of 8 is sufficient.
   while (end - latin1_input >= std::ptrdiff_t(16 + safety_margin)) {
     __m128i in8 = __lsx_vld(reinterpret_cast<const uint8_t *>(latin1_input), 0);
     uint32_t ascii_mask = __lsx_vpickve2gr_wu(__lsx_vmskgez_b(in8), 0);
