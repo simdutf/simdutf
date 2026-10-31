@@ -62,6 +62,7 @@ sse_convert_utf32_to_utf16(const char32_t *buf, size_t len,
   const __m128i v_ffff0000 = _mm_set1_epi32((int32_t)0xffff0000);
   __m128i forbidden_bytemask = _mm_setzero_si128();
 
+  // safety margin of 4 proved in formal/safety_margins
   while (end - buf >= 16 + 4) {
     const __m128i *ptr = reinterpret_cast<const __m128i *>(buf);
     const __m128i in0 = _mm_loadu_si128(ptr + 0);

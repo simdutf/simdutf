@@ -9,7 +9,7 @@ simdutf_warn_unused size_t convert_valid(const char *input, size_t size,
                                          char32_t *utf32_output) noexcept {
   size_t pos = 0;
   char32_t *start{utf32_output};
-  const size_t safety_margin = 12; // to avoid overruns!
+  const size_t safety_margin = 12; // proved in formal/safety_margins
   while (pos + 64 + safety_margin <= size) {
     simd8x64<int8_t> in(reinterpret_cast<const int8_t *>(input + pos));
     if (in.is_ascii()) {

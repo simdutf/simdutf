@@ -59,9 +59,7 @@ arm_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_out) {
   const uint16x8_t v_f800 = vmovq_n_u16((uint16_t)0xf800);
   const uint16x8_t v_d800 = vmovq_n_u16((uint16_t)0xd800);
   const uint16x8_t v_c080 = vmovq_n_u16((uint16_t)0xc080);
-  const size_t safety_margin =
-      12; // to avoid overruns, see issue
-          // https://github.com/simdutf/simdutf/issues/92
+  const size_t safety_margin = 12; // proved in formal/safety_margins
   while (end - buf >= std::ptrdiff_t(16 + safety_margin)) {
     uint16x8_t in = vld1q_u16(reinterpret_cast<const uint16_t *>(buf));
     if constexpr (!match_system(big_endian)) {
@@ -327,9 +325,7 @@ arm_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
   const uint16x8_t v_f800 = vmovq_n_u16((uint16_t)0xf800);
   const uint16x8_t v_d800 = vmovq_n_u16((uint16_t)0xd800);
   const uint16x8_t v_c080 = vmovq_n_u16((uint16_t)0xc080);
-  const size_t safety_margin =
-      12; // to avoid overruns, see issue
-          // https://github.com/simdutf/simdutf/issues/92
+  const size_t safety_margin = 12; // proved in formal/safety_margins
 
   while (end - buf >= std::ptrdiff_t(16 + safety_margin)) {
     uint16x8_t in = vld1q_u16(reinterpret_cast<const uint16_t *>(buf));
