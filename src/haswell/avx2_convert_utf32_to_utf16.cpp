@@ -5,8 +5,8 @@ avx2_convert_utf32_to_utf16(const char32_t *buf, size_t len,
   const char32_t *end = buf + len;
 
   const size_t safety_margin =
-      12; // to avoid overruns, see issue
-          // https://github.com/simdutf/simdutf/issues/92
+      0; // to avoid overruns, see issue
+         // https://github.com/simdutf/simdutf/issues/92
   __m256i forbidden_bytemask = _mm256_setzero_si256();
 
   const __m256i v_ffff0000 = _mm256_set1_epi32((int32_t)0xffff0000);
@@ -88,8 +88,8 @@ avx2_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
   const char32_t *end = buf + len;
 
   const size_t safety_margin =
-      12; // to avoid overruns, see issue
-          // https://github.com/simdutf/simdutf/issues/92
+      0; // to avoid overruns, see issue
+         // https://github.com/simdutf/simdutf/issues/92
 
   const __m256i v_ffff0000 = _mm256_set1_epi32((int32_t)0xffff0000);
   const __m256i v_f800 = _mm256_set1_epi32((uint32_t)0xf800);

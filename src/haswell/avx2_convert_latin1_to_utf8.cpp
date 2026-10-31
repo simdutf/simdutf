@@ -5,7 +5,7 @@ avx2_convert_latin1_to_utf8(const char *latin1_input, size_t len,
   const __m256i v_0000 = _mm256_setzero_si256();
   const __m256i v_c080 = _mm256_set1_epi16((int16_t)0xc080);
   const __m256i v_ff80 = _mm256_set1_epi16((int16_t)0xff80);
-  const size_t safety_margin = 12;
+  const size_t safety_margin = 8;
 
   while (end - latin1_input >= std::ptrdiff_t(16 + safety_margin)) {
     __m128i in8 = _mm_loadu_si128((__m128i *)latin1_input);

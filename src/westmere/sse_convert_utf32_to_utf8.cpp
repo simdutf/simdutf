@@ -343,8 +343,8 @@ sse_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
   const __m128i v_10ffff = _mm_set1_epi32((uint32_t)0x10ffff);
 
   const size_t safety_margin =
-      12; // to avoid overruns, see issue
-          // https://github.com/simdutf/simdutf/issues/92
+      4; // to avoid overruns, see issue
+         // https://github.com/simdutf/simdutf/issues/92
 
   while (end - buf >= std::ptrdiff_t(16 + safety_margin)) {
     // We load two 16 bytes registers for a total of 32 bytes or 8 characters.
