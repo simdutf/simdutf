@@ -421,6 +421,25 @@ TEST(base64_garbage_char16_with_valid_low_byte) {
   }
 }
 
+TEST(base64_tail_does_not_write_past_output) {
+  for (size_t spaces = 0; spaces < 130; spaces++) {
+    for (size_t chars = 1; chars < 14; chars++) {
+      const std::string input =
+          std::string(spaces, ' ') + std::string(chars, 'A');
+      const size_t n =
+          simdutf::binary_length_from_base64(input.data(), input.size());
+      std::vector<char> out(n + 1, char(0x5a));
+      simdutf::result r = implementation.base64_to_binary(
+          input.data(), input.size(), out.data(), simdutf::base64_default,
+          simdutf::last_chunk_handling_options::loose);
+      if (r.error == simdutf::error_code::SUCCESS) {
+        ASSERT_EQUAL(r.count, n);
+      }
+      ASSERT_EQUAL(out[n], char(0x5a));
+    }
+  }
+}
+
 TEST(issue_dash) {
   const std::string input = "Iw==";
   std::vector<char> back(1);
