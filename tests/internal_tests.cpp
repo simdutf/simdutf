@@ -8,7 +8,7 @@ int main(int argc, char *argv[]) {
   for (const auto &implementation : simdutf::get_available_implementations()) {
     for (const auto &test : implementation->internal_tests()) {
       simdutf::test::test_procedures().push_back(simdutf::test::test_entry{
-          test.name,
+          std::string(test.name),
           test.procedure,
       });
       any_added = true;

@@ -304,6 +304,10 @@ public:
   simdutf_warn_unused size_t binary_length_from_base64(
       const char16_t *input, size_t length) const noexcept override;
 #endif // SIMDUTF_FEATURE_BASE64
+
+#ifdef SIMDUTF_INTERNAL_TESTS
+  virtual std::vector<TestProcedure> internal_tests() const override;
+#endif
 };
 
 } // namespace lasx
