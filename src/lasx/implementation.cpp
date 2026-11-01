@@ -225,6 +225,10 @@ convert_utf8_1_to_2_byte_to_utf16(__m128i in, size_t shufutf8_idx) {
   #include "generic/base64lengths.h"
 #endif // SIMDUTF_FEATURE_BASE64
 
+#ifdef SIMDUTF_INTERNAL_TESTS
+  #include "lasx_internal_tests.cpp"
+#endif // SIMDUTF_INTERNAL_TESTS
+
 //
 // Implementation-specific overrides
 //
@@ -1518,6 +1522,16 @@ simdutf_warn_unused size_t implementation::binary_length_from_base64(
   return base64_lengths::binary_length_from_base64(input, length);
 }
 #endif // SIMDUTF_FEATURE_BASE64
+
+#ifdef SIMDUTF_INTERNAL_TESTS
+std::vector<implementation::TestProcedure>
+implementation::internal_tests() const {
+  #define entry(proc)                                                          \
+    TestProcedure { #proc, proc }
+  return {entry(simd8_bool_any)};
+  #undef entry
+}
+#endif
 
 } // namespace SIMDUTF_IMPLEMENTATION
 } // namespace simdutf

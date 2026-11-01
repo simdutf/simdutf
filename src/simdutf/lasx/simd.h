@@ -293,11 +293,7 @@ template <> struct simd8<bool> : base8<bool> {
     uint32_t mask1 = __lasx_xvpickve2gr_wu(mask, 4);
     return (mask0 | (mask1 << 16));
   }
-  simdutf_really_inline bool any() const {
-    if (__lasx_xbz_b(this->value))
-      return false;
-    return true;
-  }
+  simdutf_really_inline bool any() const { return !__lasx_xbz_v(this->value); }
   simdutf_really_inline simd8<bool> operator~() const { return *this ^ true; }
 };
 
