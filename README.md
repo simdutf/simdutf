@@ -27,6 +27,7 @@
   - [Compiling without the C++ standard library](#compiling-without-the-c-standard-library)
   - [C API](#c-api-c11-or-better)
   - [SIMDUTF\_USE\_STATIC\_INITIALIZATION](#simdutf_use_static_initialization)
+  - [ABI compatibility](#abi-compatibility)
   - [Thread safety](#thread-safety)
   - [References](#references)
   - [License](#license)
@@ -3209,6 +3210,15 @@ When building without the C++ standard library (`SIMDUTF_NO_LIBCXX=1`), static i
 
 
 *Further reading*: [Static Initialization Order Fiasco](https://en.cppreference.com/cpp/language/siof)
+
+## ABI compatibility
+
+If you link against a prebuilt simdutf library (e.g., a shared library provided by a Linux distribution), your code and the library must be compiled with consistent settings. Otherwise, your code may compile but fail to link with undefined symbols. In particular:
+
+- **C++ standard.** Ensure that your code is compiled with the same C++ standard as the library. The CMake option `SIMDUTF_CXX_STANDARD` sets the standard used to compile the library (e.g., `cmake -B build -DSIMDUTF_CXX_STANDARD=20`).
+- **C++ standard library.** Use the same C++ standard library (e.g., libstdc++ or libc++) for your code and for simdutf.
+- **Feature macros.** The headers enable all features by default (`SIMDUTF_FEATURE_UTF8`, `SIMDUTF_FEATURE_BASE64`, and so forth). If the library was compiled with some features disabled, you must define the same macros to the same values when compiling your code.
+- **Windows DLLs.** When using simdutf as a DLL, your code must be compiled with `SIMDUTF_USING_WINDOWS_DYNAMIC_LIBRARY=1`. CMake sets this for you when you link against the `simdutf` target.
 
 ## Thread safety
 
