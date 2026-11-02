@@ -25,7 +25,6 @@ public:
   std::set<size_t> iterations;
 
 public:
-  CommandLine() = default;
   static CommandLine parse_arguments(int argc, char *argv[]);
 
   bool empty() const;

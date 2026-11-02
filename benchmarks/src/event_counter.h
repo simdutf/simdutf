@@ -88,8 +88,6 @@ struct event_aggregate {
   event_count best{};
   event_count worst{};
 
-  event_aggregate() = default;
-
   void operator<<(const event_count &other) {
     if (iterations == 0 || other.elapsed < best.elapsed) {
       best = other;
