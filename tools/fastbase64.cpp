@@ -26,7 +26,6 @@ public:
   bool ignore_garbage{false};
   bool output_specified{false};
 
-  CommandLine() = default;
   ~CommandLine() {
     if (current_file != NULL && !is_stdin) {
       fclose(current_file);
