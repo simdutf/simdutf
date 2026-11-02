@@ -41,8 +41,9 @@ var index =
     [ "Compiling without the C++ standard library", "index.html#autotoc_md32", null ],
     [ "C API (C11 or better)", "index.html#autotoc_md33", null ],
     [ "SIMDUTF_USE_STATIC_INITIALIZATION", "index.html#autotoc_md34", null ],
-    [ "Thread safety", "index.html#autotoc_md35", null ],
-    [ "References", "index.html#autotoc_md36", null ],
-    [ "Citing this work", "index.html#autotoc_md37", null ],
-    [ "License", "index.html#autotoc_md38", null ]
+    [ "ABI compatibility", "index.html#autotoc_md35", null ],
+    [ "Thread safety", "index.html#autotoc_md36", null ],
+    [ "References", "index.html#autotoc_md37", null ],
+    [ "Citing this work", "index.html#autotoc_md38", null ],
+    [ "License", "index.html#autotoc_md39", null ]
 ];

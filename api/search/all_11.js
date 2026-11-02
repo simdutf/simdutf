@@ -1,7 +1,7 @@
 var searchData=
 [
   ['safe_20conversion_20functions_0',['Cost of the safe conversion functions',['../index.html#autotoc_md13',1,'']]],
-  ['safety_1',['Thread safety',['../index.html#autotoc_md35',1,'']]],
+  ['safety_1',['Thread safety',['../index.html#autotoc_md36',1,'']]],
   ['second_2',['simdutf: Text processing at billions of characters per second',['../index.html',1,'']]],
   ['selection_3',['Manual implementation selection',['../index.html#autotoc_md28',1,'']]],
   ['short_20input_20benchmarks_4',['Short input benchmarks',['../index.html#autotoc_md31',1,'']]],

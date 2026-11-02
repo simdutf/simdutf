@@ -2791,9 +2791,18 @@ SIMDUTF_USE_STATIC_INITIALIZATION</h1>
 <p>When building without the C++ standard library (<span class="tt">SIMDUTF_NO_LIBCXX=1</span>), static initialization is always used because the C++ runtime's thread-safe function-local static initialization relies on the standard library.</p>
 <p><em>Further reading</em>: <a href="https://en.cppreference.com/cpp/language/siof">Static Initialization Order Fiasco</a></p>
 <h1 class="doxsection"><a class="anchor" id="autotoc_md35"></a>
+ABI compatibility</h1>
+<p>If you link against a prebuilt simdutf library (e.g., a shared library provided by a Linux distribution), your code and the library must be compiled with consistent settings. Otherwise, your code may compile but fail to link with undefined symbols. In particular:</p>
+<ul>
+<li><b>C++ standard.</b> Ensure that your code is compiled with the same C++ standard as the library. The CMake option <span class="tt">SIMDUTF_CXX_STANDARD</span> sets the standard used to compile the library (e.g., <span class="tt">cmake -B build -DSIMDUTF_CXX_STANDARD=20</span>).</li>
+<li><b>C++ standard library.</b> Use the same C++ standard library (e.g., libstdc++ or libc++) for your code and for simdutf.</li>
+<li><b>Feature macros.</b> The headers enable all features by default (<span class="tt">SIMDUTF_FEATURE_UTF8</span>, <span class="tt">SIMDUTF_FEATURE_BASE64</span>, and so forth). If the library was compiled with some features disabled, you must define the same macros to the same values when compiling your code.</li>
+<li><b>Windows DLLs.</b> When using simdutf as a DLL, your code must be compiled with <span class="tt">SIMDUTF_USING_WINDOWS_DYNAMIC_LIBRARY=1</span>. CMake sets this for you when you link against the <span class="tt"><a class="el" href="namespacesimdutf.html" title="helpers placed in namespace detail are not a part of the public API">simdutf</a></span> target.</li>
+</ul>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md36"></a>
 Thread safety</h1>
 <p>We built simdutf with thread safety in mind. The simdutf library is single-threaded throughout. The CPU detection, which runs the first time parsing is attempted and switches to the fastest parser for your CPU, is transparent and thread-safe. Our runtime dispatching is based on global objects that are instantiated on first use and may be discarded at the end of the main thread. If you have multiple threads running and some threads use the library while the main thread is cleaning up resources, you may encounter issues. If you expect such problems, you may consider using <a href="https://en.cppreference.com/w/cpp/utility/program/quick_exit">std::quick_exit</a>.</p>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md36"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md37"></a>
 References</h1>
 <ul>
 <li>Daniel Lemire, <a href="https://doi.org/10.1145/3859286">Fast Forgiving Base64 Decoding with SIMD Instructions</a>, ACM Transactions on Architecture and Code Optimization, 2026.</li>
@@ -2804,7 +2813,7 @@ References</h1>
 <li>Wojciech Muła, Daniel Lemire, <a href="https://arxiv.org/abs/1910.05109">Base64 encoding and decoding at almost the speed of a memory copy</a>, Software: Practice and Experience 50 (2), 2020.</li>
 <li>Wojciech Muła, Daniel Lemire, <a href="https://arxiv.org/abs/1704.00605">Faster Base64 Encoding and Decoding using AVX2 Instructions</a>, ACM Transactions on the Web 12 (3), 2018.</li>
 </ul>
-<h1 class="doxsection"><a class="anchor" id="autotoc_md37"></a>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md38"></a>
 Citing this work</h1>
 <p>If you use this library in your research, please cite our work:</p>
 <div class="fragment"><div class="line">@misc{simdutf,</div>
@@ -2813,7 +2822,7 @@ Citing this work</h1>
 <div class="line">  year={2021},</div>
 <div class="line">  note={\url{https://github.com/simdutf/simdutf}}</div>
 <div class="line">}</div>
-</div><!-- fragment --><h1 class="doxsection"><a class="anchor" id="autotoc_md38"></a>
+</div><!-- fragment --><h1 class="doxsection"><a class="anchor" id="autotoc_md39"></a>
 License</h1>
 <p>This code is made available under the <a href="https://www.apache.org/licenses/LICENSE-2.0.html">Apache License 2.0</a> as well as the MIT license. As a user, you can pick the license you prefer.</p>
 <p>We include a few competitive solutions under the benchmarks/competition directory. They are provided for research purposes only. </p>
