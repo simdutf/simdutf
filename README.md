@@ -93,7 +93,8 @@ The simdutf library is used by:
 - [fluentbit](https://github.com/fluent/fluent-bit), Fast and Lightweight Logs, Metrics and Traces processor for Linux, BSD, OSX and Windows,
 - [ghostty](https://github.com/ghostty-org/ghostty), Fast terminal emulator,
 - [uWebSockets](https://github.com/uNetworking/uWebSockets), web server for the most demanding of applications,
-- [vte](https://gitlab.gnome.org/GNOME/vte) (0.81.0 or better), a virtual terminal widget for GTK applications.
+- [vte](https://gitlab.gnome.org/GNOME/vte) (0.81.0 or better), a virtual terminal widget for GTK applications,
+- Microsoft products: [Edge](https://www.microsoft.com/edge), [Teams](https://www.microsoft.com/microsoft-teams), [VS Code](https://code.visualstudio.com), and the SQL Server Python driver [mssql-python](https://github.com/microsoft/mssql-python).
 
 
 
