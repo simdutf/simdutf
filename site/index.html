@@ -322,41 +322,41 @@ h2 {
 }
 .section-header { max-width: 800px; }
 
-/* ============ ADOPTERS ============ */
-.adopters {
-  padding: 56px 0;
+/* ============ USERS ============ */
+#users {
+  background: var(--bg-elevated);
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
-  background: var(--bg-elevated);
 }
-.adopters .label {
-  text-align: center;
-  font-size: 13px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  color: var(--fg-dim);
-  margin-bottom: 32px;
-}
-.adopters-grid {
+#users .section-header { max-width: 900px; margin: 0 auto; text-align: center; }
+#users .section-lede { margin-left: auto; margin-right: auto; }
+.usedby-grid {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 12px 28px;
-  align-items: center;
+  gap: 12px;
+  max-width: 1000px;
+  margin: 0 auto;
 }
-.adopter {
-  font-weight: 700;
-  font-size: 18px;
+.usedby-pill {
+  display: inline-block;
+  padding: 9px 18px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-card);
   color: var(--fg-muted);
-  padding: 8px 4px;
+  font-weight: 600;
+  font-size: 15px;
   letter-spacing: -0.01em;
-  opacity: .8;
   transition: all .2s;
-  text-decoration: none;
 }
-.adopter:hover { opacity: 1; color: var(--fg); }
-.adopter .v { color: var(--fg-dim); font-weight: 500; font-size: 14px; margin-left: 2px; }
+.usedby-pill:hover {
+  color: var(--fg);
+  border-color: var(--brand);
+  box-shadow: 0 6px 18px -8px var(--brand-glow);
+  transform: translateY(-1px);
+}
+.usedby-more { text-align: center; margin-top: 40px; }
 
 /* ============ FEATURES ============ */
 .features-grid {
@@ -738,6 +738,7 @@ footer {
     </a>
     <div class="nav-links">
       <a href="#features">Features</a>
+      <a href="#users">Users</a>
       <a href="#performance">Performance</a>
       <a href="#install">Install</a>
       <a href="api/">API Docs</a>
@@ -799,28 +800,53 @@ footer {
   </div>
 </section>
 
-<!-- ============ ADOPTERS ============ -->
-<div class="adopters">
+<!-- ============ USERS ============ -->
+<section id="users">
   <div class="container">
-    <div class="label">Powering production at</div>
-    <div class="adopters-grid">
-      <a class="adopter" href="https://nodejs.org/" target="_blank" rel="noopener">Node.js</a>
-      <a class="adopter" href="https://bun.sh" target="_blank" rel="noopener">Bun</a>
-      <a class="adopter" href="https://github.com/WebKit/WebKit" target="_blank" rel="noopener">WebKit</a>
-      <a class="adopter" href="https://www.chromium.org/" target="_blank" rel="noopener">Chromium</a>
-      <a class="adopter" href="https://github.com/cloudflare/workerd" target="_blank" rel="noopener">Cloudflare workerd</a>
-      <a class="adopter" href="https://github.com/oracle/graaljs" target="_blank" rel="noopener">Oracle GraalJS</a>
-      <a class="adopter" href="https://www.couchbase.com" target="_blank" rel="noopener">Couchbase</a>
-      <a class="adopter" href="https://ladybird.org" target="_blank" rel="noopener">Ladybird</a>
-      <a class="adopter" href="https://github.com/ghostty-org/ghostty" target="_blank" rel="noopener">Ghostty</a>
-      <a class="adopter" href="https://www.starrocks.io" target="_blank" rel="noopener">StarRocks</a>
-      <a class="adopter" href="https://github.com/fluent/fluent-bit" target="_blank" rel="noopener">Fluent Bit</a>
-      <a class="adopter" href="https://github.com/haskell/text" target="_blank" rel="noopener">haskell/text</a>
-      <a class="adopter" href="https://github.com/uNetworking/uWebSockets" target="_blank" rel="noopener">uWebSockets</a>
-      <a class="adopter" href="https://gitlab.gnome.org/GNOME/vte" target="_blank" rel="noopener">GNOME VTE</a>
+    <div class="section-header">
+      <span class="eyebrow">Trusted in production</span>
+      <h2>Used by the systems you already know</h2>
+      <p class="section-lede">
+        simdutf ships inside JavaScript runtimes, web browsers, databases, terminals and developer tools used by billions of people every day.
+      </p>
     </div>
+
+    <div class="usedby-grid">
+      <a class="usedby-pill" href="https://nodejs.org/" target="_blank" rel="noopener">Node.js</a>
+      <a class="usedby-pill" href="https://bun.sh" target="_blank" rel="noopener">Bun</a>
+      <a class="usedby-pill" href="https://deno.com" target="_blank" rel="noopener">Deno</a>
+      <a class="usedby-pill" href="https://github.com/WebKit/WebKit" target="_blank" rel="noopener">WebKit / Safari</a>
+      <a class="usedby-pill" href="https://www.chromium.org/" target="_blank" rel="noopener">Chromium</a>
+      <a class="usedby-pill" href="https://www.microsoft.com/edge" target="_blank" rel="noopener">Microsoft Edge</a>
+      <a class="usedby-pill" href="https://www.microsoft.com/microsoft-teams" target="_blank" rel="noopener">Microsoft Teams</a>
+      <a class="usedby-pill" href="https://code.visualstudio.com" target="_blank" rel="noopener">VS Code</a>
+      <a class="usedby-pill" href="https://github.com/cloudflare/workerd" target="_blank" rel="noopener">Cloudflare workerd</a>
+      <a class="usedby-pill" href="https://github.com/ClickHouse/ClickHouse" target="_blank" rel="noopener">ClickHouse</a>
+      <a class="usedby-pill" href="https://www.couchbase.com" target="_blank" rel="noopener">Couchbase</a>
+      <a class="usedby-pill" href="https://www.starrocks.io" target="_blank" rel="noopener">StarRocks</a>
+      <a class="usedby-pill" href="https://doris.apache.org" target="_blank" rel="noopener">Apache Doris</a>
+      <a class="usedby-pill" href="https://impala.apache.org" target="_blank" rel="noopener">Apache Impala</a>
+      <a class="usedby-pill" href="https://github.com/oracle/graaljs" target="_blank" rel="noopener">Oracle GraalJS</a>
+      <a class="usedby-pill" href="https://ladybird.org" target="_blank" rel="noopener">Ladybird</a>
+      <a class="usedby-pill" href="https://github.com/Samsung/escargot" target="_blank" rel="noopener">Samsung Escargot</a>
+      <a class="usedby-pill" href="https://github.com/Tencent-TDS/KuiklyUI" target="_blank" rel="noopener">Tencent KuiklyUI</a>
+      <a class="usedby-pill" href="https://github.com/cocos/cocos-engine" target="_blank" rel="noopener">Cocos</a>
+      <a class="usedby-pill" href="https://github.com/ghostty-org/ghostty" target="_blank" rel="noopener">Ghostty</a>
+      <a class="usedby-pill" href="https://gitlab.gnome.org/GNOME/vte" target="_blank" rel="noopener">GNOME VTE</a>
+      <a class="usedby-pill" href="https://github.com/fluent/fluent-bit" target="_blank" rel="noopener">Fluent Bit</a>
+      <a class="usedby-pill" href="https://rspamd.com" target="_blank" rel="noopener">rspamd</a>
+      <a class="usedby-pill" href="https://jami.net" target="_blank" rel="noopener">Jami</a>
+      <a class="usedby-pill" href="https://github.com/uNetworking/uWebSockets" target="_blank" rel="noopener">uWebSockets</a>
+      <a class="usedby-pill" href="https://github.com/haskell/text" target="_blank" rel="noopener">haskell/text</a>
+      <a class="usedby-pill" href="https://github.com/wasmerio/edgejs" target="_blank" rel="noopener">Wasmer Edge.js</a>
+      <a class="usedby-pill" href="https://github.com/deckhouse/prompp" target="_blank" rel="noopener">Prom++</a>
+    </div>
+
+    <p class="usedby-more">
+      <a class="btn btn-secondary" href="https://github.com/simdutf/simdutf#real-world-usage">See the full list &rarr;</a>
+    </p>
   </div>
-</div>
+</section>
 
 <!-- ============ FEATURES ============ -->
 <section id="features">
