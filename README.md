@@ -94,7 +94,31 @@ The simdutf library is used by:
 - [ghostty](https://github.com/ghostty-org/ghostty), Fast terminal emulator,
 - [uWebSockets](https://github.com/uNetworking/uWebSockets), web server for the most demanding of applications,
 - [vte](https://gitlab.gnome.org/GNOME/vte) (0.81.0 or better), a virtual terminal widget for GTK applications,
-- Microsoft products: [Edge](https://www.microsoft.com/edge), [Teams](https://www.microsoft.com/microsoft-teams), [VS Code](https://code.visualstudio.com), and the SQL Server Python driver [mssql-python](https://github.com/microsoft/mssql-python).
+- Microsoft products: [Edge](https://www.microsoft.com/edge), [Teams](https://www.microsoft.com/microsoft-teams), [VS Code](https://code.visualstudio.com), and the SQL Server Python driver [mssql-python](https://github.com/microsoft/mssql-python),
+- [Deno](https://deno.com), a JavaScript, TypeScript and WebAssembly runtime,
+- [ClickHouse](https://github.com/ClickHouse/ClickHouse), a real-time analytics database management system,
+- [Apache Doris](https://doris.apache.org), a real-time analytics database,
+- [Apache Impala](https://impala.apache.org), a distributed SQL query engine for Apache Hadoop,
+- [SereneDB](https://github.com/serenedb/serenedb), a real-time search and analytics database,
+- [Cocos](https://github.com/cocos/cocos-engine), a cross-platform game engine,
+- [Tencent KuiklyUI](https://github.com/Tencent-TDS/KuiklyUI), a Kotlin Multiplatform UI framework,
+- [Samsung Escargot](https://github.com/Samsung/escargot), a lightweight JavaScript engine,
+- [rspamd](https://rspamd.com), a fast spam filtering system,
+- [Jami](https://jami.net) and [OpenDHT](https://github.com/savoirfairelinux/opendht), a peer-to-peer communication platform and its distributed hash table,
+- [Rio](https://github.com/raphamorim/rio), a hardware-accelerated GPU terminal emulator,
+- [Geode](https://github.com/geode-sdk/geode), a Geometry Dash modding framework,
+- [UZDoom](https://github.com/UZDoom/UZDoom), a source port for Doom engine games,
+- [nodejs-mobile](https://github.com/nodejs-mobile/nodejs-mobile), Node.js for Android and iOS,
+- [Wasmer Edge.js](https://github.com/wasmerio/edgejs), a JavaScript runtime for edge computing,
+- [react-native-quick-crypto](https://github.com/margelo/react-native-quick-crypto) and [react-native-nitro-fetch](https://github.com/margelo/react-native-nitro-fetch), React Native libraries by Margelo,
+- [react-native-quick-base64](https://github.com/craftzdog/react-native-quick-base64), a fast base64 module for React Native,
+- [turbodbc](https://github.com/blue-yonder/turbodbc), a Python module to access relational databases via ODBC,
+- [Prom++](https://github.com/deckhouse/prompp), a high-performance fork of Prometheus,
+- [fastgltf](https://github.com/spnda/fastgltf), a fast glTF 2.0 library,
+- [AUI](https://github.com/aui-framework/aui), a declarative UI toolkit for C++20,
+- [PhotoshopAPI](https://github.com/EmilDohne/PhotoshopAPI), a library to read and write Photoshop files,
+- [zsv](https://github.com/liquidaty/zsv), a fast CSV parser and toolkit,
+- [MoonBit](https://github.com/moonbitlang/moon), the build system and package manager of the MoonBit language.
 
 
 
