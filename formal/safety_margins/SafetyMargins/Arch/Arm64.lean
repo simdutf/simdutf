@@ -267,4 +267,24 @@ theorem valid_utf16_arm_store (pre : List Nat) (ks : List Nat) (s m : Nat)
   have hden := valid_utf16_arm ks h m hm hb
   exact overshoot_le pre (expand16 ks) s 2 hs (by rw [L_expand16 ks h]; exact hden)
 
+
+/-! ## Per-target header constants
+
+The generic headers select their margin per target
+(`#if defined(SIMDUTF_IS_ARM64)`); these are the arm64 values. -/
+
+/-- `utf8_to_utf16.h` counts `K = 2` leading bytes on arm64: the stores fit
+(`okK 2`), the 16-byte loads at `pos + 51` stay in the input (`read_ok`), and
+`K = 1` fails the stores (`arm_888_tight`) and the loads (`read_K1_fails`). -/
+theorem hdr_utf8to16 :
+    okK 2 Utf8.arm_utf16 = true ∧ okK 1 Utf8.arm_utf16 = false ∧
+      (∀ pos xs, pos + 64 + (tk 2 xs + 1) ≤ xs.length → pos + 66 < xs.length) :=
+  ⟨K_arm_utf16.1, K_arm_utf16.2, fun pos xs h => read_ok 2 pos xs (by decide) h⟩
+
+/-- `valid_utf8_to_utf16.h` uses margin 3 on arm64: the stores fit
+(`valid_utf16_arm_store`, `m ≥ 3`), the 16-byte loads at `pos + 51` stay in
+the input, and margin 2 fails the stores (`valid_utf16_arm_tight`). -/
+theorem hdr_valid_utf8to16 (pos size : Nat) (h : pos + 64 + 3 ≤ size) :
+    pos + 66 < size := by omega
+
 end SafetyMargins.Arch.Arm64

@@ -468,6 +468,20 @@ theorem safe_utf16to8 (choose : List Nat → Iter)
     ∀ n xs, Pos xs → written (need 31 1 false) choose n xs ≤ L xs :=
   safe_of_paths _ utf16to8 cur_utf16to8 choose hc
 
+/-- One less overflows. With margin 0 the loop runs on an input of 31 units.
+Let the last one, lane 30, be a high surrogate (weight 2), and let the unit
+past the end of the input, which the kernel loads as lane 31, happen to be a
+low surrogate. The carry case then emits the 4 bytes of the pair for lane 30:
+`extra = 2`, which `safe_utf16to8_real` allows, and the store ends 2 bytes
+past `L`. The 32-unit load itself also reads one unit past the input. Like
+the other `wit_*`, this shows that the arithmetic is tight, not that a test
+reaches it. -/
+theorem wit_utf16to8 :
+    let xs := ascii 30 ++ [w8 0xD800]
+    xs.length = need 31 0 false ∧ xs.length < 32 ∧
+      (0xDC00 ≤ 0xDC00 ∧ 0xDC00 < 0xE000) ∧
+      L (xs.take 31) + 2 = L xs + 2 := by decide
+
 /-- The bytes written past `L` of the 31 consumed units. ASCII stores 31 and
 advances 31 (`extra = 0`). The 1/2-byte path keeps at most `spill` bytes of
 lane 31. A matched surrogate emits the low surrogate's 2 bytes early. Each

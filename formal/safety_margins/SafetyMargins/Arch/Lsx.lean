@@ -195,4 +195,24 @@ theorem valid_utf32_lsx_store (pre : List Nat) (ks : List Nat) (s m : Nat)
   have hden := valid_utf32_lsx ks h m hm hb
   exact overshoot_le pre (expand32 ks) s 2 hs (by rw [L_expand32 ks h]; exact hden)
 
+
+/-! ## Per-target header constants
+
+The generic headers select their margin per target
+(`#if defined(SIMDUTF_IS_LSX) || defined(SIMDUTF_IS_LASX)`); these are the
+LoongArch values. The stores alone would allow `K = 1` (UTF-32) and `K = 0`
+(Latin-1); the 16-byte loads at `pos + 51` need `K ≥ 2` (`read_K1_fails`). -/
+
+theorem hdr_utf8to32 : okK 2 utf8to32 = true ∧ (∀ pos xs, pos + 64 + (tk 2 xs + 1) ≤ xs.length → pos + 66 < xs.length) :=
+  ⟨by decide, fun pos xs h => read_ok 2 pos xs (by decide) h⟩
+
+theorem hdr_utf8toLatin1 : okK 2 utf8toLatin1 = true ∧ (∀ pos xs, pos + 64 + (tk 2 xs + 1) ≤ xs.length → pos + 66 < xs.length) :=
+  ⟨by decide, fun pos xs h => read_ok 2 pos xs (by decide) h⟩
+
+/-- `valid_utf8_to_utf32.h` uses margin 4 on LoongArch
+(`valid_utf32_lsx_store`, `m ≥ 4`; `valid_utf32_lsx_tight` for 3); the loads
+need only 3. -/
+theorem hdr_valid_utf8to32 (pos size : Nat) (h : pos + 64 + 4 ≤ size) :
+    pos + 66 < size := by omega
+
 end SafetyMargins.Arch.Lsx

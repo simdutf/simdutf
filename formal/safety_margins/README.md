@@ -175,26 +175,35 @@ they have seen `K` leading bytes, then loop while
     units, which is `L` of the 12 consumed bytes (`reach_L`, `window_888`).
   - `reach_lasx_888`: the check returns before the store, then `__lsx_vst`
     writes 8 units. `L` of the 13-byte window is at least 7, so `K ≥ 1`
-    covers it (`reach_L`). The header's `K = 3` is what `0xfff` and `0x924`
-    require.
+    covers it (`reach_L`). `K = 3` is what the x86 and POWER `0xfff` and
+    `0x924` paths require.
 - **`okK K paths`.** The list of `(stored, e + 1)` pairs of each kernel's
   `convert_masked_utf8_to_*` meets the condition above. `okK m* = true` and
   `okK (m* - 1) = false` give the optimum on writes.
 - **`read_ok` / `read_K1_fails`.** A 16-byte load at `pos + 51` needs
   `K ≥ 2`.
 
-| header | K before | write optimum | Lean |
-|---|---|---|---|
-| `utf8_to_utf16.h` | 8 | 3 (x86, ppc64, lsx, lasx); 2 (arm64) | `K_x86_utf16`, `K_la_utf16`, `K_arm_utf16` |
-| `utf8_to_utf32.h` | 8 | 3 (x86, ppc64, arm64); 1 (lsx, lasx) | `K_x86_utf32`, `K_la_utf32`, `Arm64.K_arm_utf32` |
-| `utf8_to_latin1.h` | 16 (`convert`), 8 (`_with_errors`) | 3 (x86, ppc64, arm64); 0 (lsx, lasx) | `K_x86_latin1`, `Arm64.K_arm_latin1`, `Lsx.K_utf8toLatin1`, `Lasx.K_lasx_latin1` |
-| `valid_utf8_to_latin1.h` | 8 | 3 | same lists |
+| header | K before | write optimum | now (with reads) | Lean |
+|---|---|---|---|---|
+| `utf8_to_utf16.h` | 8 | 3 (x86, ppc64, lsx, lasx); 2 (arm64) | 3; arm64 2 | `K_x86_utf16`, `K_la_utf16`, `K_arm_utf16`, `Arm64.hdr_utf8to16` |
+| `utf8_to_utf32.h` | 8 | 3 (x86, ppc64, arm64); 1 (lsx, lasx) | 3; lsx, lasx 2 | `K_x86_utf32`, `K_la_utf32`, `Arm64.K_arm_utf32`, `Lsx.hdr_utf8to32`, `Lasx.hdr_utf8to32` |
+| `utf8_to_latin1.h` | 16 (`convert`), 8 (`_with_errors`) | 3 (x86, ppc64, arm64); 0 (lsx, lasx) | 3; lsx, lasx 2 | `K_x86_latin1`, `Arm64.K_arm_latin1`, `Lsx.hdr_utf8toLatin1`, `Lasx.hdr_utf8toLatin1` |
+| `valid_utf8_to_latin1.h` | 8 | 3 | 3 | same lists |
 
-The headers are shared, so one constant must cover every architecture. With
-reads, `K = 3` suffices everywhere, and every header now uses `K = 3`.
+The headers are compiled once per kernel, and each selects its constant for
+the build target: `#if defined(SIMDUTF_IS_ARM64)` in `utf8_to_utf16.h`,
+`#if defined(SIMDUTF_IS_LSX) || defined(SIMDUTF_IS_LASX)` in
+`utf8_to_utf32.h` and `utf8_to_latin1.h`. On arm64 and LoongArch only those
+kernels compile the headers, so the value is the least that covers that
+target's stores and the 16-byte loads (`K ≥ 2`, `read_ok`). The x86 and
+POWER kernels keep `K = 3`. `valid_utf8_to_latin1.h` keeps `K = 3`
+everywhere: its loop has no `continuation_mask & 1` test, so `Reach` does
+not describe it.
 - `fff_tight` (x86) and `Arm64.arm_fff_tight` give `K = 2` failing on the
-  `0xfff` path.
+  `0xfff` path (x86; arm64 UTF-32 and Latin-1).
 - `Arm64.arm_888_tight` gives `K = 1` failing on arm64 UTF-16.
+- `read_K1_fails` gives `K = 1` failing on the loads, which is what keeps
+  lsx and lasx at 2.
 
 ### 3.1 The ASCII tail (`Validator.lean`, `Exact.lean`)
 
@@ -239,7 +248,8 @@ For example, `E0 80 80 80 80` followed by ASCII hits an error row (mask
 ## 4. `convert_valid` on valid UTF-8 (`Utf8.lean`)
 
 `valid_utf8_to_utf16.h` and `valid_utf8_to_utf32.h` use a fixed
-`safety_margin` (16 before, now 9 and 12). On valid input the cursor is exact, and the bytes after
+`safety_margin` (16 before, now 9 and 12, or 3 and 4 on the targets below).
+On valid input the cursor is exact, and the bytes after
 the last call (it ends by `pos + 63`) are at least `1 + m` bytes of complete
 characters.
 - **UTF-16.** A character of at most 3 bytes gives one unit
@@ -259,13 +269,17 @@ characters. The cursor and the tail are read from the C++.
 - `valid_utf32_store`: deficit 4, `m ≥ 12`, tail `expand32`. Shared header.
 - `Arm64.valid_utf16_arm_store`: deficit 2, `m ≥ 3`.
 - `Lsx.valid_utf32_lsx_store`, `Lasx.valid_utf32_lasx_store`: deficit 2,
-  `m ≥ 4`. The shared UTF-32 header stays at 12, and the shared UTF-16
-  header stays at 9, because the other architectures overshoot by 4.
+  `m ≥ 4`.
+
+The headers select the margin per target, as in §3. A margin of at least 3
+also keeps the 16-byte loads at `pos + 51` inside the input
+(`Arm64.hdr_valid_utf8to16`, `Lsx.hdr_valid_utf8to32`,
+`Lasx.hdr_valid_utf8to32`).
 
 | header | before | needed per architecture | now |
 |---|---|---|---|
-| `valid_utf8_to_utf16.h` | 16 | 9 (`valid_utf16_store`); arm64 3 (`Arm64.valid_utf16_arm_store`) | 9 |
-| `valid_utf8_to_utf32.h` | 16 | 12 (`valid_utf32_store`); lsx, lasx 4 (`Lsx.valid_utf32_lsx_store`, `Lasx.valid_utf32_lasx_store`) | 12 |
+| `valid_utf8_to_utf16.h` | 16 | 9 (`valid_utf16_store`); arm64 3 (`Arm64.valid_utf16_arm_store`) | 9; arm64 3 |
+| `valid_utf8_to_utf32.h` | 16 | 12 (`valid_utf32_store`); lsx, lasx 4 (`Lsx.valid_utf32_lsx_store`, `Lasx.valid_utf32_lasx_store`) | 12; lsx, lasx 4 |
 
 These functions require valid input. On invalid input no fixed margin bounds
 them, because a tail of continuation bytes has `L = 0`. The same holds for
@@ -303,7 +317,9 @@ On icelake UTF-16 → UTF-8, `safe_utf16to8` bounds the model end `.ahead`,
 which is `L` of the 32 loaded lanes. `safe_utf16to8_real` bounds the bytes
 written past `L` of the 31 consumed units once that extra is `spill` of lane
 31 (`ahead_spill`), the 2 bytes of a low surrogate carried out of lane 30
-(`ahead_carry`), or 0. The margin stays 1.
+(`ahead_carry`), or 0. The margin stays 1. `wit_utf16to8` shows that 0
+overflows: on 31 units ending with a high surrogate, a low surrogate past the
+input makes the carry case write 2 bytes past `L`.
 
 For the loops with no margin:
 - **UTF-16 → UTF-32** (low surrogates weigh 0) is safe on every architecture
@@ -317,7 +333,7 @@ For the loops with no margin:
 - **rvv:** every loop is `vl`-exact (`Rvv.safe_vla`).
 - **icelake UTF-8 decoders** store exact counts (`Icelake.safe_utf8`).
 
-Every loop now uses its optimal margin.
+Every loop now uses its optimal margin, for each target.
 
 ## 6. What is assumed
 
@@ -349,8 +365,10 @@ Every loop now uses its optimal margin.
   the arithmetic is tight, not that the C++ reaches that iteration on a
   concrete input. The UTF-32/UTF-16/Latin-1 witnesses and `arm_fff_tight`,
   `arm_888_tight` were confirmed with ASan on arm64 and x86, on buffers of
-  exactly `L` units, with the margin lowered by one. The `ahead` loops have
-  no witness: margin 1 there is also what the 32-unit load needs.
+  exactly `L` units, with the margin lowered by one. The icelake UTF-16 →
+  UTF-8 witness (`wit_utf16to8`) relies on the unit after the input being a
+  low surrogate, which no test controls; margin 1 there is also what the
+  32-unit load needs.
 - **Not modelled.** The final overlapping `utf16fix` block, at `n - 16` (or
   `n - 32` on icelake), is not a loop iteration; its store ends at `n`. The
   `utf16fix` blocks also rewrite `out[-1]`, behind the cursor.

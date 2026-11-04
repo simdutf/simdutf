@@ -12,7 +12,14 @@ simdutf_warn_unused size_t convert_valid(const char *input, size_t size,
   // generic directory.
   size_t pos = 0;
   char16_t *start{utf16_output};
-  const size_t safety_margin = 9; // proved in formal/safety_margins
+  // The least margin proved in formal/safety_margins for the kernels that
+  // compile this header. The arm64 calls overshoot by at most 2
+  // units and need 3; the others overshoot by 4 and need 9.
+#if defined(SIMDUTF_IS_ARM64)
+  const size_t safety_margin = 3;
+#else
+  const size_t safety_margin = 9;
+#endif
   while (pos + 64 + safety_margin <= size) {
     // this loop could be unrolled further. For example, we could process the
     // mask far more than 64 bytes.

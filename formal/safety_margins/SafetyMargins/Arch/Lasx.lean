@@ -226,4 +226,18 @@ theorem valid_utf32_lasx_store (pre : List Nat) (ks : List Nat) (s m : Nat)
   have hden := valid_utf32_lasx ks h m hm hb
   exact overshoot_le pre (expand32 ks) s 2 hs (by rw [L_expand32 ks h]; exact hden)
 
+
+/-! ## Per-target header constants (same as lsx; see `Lsx.hdr_utf8to32`) -/
+
+theorem hdr_utf8to32 : okK 2 lasx_utf32 = true ∧ (∀ pos xs, pos + 64 + (tk 2 xs + 1) ≤ xs.length → pos + 66 < xs.length) :=
+  ⟨by decide, fun pos xs h => read_ok 2 pos xs (by decide) h⟩
+
+theorem hdr_utf8toLatin1 : okK 2 lasx_latin1 = true ∧ (∀ pos xs, pos + 64 + (tk 2 xs + 1) ≤ xs.length → pos + 66 < xs.length) :=
+  ⟨by decide, fun pos xs h => read_ok 2 pos xs (by decide) h⟩
+
+/-- `valid_utf8_to_utf32.h` uses margin 4 on LoongArch
+(`valid_utf32_lasx_store`). -/
+theorem hdr_valid_utf8to32 (pos size : Nat) (h : pos + 64 + 4 ≤ size) :
+    pos + 66 < size := by omega
+
 end SafetyMargins.Arch.Lasx
