@@ -268,7 +268,8 @@ characters. The cursor and the tail are read from the C++.
 | `valid_utf8_to_utf32.h` | 16 | 12 (`valid_utf32_store`); lsx, lasx 4 (`Lsx.valid_utf32_lsx_store`, `Lasx.valid_utf32_lasx_store`) | 12 |
 
 These functions require valid input. On invalid input no fixed margin bounds
-them, because a tail of continuation bytes has `L = 0`.
+them, because a tail of continuation bytes has `L = 0`. The same holds for
+the icelake `valid_utf8_to_latin1`, which keeps unpaired continuation bytes.
 
 ## 5. Results: fixed-margin loops
 
@@ -323,10 +324,8 @@ Every loop now uses its optimal margin.
 - **Path tables.** Lean does not parse C++. Every table is a transcription,
   as is the reading that the kernels index the lookup tables the way
   `TableFacts` and `table_step` describe. A missed path would be a missed
-  store. The validator's three nibble tables (`Validator.byte1High`,
-  `byte1Low`, `byte2High`) are copied by hand from
-  `utf8_lookup4_algorithm.h`; the other tables are extracted by
-  `extract_tables.py`.
+  store. The lookup tables, including the validator's three nibble tables
+  from `utf8_lookup4_algorithm.h`, are extracted by `extract_tables.py`.
 - **Which call shape each kernel branch is.** That a branch is a table
   lookup, a fast path, or the `0x888` path, and which pair test it uses, is
   read from the C++. So is the shape of its stores: the `okK` pairs, and the
@@ -352,3 +351,10 @@ Every loop now uses its optimal margin.
   `arm_888_tight` were confirmed with ASan on arm64 and x86, on buffers of
   exactly `L` units, with the margin lowered by one. The `ahead` loops have
   no witness: margin 1 there is also what the 32-unit load needs.
+- **Not modelled.** The final overlapping `utf16fix` block, at `n - 16` (or
+  `n - 32` on icelake), is not a loop iteration; its store ends at `n`. The
+  `utf16fix` blocks also rewrite `out[-1]`, behind the cursor.
+- **With replacement.** `convert_utf16*_to_utf8_with_replacement` runs the
+  same kernels with a length function that counts an unpaired surrogate as
+  3 bytes. Every unit still weighs at least 1, so `Pos` holds, but no theorem
+  is stated for that length function.

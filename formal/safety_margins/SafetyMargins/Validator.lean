@@ -1,3 +1,4 @@
+import SafetyMargins.Tables
 /-
 The UTF-8 check of the generic transcoders, `check_utf8_bytes`
 (src/generic/utf8_to_utf16/utf8_to_utf16.h:118 and the utf32 and latin1
@@ -7,49 +8,10 @@ block whose first chunk has `prev_input = 0`.
 -/
 namespace SafetyMargins.Validator
 
-def TOO_SHORT : Nat := 1 <<< 0
-def TOO_LONG : Nat := 1 <<< 1
-def OVERLONG_3 : Nat := 1 <<< 2
-def TOO_LARGE : Nat := 1 <<< 3
-def SURROGATE : Nat := 1 <<< 4
-def OVERLONG_2 : Nat := 1 <<< 5
-def TOO_LARGE_1000 : Nat := 1 <<< 6
-def OVERLONG_4 : Nat := 1 <<< 6
-def TWO_CONTS : Nat := 1 <<< 7
-def CARRY : Nat := TOO_SHORT ||| TOO_LONG ||| TWO_CONTS
-
-def byte1High : Array Nat :=
-  #[TOO_LONG, TOO_LONG, TOO_LONG, TOO_LONG, TOO_LONG, TOO_LONG, TOO_LONG, TOO_LONG,
-    TWO_CONTS, TWO_CONTS, TWO_CONTS, TWO_CONTS,
-    TOO_SHORT ||| OVERLONG_2,
-    TOO_SHORT,
-    TOO_SHORT ||| OVERLONG_3 ||| SURROGATE,
-    TOO_SHORT ||| TOO_LARGE ||| TOO_LARGE_1000 ||| OVERLONG_4]
-
-def byte1Low : Array Nat :=
-  #[CARRY ||| OVERLONG_3 ||| OVERLONG_2 ||| OVERLONG_4,
-    CARRY ||| OVERLONG_2,
-    CARRY, CARRY,
-    CARRY ||| TOO_LARGE,
-    CARRY ||| TOO_LARGE ||| TOO_LARGE_1000,
-    CARRY ||| TOO_LARGE ||| TOO_LARGE_1000,
-    CARRY ||| TOO_LARGE ||| TOO_LARGE_1000,
-    CARRY ||| TOO_LARGE ||| TOO_LARGE_1000,
-    CARRY ||| TOO_LARGE ||| TOO_LARGE_1000,
-    CARRY ||| TOO_LARGE ||| TOO_LARGE_1000,
-    CARRY ||| TOO_LARGE ||| TOO_LARGE_1000,
-    CARRY ||| TOO_LARGE ||| TOO_LARGE_1000,
-    CARRY ||| TOO_LARGE ||| TOO_LARGE_1000 ||| SURROGATE,
-    CARRY ||| TOO_LARGE ||| TOO_LARGE_1000,
-    CARRY ||| TOO_LARGE ||| TOO_LARGE_1000]
-
-def byte2High : Array Nat :=
-  #[TOO_SHORT, TOO_SHORT, TOO_SHORT, TOO_SHORT, TOO_SHORT, TOO_SHORT, TOO_SHORT, TOO_SHORT,
-    TOO_LONG ||| OVERLONG_2 ||| TWO_CONTS ||| OVERLONG_3 ||| TOO_LARGE_1000 ||| OVERLONG_4,
-    TOO_LONG ||| OVERLONG_2 ||| TWO_CONTS ||| OVERLONG_3 ||| TOO_LARGE,
-    TOO_LONG ||| OVERLONG_2 ||| TWO_CONTS ||| SURROGATE ||| TOO_LARGE,
-    TOO_LONG ||| OVERLONG_2 ||| TWO_CONTS ||| SURROGATE ||| TOO_LARGE,
-    TOO_SHORT, TOO_SHORT, TOO_SHORT, TOO_SHORT]
+/-- The three nibble tables, extracted from the C++ by `extract_tables.py`. -/
+def byte1High : Array Nat := Tables.byte1High
+def byte1Low : Array Nat := Tables.byte1Low
+def byte2High : Array Nat := Tables.byte2High
 
 /-- `check_special_cases` on one byte and the byte before it. -/
 def sc (p1 c : Nat) : Nat := byte1High[p1 / 16]! &&& byte1Low[p1 % 16]! &&& byte2High[c / 16]!

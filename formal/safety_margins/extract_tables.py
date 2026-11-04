@@ -28,6 +28,46 @@ def array(path, name):
             cur.append(int(s, 0))
     return rows
 
+def lookup16(path, func, names):
+    text = (root / path).read_text()
+    text = re.sub(r"//.*", "", text)
+    text = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
+    m = re.search(r"\b" + func + r"\s*\([^)]*\)\s*\{", text)
+    if not m:
+        sys.exit(f"cannot find {func} in {path}")
+    body = text[m.end():text.index("\n}", m.end())]
+    env = {}
+    def ev(expr):
+        expr = " ".join(expr.split())
+        if not re.fullmatch(r"[A-Z0-9_ |<x]+", expr.replace("<<", "<")):
+            sys.exit(f"unexpected expression {expr!r} in {func}")
+        v = 0
+        for term in expr.split("|"):
+            term = term.strip()
+            if "<<" in term:
+                a, b = term.split("<<")
+                v |= int(a, 0) << int(b, 0)
+            elif term in env:
+                v |= env[term]
+            else:
+                v |= int(term, 0)
+        return v
+    for c in re.finditer(r"constexpr\s+const\s+uint8_t\s+(\w+)\s*=\s*([^;]*);", body):
+        env[c.group(1)] = ev(c.group(2))
+    out = {}
+    for name in names:
+        c = re.search(r"\b" + name + r"\s*=.*?lookup_16\s*<\s*uint8_t\s*>\s*\(([^;]*?)\)\s*;", body, flags=re.S)
+        if not c:
+            sys.exit(f"cannot find lookup_16 for {name} in {func}")
+        vals = [ev(x) for x in c.group(1).split(",")]
+        if len(vals) != 16 or any(not 0 <= v < 256 for v in vals):
+            sys.exit(f"{name}: expected 16 byte values")
+        out[name] = vals
+    return out
+
+val = lookup16("src/generic/utf8_validation/utf8_lookup4_algorithm.h", "check_special_cases",
+               ["byte_1_high", "byte_1_low", "byte_2_high"])
+
 p12 = array("src/tables/utf16_to_utf8_tables.h", "pack_1_2_utf8_bytes")
 p123 = array("src/tables/utf16_to_utf8_tables.h", "pack_1_2_3_utf8_bytes")
 big = array("src/tables/utf8_to_utf16_tables.h", "utf8bigindex")
@@ -51,6 +91,9 @@ out.append("/-- `utf8bigindex[i][1]`: number of input bytes consumed. -/")
 out.append("def bigConsumed : Array Nat := " + lean_list(r[1] for r in big) + "\n")
 out.append("/-- `shufutf8` (src/tables/utf8_to_utf16_tables.h), rows flattened: entry `16 * idx + j`. -/")
 out.append("def shuf : Array Nat := " + lean_list(x for r in shuf for x in r) + "\n")
+for cname, lname in [("byte_1_high", "byte1High"), ("byte_1_low", "byte1Low"), ("byte_2_high", "byte2High")]:
+    out.append(f"/-- `{cname}` of `check_special_cases` (src/generic/utf8_validation/utf8_lookup4_algorithm.h). -/")
+    out.append(f"def {lname} : Array Nat := " + lean_list(val[cname]) + "\n")
 out.append("end SafetyMargins.Tables")
 (root / "formal/safety_margins/SafetyMargins/Tables.lean").write_text("\n".join(out) + "\n")
 print("ok")
