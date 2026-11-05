@@ -1,5 +1,6 @@
 import SafetyMargins.Kernels
 import SafetyMargins.Utf8
+import SafetyMargins.ValidLatin1
 /-
 LoongArch LASX: every transcoding loop of src/lasx/*.cpp and of the generic
 headers as instantiated for lasx (base64 excluded). A `__lsx_vst` is 16 bytes
@@ -239,5 +240,21 @@ theorem hdr_utf8toLatin1 : okK 2 lasx_latin1 = true ∧ (∀ pos xs, pos + 64 + 
 (`valid_utf32_lasx_store`). -/
 theorem hdr_valid_utf8to32 (pos size : Nat) (h : pos + 64 + 4 ≤ size) :
     pos + 66 < size := by omega
+
+
+/-- `valid_utf8_to_latin1.h` counts `K = 2` leading bytes on LoongArch. On the
+input its contract allows (`ValidLatin1.LV`), every store of a call fits with
+this kernel's Latin-1 list at `K = 2` (`ValidLatin1.valid_latin1_okK`; the list
+needs only `K = 0`), and the 16-byte loads at `pos + 51` stay in the input
+(`read_ok`). `K = 1` fails on the loads (`read_K1_fails`, an ASCII input,
+`ValidLatin1.lv_ascii`). -/
+theorem hdr_valid_utf8toLatin1 (bs : List Nat) (hv : ValidLatin1.LV bs)
+    (pos t o d : Nat) (q : MPath) (h : ValidLatin1.VReach bs true pos t o)
+    (hloop : pos + 64 + (tk 2 (bs.map Exact.w01) + 1) ≤ (bs.map Exact.w01).length)
+    (hd : t + d ≤ pos + 64) (hq : q ∈ lasx_latin1)
+    (hf : q.f ≤ cont (bs.map Exact.w01) t + cnt (((bs.map Exact.w01).drop t).take d)) :
+    o + q.s ≤ L (bs.map Exact.w01) ∧ pos + 66 < (bs.map Exact.w01).length :=
+  ⟨ValidLatin1.valid_latin1_okK hv 2 pos t o d lasx_latin1 q h hloop hd (by decide) hq hf,
+   read_ok 2 pos _ (by decide) hloop⟩
 
 end SafetyMargins.Arch.Lasx

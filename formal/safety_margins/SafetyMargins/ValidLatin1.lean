@@ -30,6 +30,13 @@ inductive LV : List Nat → Prop
   | two (c d : Nat) (rest : List Nat) (hc : 0xC2 ≤ c ∧ c ≤ 0xC3)
       (hd : 0x80 ≤ d ∧ d < 0xC0) (h : LV rest) : LV (c :: d :: rest)
 
+/-- ASCII input satisfies the contract; `read_K1_fails` (66 ASCII bytes) is
+therefore an input this header accepts, so the loads alone rule out `K = 1`. -/
+theorem lv_ascii (n : Nat) : LV (List.replicate n 0x41) := by
+  induction n with
+  | zero => exact LV.nil
+  | succ n ih => exact LV.one 0x41 _ (by decide) ih
+
 theorem LV.lt256 {bs : List Nat} (h : LV bs) : ∀ b ∈ bs, b < 256 := by
   induction h with
   | nil => simp

@@ -189,17 +189,18 @@ they have seen `K` leading bytes, then loop while
 | `utf8_to_utf16.h` | 8 | 3 (x86, ppc64, lsx, lasx); 2 (arm64) | 3; arm64 2 | `K_x86_utf16`, `K_la_utf16`, `K_arm_utf16`, `Arm64.hdr_utf8to16` |
 | `utf8_to_utf32.h` | 8 | 3 (x86, ppc64, arm64); 1 (lsx, lasx) | 3; lsx, lasx 2 | `K_x86_utf32`, `K_la_utf32`, `Arm64.K_arm_utf32`, `Lsx.hdr_utf8to32`, `Lasx.hdr_utf8to32` |
 | `utf8_to_latin1.h` | 16 (`convert`), 8 (`_with_errors`) | 3 (x86, ppc64, arm64); 0 (lsx, lasx) | 3; lsx, lasx 2 | `K_x86_latin1`, `Arm64.K_arm_latin1`, `Lsx.hdr_utf8toLatin1`, `Lasx.hdr_utf8toLatin1` |
-| `valid_utf8_to_latin1.h` | 8 | 3 | 3 | same lists, through `ValidLatin1.vreach_reach` |
+| `valid_utf8_to_latin1.h` | 8 | 3 | 3; lsx, lasx 2 | same lists, through `ValidLatin1.vreach_reach`; `Lsx.hdr_valid_utf8toLatin1`, `Lasx.hdr_valid_utf8toLatin1` |
 
 The headers are compiled once per kernel, and each selects its constant for
 the build target: `#if defined(SIMDUTF_IS_ARM64)` in `utf8_to_utf16.h`,
 `#if defined(SIMDUTF_IS_LSX) || defined(SIMDUTF_IS_LASX)` in
-`utf8_to_utf32.h` and `utf8_to_latin1.h`. On arm64 and LoongArch only those
+`utf8_to_utf32.h`, `utf8_to_latin1.h` and `valid_utf8_to_latin1.h`. On arm64 and LoongArch only those
 kernels compile the headers, so the value is the least that covers that
 target's stores and the 16-byte loads (`K ≥ 2`, `read_ok`). The x86 and
-POWER kernels keep `K = 3`. `valid_utf8_to_latin1.h` keeps `K = 3`
-everywhere; its loop has no `continuation_mask & 1` test, so §3.2 proves it
-separately on the input its contract allows.
+POWER kernels keep `K = 3`. `valid_utf8_to_latin1.h` keeps `K = 3` on x86,
+POWER and arm64 and uses `K = 2` on LoongArch; its loop has no
+`continuation_mask & 1` test, so §3.2 proves it separately on the input its
+contract allows.
 - `fff_tight` (x86) and `Arm64.arm_fff_tight` give `K = 2` failing on the
   `0xfff` path (x86; arm64 UTF-32 and Latin-1).
 - `Arm64.arm_888_tight` gives `K = 1` failing on arm64 UTF-16.
@@ -269,8 +270,10 @@ that starts on a continuation byte, and the tail is scalar.
 - **Stores.** `valid_latin1_okK`, `valid_latin1_row` and `valid_latin1_fff`
   are `reach_okK`, `reach_row` and `reach_x86_latin1_fff` through
   `vreach_reach`, with the same Latin-1 lists and `K = 3`
-  (`Utf8.K_x86_latin1`, `Arm64.K_arm_latin1`, `Ppc64.K_ppc_latin1`; the lsx
-  and lasx lists need `K = 0`). The 16-byte loads need `K ≥ 2` (`read_ok`).
+  (`Utf8.K_x86_latin1`, `Arm64.K_arm_latin1`, `Ppc64.K_ppc_latin1`). The lsx
+  and lasx lists need `K = 0`, and the 16-byte loads need `K ≥ 2`
+  (`read_ok`), so LoongArch uses `K = 2`: `Lsx.hdr_valid_utf8toLatin1` and
+  `Lasx.hdr_valid_utf8toLatin1` give the stores and the loads at `K = 2`.
 - **`valid_latin1_tail`.** The scalar tail writes one byte per leading byte,
   `L` of the rest, after a cursor at most `L` of the consumed bytes.
 
