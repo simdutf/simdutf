@@ -31,6 +31,7 @@ and the pair tests on all valid 4-byte characters (`Exact.pair4`).
 | `SafetyMargins/Utf8.lean` | the dynamic margin of the UTF-8 decoders, and `convert_valid` on valid input |
 | `SafetyMargins/Validator.lean` | the UTF-8 check `check_utf8_bytes`, and the character structure of a block that passes it |
 | `SafetyMargins/Exact.lean` | exact output on checked blocks, the in-loop store on unit weights, and the ASCII tail |
+| `SafetyMargins/ValidLatin1.lean` | `valid_utf8_to_latin1.h` on the valid, Latin-1-representable input its contract allows |
 | `SafetyMargins/Utf8Table.lean` | the decoder's per-call facts, derived from the `utf8bigindex` and `shufutf8` tables and the lane arithmetic |
 | `SafetyMargins/Tables.lean` | lookup tables extracted from `src/tables/` by `extract_tables.py`; don't edit it by hand |
 | `SafetyMargins/TableFacts.lean` | facts about those tables |
@@ -188,7 +189,7 @@ they have seen `K` leading bytes, then loop while
 | `utf8_to_utf16.h` | 8 | 3 (x86, ppc64, lsx, lasx); 2 (arm64) | 3; arm64 2 | `K_x86_utf16`, `K_la_utf16`, `K_arm_utf16`, `Arm64.hdr_utf8to16` |
 | `utf8_to_utf32.h` | 8 | 3 (x86, ppc64, arm64); 1 (lsx, lasx) | 3; lsx, lasx 2 | `K_x86_utf32`, `K_la_utf32`, `Arm64.K_arm_utf32`, `Lsx.hdr_utf8to32`, `Lasx.hdr_utf8to32` |
 | `utf8_to_latin1.h` | 16 (`convert`), 8 (`_with_errors`) | 3 (x86, ppc64, arm64); 0 (lsx, lasx) | 3; lsx, lasx 2 | `K_x86_latin1`, `Arm64.K_arm_latin1`, `Lsx.hdr_utf8toLatin1`, `Lasx.hdr_utf8toLatin1` |
-| `valid_utf8_to_latin1.h` | 8 | 3 | 3 | same lists |
+| `valid_utf8_to_latin1.h` | 8 | 3 | 3 | same lists, through `ValidLatin1.vreach_reach` |
 
 The headers are compiled once per kernel, and each selects its constant for
 the build target: `#if defined(SIMDUTF_IS_ARM64)` in `utf8_to_utf16.h`,
@@ -197,8 +198,8 @@ the build target: `#if defined(SIMDUTF_IS_ARM64)` in `utf8_to_utf16.h`,
 kernels compile the headers, so the value is the least that covers that
 target's stores and the 16-byte loads (`K ≥ 2`, `read_ok`). The x86 and
 POWER kernels keep `K = 3`. `valid_utf8_to_latin1.h` keeps `K = 3`
-everywhere: its loop has no `continuation_mask & 1` test, so `Reach` does
-not describe it.
+everywhere; its loop has no `continuation_mask & 1` test, so §3.2 proves it
+separately on the input its contract allows.
 - `fff_tight` (x86) and `Arm64.arm_fff_tight` give `K = 2` failing on the
   `0xfff` path (x86; arm64 UTF-32 and Latin-1).
 - `Arm64.arm_888_tight` gives `K = 1` failing on arm64 UTF-16.
@@ -244,6 +245,34 @@ For example, `E0 80 80 80 80` followed by ASCII hits an error row (mask
   `reach_count`, `reach_arm_888` and `reach_lasx_888`.
   `valid_utf8_to_latin1.h` is outside this theorem: the loop has no
   `continuation_mask & 1` test, and the tail is scalar `convert_valid`.
+  §3.2 covers it.
+
+### 3.2 `valid_utf8_to_latin1.h` (`ValidLatin1.lean`)
+
+The contract of `convert_valid_utf8_to_latin1` requires valid UTF-8 that
+Latin-1 can represent: every character is an ASCII byte, or `0xC2`/`0xC3`
+followed by one continuation byte (`LV`). The loop does not reject a block
+that starts on a continuation byte, and the tail is scalar.
+
+- **`VReach`** is the loop: `Reach` without the test on the first byte of a
+  block, with only the loop test (`t + 64 ≤ length`) and with calls that end
+  just before a leading byte.
+- **`vreach_reach`.** On `LV` input every state of `VReach` is a state of
+  `Reach`, because every block head is a leading byte: the input starts with
+  one (`LV.first`), an ASCII byte is never followed by a continuation byte
+  (`LV.after_ascii`), and every call ends just before a leading byte.
+- **`table_conv`.** On `LV` input no table call takes an error row: two
+  continuation bytes are never adjacent (`LV.no2`), so the 12-bit mask is well
+  shaped and `well_noerr` applies; the call then ends just before a leading
+  byte (`row_conv`). The fast paths are `count_step`. The `0x888` path needs
+  three adjacent continuation bytes and cannot occur.
+- **Stores.** `valid_latin1_okK`, `valid_latin1_row` and `valid_latin1_fff`
+  are `reach_okK`, `reach_row` and `reach_x86_latin1_fff` through
+  `vreach_reach`, with the same Latin-1 lists and `K = 3`
+  (`Utf8.K_x86_latin1`, `Arm64.K_arm_latin1`, `Ppc64.K_ppc_latin1`; the lsx
+  and lasx lists need `K = 0`). The 16-byte loads need `K ≥ 2` (`read_ok`).
+- **`valid_latin1_tail`.** The scalar tail writes one byte per leading byte,
+  `L` of the rest, after a cursor at most `L` of the consumed bytes.
 
 ## 4. `convert_valid` on valid UTF-8 (`Utf8.lean`)
 
@@ -351,8 +380,9 @@ Every loop now uses its optimal margin, for each target.
   `Arm64.valid_utf16_arm_store`, `Lsx.valid_utf32_lsx_store` and
   `Lasx.valid_utf32_lasx_store` assume the cursor equals `L` of the consumed
   prefix and the unread tail is the expansion of complete characters. Both
-  are read from the C++. `valid_utf8_to_latin1.h` is not among them: it has
-  no `continuation_mask & 1` test, and its tail is scalar.
+  are read from the C++. `valid_utf8_to_latin1.h` is not among them; §3.2
+  covers it, under its contract (`LV` input). That the scalar tail writes one
+  byte per character is read from the C++.
 - **Ice Lake real ends.** `safe_utf16to32_real` assumes the surrogate
   iteration runs only when `16 ≤ L` of the 32 loaded lanes.
   `safe_utf16to8_real` assumes each `.ahead` iteration's extra bytes are the

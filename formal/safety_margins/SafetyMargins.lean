@@ -13,3 +13,4 @@ import SafetyMargins.Arch.Ppc64
 import SafetyMargins.Arch.Rvv
 import SafetyMargins.Arch.Lsx
 import SafetyMargins.Arch.Lasx
+import SafetyMargins.ValidLatin1
