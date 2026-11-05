@@ -30,8 +30,10 @@ inductive LV : List Nat → Prop
   | two (c d : Nat) (rest : List Nat) (hc : 0xC2 ≤ c ∧ c ≤ 0xC3)
       (hd : 0x80 ≤ d ∧ d < 0xC0) (h : LV rest) : LV (c :: d :: rest)
 
-/-- ASCII input satisfies the contract; `read_K1_fails` (66 ASCII bytes) is
-therefore an input this header accepts, so the loads alone rule out `K = 1`. -/
+/-- ASCII input satisfies the contract, so the input of `read_K1_fails`
+(66 ASCII bytes) is one this header accepts: with `K = 1` its loop test does
+not guarantee the 16-byte load at `pos + 51`. The C++ takes the ASCII path on
+that input; the overread with `K = 1` is shown by the negative controls. -/
 theorem lv_ascii (n : Nat) : LV (List.replicate n 0x41) := by
   induction n with
   | zero => exact LV.nil
@@ -270,7 +272,8 @@ theorem valid_latin1_row {bs : List Nat} (hv : LV bs) (K pos t o : Nat)
   reach_row K pos t o (bs.map w01) ps q (row (bs.map w01) t) (vreach_reach hv _ _ _ _ h).1
     hloop hi (fun k _ => getD_w01 bs (t + k)) hd hK hq hf
 
-/-- The header counts `K = 3` leading bytes on every target. With the
+/-- The header counts `K = 3` leading bytes on x86, POWER and arm64 (`K = 2`
+on LoongArch: `Lsx.hdr_valid_utf8toLatin1`, `Lasx.hdr_valid_utf8toLatin1`). With the
 kernels' Latin-1 store paths, `K = 3` covers every store
 (`Utf8.K_x86_latin1`, `Arm64.K_arm_latin1`, `Ppc64.K_ppc_latin1`; the lsx
 and lasx lists need only `K = 0`), and the 16-byte loads at `pos + 51` need

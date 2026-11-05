@@ -275,7 +275,8 @@ The generic headers select their margin per target
 
 /-- `utf8_to_utf16.h` counts `K = 2` leading bytes on arm64: the stores fit
 (`okK 2`), the 16-byte loads at `pos + 51` stay in the input (`read_ok`), and
-`K = 1` fails the stores (`arm_888_tight`) and the loads (`read_K1_fails`). -/
+`K = 1` fails the stores (`arm_888_tight`), and its loop test does not
+guarantee the loads (`read_K1_fails`). -/
 theorem hdr_utf8to16 :
     okK 2 Utf8.arm_utf16 = true ∧ okK 1 Utf8.arm_utf16 = false ∧
       (∀ pos xs, pos + 64 + (tk 2 xs + 1) ≤ xs.length → pos + 66 < xs.length) :=

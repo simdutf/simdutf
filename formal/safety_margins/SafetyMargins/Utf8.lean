@@ -212,8 +212,12 @@ theorem read_ok (K pos : Nat) (xs : List Nat) (hK : 2 ≤ K)
   have := tk_ge K xs hlt
   omega
 
-/-- and `K = 1` does not: 66 ASCII bytes, `tk 1 = 1`, the loop runs at
-`pos = 0`, byte 66 is past the end. -/
+/-- and `K = 1` does not guarantee it: on 66 ASCII bytes, `tk 1 = 1`, the loop
+test admits a block at `pos = 0`, and byte 66 is past the end.
+This bounds only the loop test. On 66 ASCII bytes the C++ takes the ASCII
+path of the block, which does not load at `pos + 51`; that the C++ reads
+past the input with `K = 1` is shown by the negative controls, whose
+faulting inputs are not ASCII, not by this theorem. -/
 theorem read_K1_fails :
     let xs := List.replicate 66 1
     0 + 64 + (tk 1 xs + 1) ≤ xs.length ∧ ¬ (0 + 66 < xs.length) := by decide

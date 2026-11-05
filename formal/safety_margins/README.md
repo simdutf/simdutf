@@ -181,8 +181,12 @@ they have seen `K` leading bytes, then loop while
 - **`okK K paths`.** The list of `(stored, e + 1)` pairs of each kernel's
   `convert_masked_utf8_to_*` meets the condition above. `okK m* = true` and
   `okK (m* - 1) = false` give the optimum on writes.
-- **`read_ok` / `read_K1_fails`.** A 16-byte load at `pos + 51` needs
-  `K ≥ 2`.
+- **`read_ok` / `read_K1_fails`.** A 16-byte load at `pos + 51` stays in the
+  input when `K ≥ 2`. With `K = 1` the loop test does not guarantee it: on 66
+  ASCII bytes it admits a block at `pos = 0`. That is a bound on the loop test
+  only; on that input the C++ takes the ASCII path, which does not load at
+  `pos + 51`. The negative controls with `K = 1` on LoongArch, whose faulting
+  inputs are not ASCII, show the overread in the C++.
 
 | header | K before | write optimum | now (with reads) | Lean |
 |---|---|---|---|---|
@@ -204,8 +208,9 @@ contract allows.
 - `fff_tight` (x86) and `Arm64.arm_fff_tight` give `K = 2` failing on the
   `0xfff` path (x86; arm64 UTF-32 and Latin-1).
 - `Arm64.arm_888_tight` gives `K = 1` failing on arm64 UTF-16.
-- `read_K1_fails` gives `K = 1` failing on the loads, which is what keeps
-  lsx and lasx at 2.
+- `read_K1_fails` shows that with `K = 1` the loop test no longer guarantees
+  the loads, which is what keeps lsx and lasx at 2; the LoongArch `K = 1`
+  controls fault.
 
 ### 3.1 The ASCII tail (`Validator.lean`, `Exact.lean`)
 

@@ -246,8 +246,9 @@ theorem hdr_valid_utf8to32 (pos size : Nat) (h : pos + 64 + 4 ≤ size) :
 input its contract allows (`ValidLatin1.LV`), every store of a call fits with
 this kernel's Latin-1 list at `K = 2` (`ValidLatin1.valid_latin1_okK`; the list
 needs only `K = 0`), and the 16-byte loads at `pos + 51` stay in the input
-(`read_ok`). `K = 1` fails on the loads (`read_K1_fails`, an ASCII input,
-`ValidLatin1.lv_ascii`). -/
+(`read_ok`). With `K = 1` the loop test no longer guarantees those loads
+(`read_K1_fails`, `ValidLatin1.lv_ascii`); the overread itself is shown by
+the negative controls. -/
 theorem hdr_valid_utf8toLatin1 (bs : List Nat) (hv : ValidLatin1.LV bs)
     (pos t o d : Nat) (q : MPath) (h : ValidLatin1.VReach bs true pos t o)
     (hloop : pos + 64 + (tk 2 (bs.map Exact.w01) + 1) ≤ (bs.map Exact.w01).length)
