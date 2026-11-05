@@ -50,7 +50,7 @@ if(WIN32 AND BUILD_SHARED_LIBS)
   add_custom_command(TARGET stream POST_BUILD        # Adds a post-build event
     COMMAND ${CMAKE_COMMAND} -E copy_if_different  # which executes "cmake -E copy_if_different..."
         "$<TARGET_FILE:simdutf>"      # <--this is in-file
-        "$<TARGET_FILE_DIR:random_fuzzer>")                 # <--this is out-file path
+        "$<TARGET_FILE_DIR:stream>")                 # <--this is out-file path
 endif()
 
 
