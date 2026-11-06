@@ -208,6 +208,11 @@ contract allows.
 - `fff_tight` (x86) and `Arm64.arm_fff_tight` give `K = 2` failing on the
   `0xfff` path (x86; arm64 UTF-32 and Latin-1).
 - `Arm64.arm_888_tight` gives `K = 1` failing on arm64 UTF-16.
+- `la_924_tight` gives `K = 2` failing on LoongArch UTF-16 (lsx and lasx):
+  a valid 68-byte input, the calls of the kernel up to byte 51 as a `Reach`
+  derivation (the `bigindex` row at byte 44 is `TableFacts.la_924_rows`),
+  then the `0x924` call at 51 stores 8 units ending one past `L`. The
+  calls take the same paths on lsx and lasx.
 - `read_K1_fails` shows that with `K = 1` the loop test no longer guarantees
   the loads, which is what keeps lsx and lasx at 2; the LoongArch `K = 1`
   controls fault.

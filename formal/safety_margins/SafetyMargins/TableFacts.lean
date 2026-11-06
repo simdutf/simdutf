@@ -67,6 +67,10 @@ theorem bigindex_exact :
       else c == 12) = true := by
   native_decide
 
+/-- The rows used by `Utf8.la_924_tight`: the call at byte 44 (mask `0x25A`)
+takes the four-unit path and consumes 7 bytes. -/
+theorem la_924_rows : bigIdx[0x25A]! = 101 ∧ bigConsumed[0x25A]! = 7 := by native_decide
+
 /-- No row consumes more than the 12 bytes its mask describes. -/
 theorem bigconsumed_le :
     (List.range 4096).all (fun m => decide (bigConsumed[m]! ≤ 12)) = true := by

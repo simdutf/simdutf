@@ -195,6 +195,7 @@ def lasx_utf32 : List MPath := [⟨16, 17⟩, ⟨4, 5⟩, ⟨8, 7⟩, ⟨8, 7⟩
 :43-74 (`memcpy` of 6 bytes, 6 + 1). Every other index returns without writing. -/
 def lasx_latin1 : List MPath := [⟨16, 17⟩, ⟨6, 7⟩]
 
+/-- `Utf8.la_924_tight` gives an input on which `K = 2` overflows. -/
 theorem K_lasx_utf16 : okK 3 lasx_utf16 = true ∧ okK 2 lasx_utf16 = false := by decide
 theorem K_lasx_utf32 : okK 1 lasx_utf32 = true ∧ okK 0 lasx_utf32 = false := by decide
 theorem K_lasx_latin1 : okK 0 lasx_latin1 = true := by decide

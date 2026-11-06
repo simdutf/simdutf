@@ -151,7 +151,8 @@ listed with `f = s + 1` where kept, and need `K ≥ 0`. -/
 ASCII path (:24, 16, 16), `0x888` (:133, `memcpy` 12 bytes = 6, after the lead
 check, else `return 12` with no store) and `idx < 209` (:197, scalar, exact)
 are exact; `else return 12` (:289) stores nothing. Same list as
-`Utf8.la_utf16`. -/
+`Utf8.la_utf16`; `Utf8.la_924_tight` gives an input on which `K = 2`
+overflows. -/
 def utf8to16 : List MPath := [⟨8, 5⟩, ⟨8, 5⟩, ⟨8, 7⟩, ⟨8, 7⟩, ⟨16, 17⟩, ⟨6, 7⟩]
 
 theorem K_utf8to16 : okK 3 utf8to16 = true ∧ okK 2 utf8to16 = false := by decide

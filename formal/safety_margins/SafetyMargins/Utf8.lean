@@ -431,6 +431,45 @@ theorem fff_tight :
     tk 2 xs = 2 ∧ 0 + 64 + (tk 2 xs + 1) ≤ xs.length ∧
     L (xs.take 51) + 16 = L xs + 1 := by decide
 
+/-- Weights of a valid UTF-8 input that takes LoongArch UTF-16
+(`la_utf16`, lsx and lasx) past the end with `K = 2`: 32 ASCII bytes, four
+3-byte characters (bytes 32..43), two 2-byte characters (44..47), one ASCII
+byte (48), one 2-byte character (49..50), five 3-byte characters (51..65) and
+two ASCII bytes (66, 67). 68 bytes, `L = 47`. -/
+def la924 : List Nat :=
+  List.replicate 32 1 ++ (List.replicate 4 [1, 0, 0]).flatten ++
+    (List.replicate 2 [1, 0]).flatten ++ [1] ++ [1, 0] ++
+    (List.replicate 5 [1, 0, 0]).flatten ++ [1, 1]
+
+/-- Tightness of `K = 3` for LoongArch UTF-16, `K = 2`, on a valid input and
+through the lag model. The loop test admits the block at 0 with `K = 2` and
+rejects it with `K = 3`. The calls of the C++ kernels
+(src/lsx/lsx_convert_utf8_to_utf16.cpp and src/lasx/lasx_convert_utf8_to_utf16.cpp
+take the same paths here) are: ASCII at 0 and 16 (16 bytes, 16 units),
+`0x924` at 32 (12 bytes, 4 units), then the `bigindex` row of mask `0x25A` at
+44 (index 101 < 145, 7 bytes, 4 units: `TableFacts.la_924_rows`), which give
+`Reach xs true 0 51 40`. 51 is below `pos + 52`, so the inner loop calls
+again at 51. There the mask is `0x924`, a path `(8, 5)` of `la_utf16`: 8 units
+stored at output 40, with 5 leading bytes in bytes 51..63. The store ends at
+48, one unit past `L = 47`. -/
+theorem la_924_tight :
+    Reach la924 true 0 51 40 ∧
+      0 + 64 + (tk 2 la924 + 1) ≤ la924.length ∧
+      ¬ (0 + 64 + (tk 3 la924 + 1) ≤ la924.length) ∧
+      la_utf16.any (fun p => p.s == 8 && p.f == 5) = true ∧
+      cont la924 51 + cnt ((la924.drop 51).take 13) = 5 ∧
+      40 + 8 = L la924 + 1 := by
+  refine ⟨?_, by decide, by decide, by decide, by decide, by decide⟩
+  have h0 : Reach la924 false 0 0 0 := Reach.start
+  have h1 : Reach la924 true 0 0 0 := Reach.enter 0 0 h0 (by decide)
+  have h2 : Reach la924 true 0 16 16 :=
+    Reach.call 0 0 0 16 16 h1 (by decide) (Step.conv 0 0 16 16 (by decide) (by decide) (by decide))
+  have h3 : Reach la924 true 0 32 32 :=
+    Reach.call 0 16 16 32 32 h2 (by decide) (Step.conv 16 16 16 16 (by decide) (by decide) (by decide))
+  have h4 : Reach la924 true 0 44 36 :=
+    Reach.call 0 32 32 44 36 h3 (by decide) (Step.conv 32 32 12 4 (by decide) (by decide) (by decide))
+  exact Reach.call 0 44 36 51 40 h4 (by decide) (Step.conv 44 36 7 4 (by decide) (by decide) (by decide))
+
 /-! ## `convert_valid` with a fixed margin
 
 For valid input the output is exact (`o = L (xs.take t)`) and the bytes from
