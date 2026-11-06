@@ -468,20 +468,6 @@ theorem safe_utf16to8 (choose : List Nat → Iter)
     ∀ n xs, Pos xs → written (need 31 1 false) choose n xs ≤ L xs :=
   safe_of_paths _ utf16to8 cur_utf16to8 choose hc
 
-/-- One less overflows. With margin 0 the loop runs on an input of 31 units.
-Let the last one, lane 30, be a high surrogate (weight 2), and let the unit
-past the end of the input, which the kernel loads as lane 31, happen to be a
-low surrogate. The carry case then emits the 4 bytes of the pair for lane 30:
-`extra = 2`, which `safe_utf16to8_real` allows, and the store ends 2 bytes
-past `L`. The 32-unit load itself also reads one unit past the input. Like
-the other `wit_*`, this shows that the arithmetic is tight, not that a test
-reaches it. -/
-theorem wit_utf16to8 :
-    let xs := ascii 30 ++ [w8 0xD800]
-    xs.length = need 31 0 false ∧ xs.length < 32 ∧
-      (0xDC00 ≤ 0xDC00 ∧ 0xDC00 < 0xE000) ∧
-      L (xs.take 31) + 2 = L xs + 2 := by decide
-
 /-- The bytes written past `L` of the 31 consumed units. ASCII stores 31 and
 advances 31 (`extra = 0`). The 1/2-byte path keeps at most `spill` bytes of
 lane 31. A matched surrogate emits the low surrogate's 2 bytes early. Each
@@ -509,18 +495,18 @@ def ahead8 : Iter := { consumed := 31, stores := [.ahead] }
 def end8 (xs : List Nat) (it : Iter) (extra : Nat) : Nat :=
   if it = ahead8 then L (xs.take 31) + extra else maxEnd xs it.consumed it.stores
 
-def realWritten8 (choose : List Nat → Iter) (extra : List Nat → Nat) :
+def realWritten8 (N : Nat) (choose : List Nat → Iter) (extra : List Nat → Nat) :
     Nat → List Nat → Nat
   | 0, xs => L xs
   | n + 1, xs =>
-    if xs.length < need 31 1 false then
+    if xs.length < N then
       L xs
     else if (choose xs).stop then
       max (end8 xs (choose xs) (extra xs)) (L (xs.take (choose xs).consumed))
     else
       max (end8 xs (choose xs) (extra xs))
         (L (xs.take (choose xs).consumed) +
-          realWritten8 choose extra n (xs.drop (choose xs).consumed))
+          realWritten8 N choose extra n (xs.drop (choose xs).consumed))
 
 theorem end8_le (xs : List Nat) (it : Iter) (extra : Nat)
     (hmem : it ∈ utf16to8)
@@ -539,15 +525,16 @@ theorem end8_le (xs : List Nat) (it : Iter) (extra : Nat)
       simp [maxEnd, storeEnd]
       exact L_take_le xs k
 
-/-- `safe_utf16to8` bounds the model end `.ahead`. This bounds the real end,
-once each `.ahead` iteration's `extra` is one of the three C++ effects. -/
+/-- `safe_utf16to8` bounds the model end `.ahead`. This bounds the real end
+(loop test `N = need 31 1 false`), once each `.ahead` iteration's `extra` is
+one of the three C++ effects. -/
 theorem safe_utf16to8_real (choose : List Nat → Iter) (extra : List Nat → Nat)
     (hc : ∀ xs, need 31 1 false ≤ xs.length → choose xs ∈ utf16to8)
     (hreal : ∀ xs, need 31 1 false ≤ xs.length →
       choose xs = ahead8 → ∃ v, v < 65536 ∧ xs.take 32 = xs.take 31 ++ [w8 v] ∧
         (extra xs ≤ spill v ∨ (0xDC00 ≤ v ∧ v < 0xE000 ∧ extra xs ≤ 2) ∨
           extra xs = 0)) :
-    ∀ n xs, realWritten8 choose extra n xs ≤ L xs := by
+    ∀ n xs, realWritten8 (need 31 1 false) choose extra n xs ≤ L xs := by
   intro n
   induction n with
   | zero =>
@@ -571,6 +558,25 @@ theorem safe_utf16to8_real (choose : List Nat → Iter) (extra : List Nat → Na
         have hrest := ih (xs.drop (choose xs).consumed)
         have hsum := L_take_add_drop (choose xs).consumed xs
         exact Nat.max_le.mpr ⟨hhere, by omega⟩
+
+/-- One less overflows. With margin 0 (`N = need 31 0 false = 31`) the loop
+runs on an input `xs` of 31 units. Let the last one, lane 30, be a high
+surrogate (weight 2), and let the unit past the end of the input, which the
+kernel loads as lane 31, be the low surrogate 0xDC00. The 32 loaded lanes are
+then `xs ++ [w8 0xDC00]`, and the carry case, an effect that
+`safe_utf16to8_real` admits, emits the 4 bytes of the pair for lane 30:
+`extra = 2`. The real end of the first iteration, under the same model
+(`realWritten8`, path `ahead8` of the table), is 2 bytes past `L xs`. The
+32-unit load itself also reads one unit past the input. Like the other
+`wit_*`, this shows that the bound is tight, not that a test reaches it. -/
+theorem wit_utf16to8 :
+    let xs := ascii 30 ++ [w8 0xD800]
+    let v := 0xDC00
+    ahead8 ∈ utf16to8 ∧ xs.length = need 31 0 false ∧
+      v < 65536 ∧ (xs ++ [w8 v]).take 32 = xs.take 31 ++ [w8 v] ∧
+      (0xDC00 ≤ v ∧ v < 0xE000 ∧ 2 ≤ 2) ∧
+      realWritten8 (need 31 0 false) (fun _ => ahead8) (fun _ => 2) 1 xs = L xs + 2 := by
+  decide
 
 /-! ## UTF-8 sources: exact counts, no dynamic margin
 

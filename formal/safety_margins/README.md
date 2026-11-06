@@ -355,8 +355,9 @@ which is `L` of the 32 loaded lanes. `safe_utf16to8_real` bounds the bytes
 written past `L` of the 31 consumed units once that extra is `spill` of lane
 31 (`ahead_spill`), the 2 bytes of a low surrogate carried out of lane 30
 (`ahead_carry`), or 0. The margin stays 1. `wit_utf16to8` shows that 0
-overflows: on 31 units ending with a high surrogate, a low surrogate past the
-input makes the carry case write 2 bytes past `L`.
+overflows: `realWritten8`, with the loop test of margin 0, runs the table's
+`.ahead` path on 31 units ending with a high surrogate; a low surrogate past
+the input makes the carry case write 2 bytes past `L`.
 
 For the loops with no margin:
 - **UTF-16 → UTF-32** (low surrogates weigh 0) is safe on every architecture
