@@ -224,6 +224,11 @@ GCC build only, `idx < 64` (:63-65, `memcpy` of 8 for 6; the clang build copies
 exactly 6, :58-61). `idx ≥ 64` writes nothing (:36-38). -/
 def ppc_latin1 : List MPath := [⟨16, 13⟩, ⟨8, 7⟩]
 
+/-- The same store paths as `Utf8.x86_latin1`, so `ValidLatin1.lv_tight_K2`
+shows `K = 2` overflowing here too: this kernel also has the `0xfff` path and
+no 16-byte ASCII path. -/
+theorem ppc_latin1_eq_x86 : ppc_latin1 = x86_latin1 := rfl
+
 theorem K_ppc_utf16 : okK 3 ppc_utf16 = true ∧ okK 2 ppc_utf16 = false := by decide
 theorem K_ppc_utf32 : okK 3 ppc_utf32 = true ∧ okK 2 ppc_utf32 = false := by decide
 theorem K_ppc_latin1 : okK 3 ppc_latin1 = true ∧ okK 2 ppc_latin1 = false := by decide

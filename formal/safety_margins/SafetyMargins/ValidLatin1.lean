@@ -33,7 +33,8 @@ inductive LV : List Nat → Prop
 /-- ASCII input satisfies the contract, so the input of `read_K1_fails`
 (66 ASCII bytes) is one this header accepts: with `K = 1` its loop test does
 not guarantee the 16-byte load at `pos + 51`. The C++ takes the ASCII path on
-that input; the overread with `K = 1` is shown by the negative controls. -/
+that input; `la_read_K1` gives an input of this contract on which a call at
+byte 51 loads past the input. -/
 theorem lv_ascii (n : Nat) : LV (List.replicate n 0x41) := by
   induction n with
   | zero => exact LV.nil
@@ -279,5 +280,117 @@ kernels' Latin-1 store paths, `K = 3` covers every store
 and lasx lists need only `K = 0`), and the 16-byte loads at `pos + 51` need
 only `K ≥ 2` (`read_ok`). -/
 theorem valid_latin1_K3 : okK 3 x86_latin1 = true := K_x86_latin1.1
+
+/-- Decide `LV` on a concrete input. -/
+macro "lv_decide" : tactic => `(tactic| (
+  repeat (first
+    | exact LV.nil
+    | refine LV.one _ _ (by decide) ?_
+    | refine LV.two _ _ _ (by decide) (by decide) ?_)))
+
+/-! ## Inputs the contract allows on which one less fails -/
+
+/-- 32 ASCII bytes, seven `é` (`C3 A9`), 20 ASCII bytes: 66 bytes. -/
+def laRead : List Nat :=
+  List.replicate 32 0x41 ++ (List.replicate 7 [0xC3, 0xA9]).flatten ++
+    List.replicate 20 0x41
+
+/-- **LoongArch, `K = 1`: a call loads past the input.** On `laRead`, which
+every UTF-8 decoder accepts and the valid Latin-1 contract allows, the loop
+test admits the block at 0 with `K = 1` and rejects it with `K = 2`. The
+calls of the lsx and lasx kernels for UTF-32 and Latin-1 output
+(src/lsx/lsx_convert_utf8_to_utf32.cpp, src/lsx/lsx_convert_utf8_to_latin1.cpp
+and their lasx versions) are: ASCII at 0 and 16 (mask `0xFFFF`, 16 bytes),
+the row of mask `0xAAA` at 32 (12 bytes; the UTF-32 kernels take their
+`0xaaa` fast path, which also consumes 12), and the row of mask `0xFFE` at
+44 (7 bytes; `TableFacts.lv_rows`). They reach byte 51, below `pos + 52`,
+in the model of the validating decoders (`Reach`) and of the valid Latin-1
+decoder (`VReach`). The inner loop then calls at 51, and every one of these
+kernels begins with a 16-byte load (`__lsx_vld`) of bytes 51 to 66: byte 66
+is past the input. The stores need `K = 1` (UTF-32) or `K = 0` (Latin-1);
+this read is what sets `K = 2` on LoongArch. -/
+theorem la_read_K1 :
+    let bs := laRead
+    let xs := bs.map w01
+    LV bs ∧ bs.length = 66 ∧
+      emask xs 0 16 = 0xFFFF ∧ emask xs 16 16 = 0xFFFF ∧
+      emask xs 32 12 = 0xAAA ∧ emask xs 44 12 = 0xFFE ∧
+      Reach xs true 0 51 44 ∧ VReach bs true 0 51 44 ∧
+      0 + 64 + (tk 1 xs + 1) ≤ xs.length ∧
+      ¬ (0 + 64 + (tk 2 xs + 1) ≤ xs.length) ∧
+      ¬ (0 + 51 + 15 < bs.length) := by
+  intro bs xs
+  refine ⟨?_, by decide, by decide, by decide, by decide, by decide, ?_, ?_,
+    by decide, by decide, by decide⟩
+  · show LV laRead
+    unfold laRead
+    simp only [List.replicate, List.flatten, List.cons_append, List.nil_append]
+    lv_decide
+  · have h1 : Reach xs true 0 0 0 := Reach.enter 0 0 Reach.start (by decide)
+    have h2 : Reach xs true 0 16 16 :=
+      Reach.call 0 0 0 16 16 h1 (by decide) (Step.conv 0 0 16 16 (by decide) (by decide) (by decide))
+    have h3 : Reach xs true 0 32 32 :=
+      Reach.call 0 16 16 32 32 h2 (by decide) (Step.conv 16 16 16 16 (by decide) (by decide) (by decide))
+    have h4 : Reach xs true 0 44 38 :=
+      Reach.call 0 32 32 44 38 h3 (by decide) (Step.conv 32 32 12 6 (by decide) (by decide) (by decide))
+    exact Reach.call 0 44 38 51 44 h4 (by decide) (Step.conv 44 38 7 6 (by decide) (by decide) (by decide))
+  · have h1 : VReach bs true 0 0 0 := VReach.enter 0 0 VReach.start (by decide)
+    have h2 : VReach bs true 0 16 16 :=
+      VReach.call 0 0 0 16 16 h1 (by decide) (by decide) (by decide) (by decide)
+    have h3 : VReach bs true 0 32 32 :=
+      VReach.call 0 16 16 16 16 h2 (by decide) (by decide) (by decide) (by decide)
+    have h4 : VReach bs true 0 44 38 :=
+      VReach.call 0 32 32 12 6 h3 (by decide) (by decide) (by decide) (by decide)
+    exact VReach.call 0 44 38 7 6 h4 (by decide) (by decide) (by decide) (by decide)
+
+/-- 24 ASCII bytes, seven `é`, 5 ASCII, two `é`, 16 ASCII, `é`, 2 ASCII:
+67 bytes of valid Latin-1-representable UTF-8. -/
+def lvTight : List Nat :=
+  List.replicate 24 0x41 ++ (List.replicate 7 [0xC3, 0xA9]).flatten ++
+    List.replicate 5 0x41 ++ (List.replicate 2 [0xC3, 0xA9]).flatten ++
+    List.replicate 16 0x41 ++ [0xC3, 0xA9, 0x41, 0x41]
+
+/-- **x86, arm64 and POWER, valid UTF-8 to Latin-1: `K = 2` overflows on
+input the contract allows.** The loop test admits the block at 0 with
+`K = 2` and rejects it with `K = 3`. The calls of the westmere, haswell,
+arm64 and ppc64 Latin-1 kernels (src/*/..._convert_utf8_to_latin1.cpp; none
+has a 16-byte ASCII path) are: the `0xfff` path at 0 and 12 (12 bytes,
+12 out), and the rows of masks `0xAAA` at 24 (12 bytes), `0xD7E` at 36
+(7 bytes) and `0xFFA` at 43 (8 bytes), 6 out each (`TableFacts.lv_rows`).
+They reach byte 51 with 42 bytes out, `L` of the first 51 bytes. At 51 the
+mask is `0xfff` again: the kernel stores 16 bytes (`_mm_storeu_si128`,
+`vst1q_u8`, `vec_xst`), the path `(16, 13)` of `x86_latin1` (and of
+`Arm64.arm_latin1`, `Ppc64.ppc_latin1`), and that store ends at 58, one
+byte past `L = 57`. -/
+theorem lv_tight_K2 :
+    let bs := lvTight
+    let xs := bs.map w01
+    LV bs ∧ bs.length = 67 ∧
+      emask xs 0 12 = 0xFFF ∧ emask xs 12 12 = 0xFFF ∧
+      emask xs 24 12 = 0xAAA ∧ emask xs 36 12 = 0xD7E ∧
+      emask xs 43 12 = 0xFFA ∧ emask xs 51 12 = 0xFFF ∧
+      VReach bs true 0 51 42 ∧ 42 = L (xs.take 51) ∧
+      0 + 64 + (tk 2 xs + 1) ≤ xs.length ∧
+      ¬ (0 + 64 + (tk 3 xs + 1) ≤ xs.length) ∧
+      x86_latin1.any (fun p => p.s == 16 && p.f == 13) = true ∧
+      cont xs 51 + cnt ((xs.drop 51).take 13) = 13 ∧
+      42 + 16 = L xs + 1 := by
+  intro bs xs
+  refine ⟨?_, by decide, by decide, by decide, by decide, by decide, by decide,
+    by decide, ?_, by decide, by decide, by decide, by decide, by decide, by decide⟩
+  · show LV lvTight
+    unfold lvTight
+    simp only [List.replicate, List.flatten, List.cons_append, List.nil_append]
+    lv_decide
+  · have h1 : VReach bs true 0 0 0 := VReach.enter 0 0 VReach.start (by decide)
+    have h2 : VReach bs true 0 12 12 :=
+      VReach.call 0 0 0 12 12 h1 (by decide) (by decide) (by decide) (by decide)
+    have h3 : VReach bs true 0 24 24 :=
+      VReach.call 0 12 12 12 12 h2 (by decide) (by decide) (by decide) (by decide)
+    have h4 : VReach bs true 0 36 30 :=
+      VReach.call 0 24 24 12 6 h3 (by decide) (by decide) (by decide) (by decide)
+    have h5 : VReach bs true 0 43 36 :=
+      VReach.call 0 36 30 7 6 h4 (by decide) (by decide) (by decide) (by decide)
+    exact VReach.call 0 43 36 8 6 h5 (by decide) (by decide) (by decide) (by decide)
 
 end SafetyMargins.ValidLatin1

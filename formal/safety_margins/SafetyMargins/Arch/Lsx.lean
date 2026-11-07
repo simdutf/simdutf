@@ -204,7 +204,8 @@ The generic headers select their margin per target
 (`#if defined(SIMDUTF_IS_LSX) || defined(SIMDUTF_IS_LASX)`); these are the
 LoongArch values. The stores alone would allow `K = 1` (UTF-32) and `K = 0`
 (Latin-1); the 16-byte loads at `pos + 51` need `K ≥ 2` (`read_ok`; with
-`K = 1` the loop test does not guarantee them, `read_K1_fails`). -/
+`K = 1` the loop test does not guarantee them, `read_K1_fails`, and the
+kernels call at byte 51 and load past the input, `ValidLatin1.la_read_K1`). -/
 
 theorem hdr_utf8to32 : okK 2 utf8to32 = true ∧ (∀ pos xs, pos + 64 + (tk 2 xs + 1) ≤ xs.length → pos + 66 < xs.length) :=
   ⟨by decide, fun pos xs h => read_ok 2 pos xs (by decide) h⟩
@@ -224,8 +225,9 @@ input its contract allows (`ValidLatin1.LV`), every store of a call fits with
 this kernel's Latin-1 list at `K = 2` (`ValidLatin1.valid_latin1_okK`; the list
 needs only `K = 0`), and the 16-byte loads at `pos + 51` stay in the input
 (`read_ok`). With `K = 1` the loop test no longer guarantees those loads
-(`read_K1_fails`, `ValidLatin1.lv_ascii`); the overread itself is shown by
-the negative controls. -/
+(`read_K1_fails`), and on `ValidLatin1.laRead`, which the contract allows,
+the kernel calls at byte 51 and loads past the input
+(`ValidLatin1.la_read_K1`); the negative controls fault on that load. -/
 theorem hdr_valid_utf8toLatin1 (bs : List Nat) (hv : ValidLatin1.LV bs)
     (pos t o d : Nat) (q : MPath) (h : ValidLatin1.VReach bs true pos t o)
     (hloop : pos + 64 + (tk 2 (bs.map Exact.w01) + 1) ≤ (bs.map Exact.w01).length)

@@ -218,6 +218,11 @@ def arm_utf32 : List MPath := [⟨16, 13⟩, ⟨8, 7⟩, ⟨8, 7⟩, ⟨4, 4⟩,
 produced), `idx < 64` (:61, 8 stored, 6 produced). Same as `Utf8.x86_latin1`. -/
 def arm_latin1 : List MPath := [⟨16, 13⟩, ⟨8, 7⟩]
 
+/-- The same store paths as `Utf8.x86_latin1`, so `ValidLatin1.lv_tight_K2`
+shows `K = 2` overflowing here too: this kernel also has the `0xfff` path and
+no 16-byte ASCII path. -/
+theorem arm_latin1_eq_x86 : arm_latin1 = x86_latin1 := rfl
+
 theorem K_arm_utf32 : okK 3 arm_utf32 = true ∧ okK 2 arm_utf32 = false := by decide
 theorem K_arm_latin1 : okK 3 arm_latin1 = true ∧ okK 2 arm_latin1 = false := by decide
 

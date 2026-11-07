@@ -71,6 +71,16 @@ theorem bigindex_exact :
 takes the four-unit path and consumes 7 bytes. -/
 theorem la_924_rows : bigIdx[0x25A]! = 101 ∧ bigConsumed[0x25A]! = 7 := by native_decide
 
+/-- The rows used by `ValidLatin1.la_read_K1` and `ValidLatin1.lv_tight_K2`:
+six 2-byte characters (`0xAAA`, 12 bytes), and six characters of 7 and 8
+bytes (`0xFFE`, `0xD7E`, `0xFFA`). All are below 64, the rows of six 1- or
+2-byte characters, which every UTF-8 to UTF-32 and Latin-1 kernel converts. -/
+theorem lv_rows :
+    bigIdx[0xAAA]! = 63 ∧ bigConsumed[0xAAA]! = 12 ∧
+      bigIdx[0xFFE]! = 32 ∧ bigConsumed[0xFFE]! = 7 ∧
+      bigIdx[0xD7E]! = 32 ∧ bigConsumed[0xD7E]! = 7 ∧
+      bigIdx[0xFFA]! = 48 ∧ bigConsumed[0xFFA]! = 8 := by native_decide
+
 /-- No row consumes more than the 12 bytes its mask describes. -/
 theorem bigconsumed_le :
     (List.range 4096).all (fun m => decide (bigConsumed[m]! ≤ 12)) = true := by

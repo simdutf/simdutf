@@ -185,8 +185,12 @@ they have seen `K` leading bytes, then loop while
   input when `K ≥ 2`. With `K = 1` the loop test does not guarantee it: on 66
   ASCII bytes it admits a block at `pos = 0`. That is a bound on the loop test
   only; on that input the C++ takes the ASCII path, which does not load at
-  `pos + 51`. The negative controls with `K = 1` on LoongArch, whose faulting
-  inputs are not ASCII, show the overread in the C++.
+  `pos + 51`. `ValidLatin1.la_read_K1` gives the reachable call: on 66 bytes
+  of valid Latin-1-representable UTF-8, `K = 1` admits the block and `K = 2`
+  rejects it, and the lsx and lasx UTF-32 and Latin-1 kernels call at byte
+  51 (`Reach` and `VReach` derivations, rows `TableFacts.lv_rows`), whose
+  16-byte load reads byte 66, past the input. The negative controls with
+  `K = 1` on LoongArch show the overread in the C++.
 
 | header | K before | write optimum | now (with reads) | Lean |
 |---|---|---|---|---|
@@ -214,8 +218,16 @@ contract allows.
   then the `0x924` call at 51 stores 8 units ending one past `L`. The
   calls take the same paths on lsx and lasx.
 - `read_K1_fails` shows that with `K = 1` the loop test no longer guarantees
-  the loads, which is what keeps lsx and lasx at 2; the LoongArch `K = 1`
+  the loads, and `ValidLatin1.la_read_K1` gives an input, valid for all three
+  headers, on which the kernels call at byte 51 and load past the input with
+  `K = 1`. That read is what keeps lsx and lasx at 2; the LoongArch `K = 1`
   controls fault.
+- `ValidLatin1.lv_tight_K2` gives `K = 2` failing for
+  `valid_utf8_to_latin1.h` on x86, arm64 and POWER, on 67 bytes the contract
+  allows: a `VReach` derivation to byte 51 with the output at `L` of the
+  consumed bytes, then the `0xfff` path, which stores 16 bytes and ends one
+  past `L`. The three kernels have the same store paths
+  (`Arm64.arm_latin1_eq_x86`, `Ppc64.ppc_latin1_eq_x86`).
 
 ### 3.1 The ASCII tail (`Validator.lean`, `Exact.lean`)
 
@@ -362,7 +374,10 @@ written past `L` of the 31 consumed units once that extra is `spill` of lane
 (`ahead_carry`), or 0. The margin stays 1. `wit_utf16to8` shows that 0
 overflows: `realWritten8`, with the loop test of margin 0, runs the table's
 `.ahead` path on 31 units ending with a high surrogate; a low surrogate past
-the input makes the carry case write 2 bytes past `L`.
+the input makes the carry case write 2 bytes past `L`. `read_utf16to8`
+shows that margin 0 reads past the input on every input that enters the
+loop with 31 units, since each iteration loads 32: the read alone sets the
+optimum 1.
 
 For the loops with no margin:
 - **UTF-16 → UTF-32** (low surrogates weigh 0) is safe on every architecture
@@ -412,7 +427,7 @@ Every loop now uses its optimal margin, for each target.
   exactly `L` units, with the margin lowered by one. The icelake UTF-16 →
   UTF-8 witness (`wit_utf16to8`) relies on the unit after the input being a
   low surrogate, which no test controls; margin 1 there is also what the
-  32-unit load needs.
+  32-unit load needs (`read_utf16to8`).
 - **Not modelled.** The final overlapping `utf16fix` block, at `n - 16` (or
   `n - 32` on icelake), is not a loop iteration; its store ends at `n`. The
   `utf16fix` blocks also rewrite `out[-1]`, behind the cursor.

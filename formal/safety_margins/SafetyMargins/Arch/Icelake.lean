@@ -578,6 +578,20 @@ theorem wit_utf16to8 :
       realWritten8 (need 31 0 false) (fun _ => ahead8) (fun _ => 2) 1 xs = L xs + 2 := by
   decide
 
+/-- **Margin 0 reads past the input.** The loop loads 32 units per
+iteration and advances at most 31. With margin 0 the loop test
+(`need 31 0 false = 31`) admits an input of 31 units, so the first load
+reads one unit past it, whatever the input. With margin 1
+(`need 31 1 false = 32`), every load of 32 units at the start of the
+remaining input stays inside it. So the read alone sets the optimum 1 on
+every input; the store bound, which is also 1 (`m_utf16to8`), can only be
+attained when that unread unit is a low surrogate (`wit_utf16to8`). -/
+theorem read_utf16to8 :
+    need 31 0 false = 31 ∧ ¬ (32 ≤ 31) ∧
+      ∀ n, need 31 1 false ≤ n → 32 ≤ n := by
+  refine ⟨by decide, by decide, fun n h => ?_⟩
+  simpa [need, strictBump] using h
+
 /-! ## UTF-8 sources: exact counts, no dynamic margin
 
 Ice Lake does not include the generic `utf8_to_utf16.h` / `utf8_to_utf32.h` /
