@@ -10,7 +10,7 @@ open SafetyMargins SafetyMargins.Kernels SafetyMargins.Utf8
 
 /-! ## Latin-1 to UTF-8 -/
 
-/-- src/icelake/icelake_convert_latin1_to_utf8.inl.cpp:90, loop
+/-- src/icelake/icelake_convert_latin1_to_utf8.inl.cpp:91, loop
 `pos + 96 <= len`, 64 bytes per iteration (`B = 64`, `m = 32`).
 `latin1_to_utf8_avx512_branch` (line 74): ASCII stores 64 bytes (line 80);
 otherwise `latin1_to_utf8_avx512_vec(..., mask_output = 0)` stores 64 bytes at

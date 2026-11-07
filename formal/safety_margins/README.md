@@ -20,7 +20,8 @@ lake build
 `lean-toolchain` pins Lean 4.35. There is no mathlib and no `sorry`.
 `native_decide` is used only for finite checks: the lookup tables
 (`TableFacts.lean`), the validator on all byte pairs (`Validator.pair_ok`),
-and the pair tests on all valid 4-byte characters (`Exact.pair4`).
+the pair tests on all valid 4-byte characters (`Exact.pair4`), and the
+validator on every state of the UTF-8 automaton (`ValidExact.closure`).
 
 ## Files
 
@@ -36,6 +37,11 @@ and the pair tests on all valid 4-byte characters (`Exact.pair4`).
 | `SafetyMargins/Tables.lean` | lookup tables extracted from `src/tables/` by `extract_tables.py`; don't edit it by hand |
 | `SafetyMargins/TableFacts.lean` | facts about those tables |
 | `SafetyMargins/Arch/*.lean` | one file per architecture: every loop, its path table, its margins |
+| `SafetyMargins/Loads.lean` | the input loads of every fixed-margin loop whose margin was lowered (§7) |
+| `SafetyMargins/Utf16Fix.lean` | every access of every `utf16fix` kernel, for every length (§7) |
+| `SafetyMargins/Replacement.lean` | the two conversions with replacement (§7) |
+| `SafetyMargins/ValidExact.lean` | the `convert_valid` cursor and tail on valid UTF-8 (§7) |
+| `SafetyMargins/IcelakeReal.lean` | the Ice Lake UTF-16 loops on the unit values, which discharge the data hypotheses of `safe_utf16to32_real` and `safe_utf16to8_real` (§7) |
 
 ## 1. Model (`Basic.lean`)
 
@@ -408,14 +414,16 @@ Every loop now uses its optimal margin, for each target.
 - **`convert_valid` tails.** `valid_utf16_store`, `valid_utf32_store`,
   `Arm64.valid_utf16_arm_store`, `Lsx.valid_utf32_lsx_store` and
   `Lasx.valid_utf32_lasx_store` assume the cursor equals `L` of the consumed
-  prefix and the unread tail is the expansion of complete characters. Both
-  are read from the C++. `valid_utf8_to_latin1.h` is not among them; §3.2
+  prefix and the unread tail is the expansion of complete characters.
+  `ValidExact` proves both on valid UTF-8 (§7); what remains read from the
+  C++ is the shape of each call, as for the other decoders. `valid_utf8_to_latin1.h` is not among them; §3.2
   covers it, under its contract (`LV` input). That the scalar tail writes one
   byte per character is read from the C++.
 - **Ice Lake real ends.** `safe_utf16to32_real` assumes the surrogate
   iteration runs only when `16 ≤ L` of the 32 loaded lanes.
   `safe_utf16to8_real` assumes each `.ahead` iteration's extra bytes are the
-  spill, the low-surrogate carry, or zero.
+  spill, the low-surrogate carry, or zero. `IcelakeReal` proves both from a
+  transcription of the loops on the unit values (§7).
 - **Control flow around the check.** The ASCII tail is reached only after
   every converted non-ASCII block passed `check_utf8_bytes`: plain `convert`
   returns 0 on `errors()` first, and `convert_with_errors` tests `errors()`
@@ -428,10 +436,48 @@ Every loop now uses its optimal margin, for each target.
   UTF-8 witness (`wit_utf16to8`) relies on the unit after the input being a
   low surrogate, which no test controls; margin 1 there is also what the
   32-unit load needs (`read_utf16to8`).
-- **Not modelled.** The final overlapping `utf16fix` block, at `n - 16` (or
-  `n - 32` on icelake), is not a loop iteration; its store ends at `n`. The
-  `utf16fix` blocks also rewrite `out[-1]`, behind the cursor.
-- **With replacement.** `convert_utf16*_to_utf8_with_replacement` runs the
-  same kernels with a length function that counts an unpaired surrogate as
-  3 bytes. Every unit still weighs at least 1, so `Pos` holds, but no theorem
-  is stated for that length function.
+- **`utf16fix`, loads, with replacement.** Modelled in §7, from
+  transcriptions of the C++.
+
+## 7. Loads, `utf16fix`, replacement, exact cursors, Ice Lake lanes
+
+- **Loads (`Loads.lean`).** For each fixed-margin loop whose margin was
+  lowered (UTF-32 → UTF-8 on arm64, lsx, lasx and westmere `_with_errors`;
+  UTF-32 → UTF-16 on westmere and haswell; Latin-1 → UTF-8 on haswell, lasx,
+  arm64 and icelake), every vector load of an iteration, as (offset, width),
+  with its file:line. `*_tied` states, under the same `need B m strict`, the
+  store theorem, the load bound and the bound of the scalar fallback
+  (`forward = end - buf - 1`). `lower_fits`: one less margin still fits the
+  loads, so the stores set those optima; `zero_margin_tight`: where the
+  margin is 0, the load ends exactly at `B`.
+- **`utf16fix` (`Utf16Fix.lean`).** Every load and store of every kernel
+  (westmere, haswell, icelake, arm64, lsx, lasx, rvv, scalar), including
+  `in[-1]`, `out[-1]` and the final overlapping block, lies in `[0, n)` for
+  every `n` (`*_inBounds`).
+- **With replacement (`Replacement.lean`).** UTF-16 → UTF-8: the driver
+  passes the whole rest of the input to the kernel, which stops at the first
+  unpaired surrogate; `via_inv` and `via_paths` bound every store by the
+  replacement length (`countRepl`, a transcription of
+  `utf8_length_from_utf16_with_replacement`). UTF-8 → UTF-16: every store
+  path overshoots its output by at most 4 units (`gap_all`, tight:
+  `gap_tight`); a byte-level transcription of the scalar decoder with
+  replacement gives at least `⌈len/3⌉` units (`count_ge`), so the 32
+  held-back bytes give at least 11 (`count_ge_11`, attained by
+  `tight32_count`), and `bulk_store` bounds every store of the vector part.
+  Read from the C++: that the kernel reports the first unpaired surrogate;
+  that the vector length functions equal the scalar ones; that
+  `maximal_subpart` restarts the decoder as modelled.
+- **`convert_valid` (`ValidExact.lean`).** Valid UTF-8 is the automaton of
+  Unicode Table 3-7. A 64-byte block of valid UTF-8 that starts on a
+  character boundary passes `check_utf8_bytes` (`checkedAt_of_valid`, through
+  the exhaustive `closure`), so every call of `Exact.lean` is exact; by
+  induction over the loop (`vx_inv`) the cursor is `L` of the consumed bytes
+  at a character boundary, and `valid_utf16_vx`, `valid_utf32_vx`,
+  `valid_utf16_arm_vx`, `valid_utf32_lsx_vx`, `valid_utf32_lasx_vx` give the
+  store bounds with no hypothesis on the cursor or tail.
+- **Ice Lake (`IcelakeReal.lean`).** Both UTF-16 loops as functions of the 32
+  lane values and the carry (both endiannesses). `utf16to32_hsur` and
+  `utf16to8_hreal` are the data hypotheses of `safe_utf16to32_real` and
+  `safe_utf16to8_real`, proved for every lane vector;
+  `safe_utf16to32_kernel` and `safe_utf16to8_kernel` bound the whole loops
+  with no data hypothesis.

@@ -14,3 +14,8 @@ import SafetyMargins.Arch.Rvv
 import SafetyMargins.Arch.Lsx
 import SafetyMargins.Arch.Lasx
 import SafetyMargins.ValidLatin1
+import SafetyMargins.Loads
+import SafetyMargins.Utf16Fix
+import SafetyMargins.Replacement
+import SafetyMargins.ValidExact
+import SafetyMargins.IcelakeReal

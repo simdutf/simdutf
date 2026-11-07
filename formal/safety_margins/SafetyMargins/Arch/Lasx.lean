@@ -11,7 +11,7 @@ open SafetyMargins SafetyMargins.Kernels SafetyMargins.Utf8
 
 /-! ## Latin-1 to UTF-8 -/
 
-/-- src/lasx/lasx_convert_latin1_to_utf8.cpp:15, `end - latin1_input >= 16 + 8`.
+/-- src/lasx/lasx_convert_latin1_to_utf8.cpp:13, `end - latin1_input >= 16 + 8`.
 ASCII (:18-23): one 16-byte store, advance 16. Otherwise (:42-61): a 16-byte
 store at 0 and a 16-byte store at `row0[0]` = L(bytes 0..7)
 (`lasx_1_2_utf8_bytes_mask` maps the 8-bit ASCII mask to a `pack_1_2_utf8_bytes`
@@ -94,7 +94,7 @@ theorem wit_utf16to8 :
 
 /-! ## UTF-32 to UTF-8 -/
 
-/-- src/lasx/lasx_convert_utf32_to_utf8.cpp:45 and :340 (`_with_errors`),
+/-- src/lasx/lasx_convert_utf32_to_utf8.cpp:43 and :336 (`_with_errors`),
 strict `end - buf > 16 + 11`: the same three vector paths as UTF-16 (after
 packing 16 BMP units to 16 bits), and a scalar fallback of 15 units for any unit
 above 0xFFFF. -/

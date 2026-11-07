@@ -44,7 +44,7 @@ theorem wit_utf32to8 :
     it ∈ utf32to8 ∧ xs.length = need 16 11 false ∧
       written (need 16 11 false) (fun _ => it) 1 xs = L xs + 1 := by decide
 
-/-- src/westmere/sse_convert_utf32_to_utf8.cpp:349, `_with_errors`, loop
+/-- src/westmere/sse_convert_utf32_to_utf8.cpp:345, `_with_errors`, loop
 `end - buf >= 16 + 4`; ASCII path stores 16 bytes for 8 units and
 `continue`s (:369-379). -/
 def utf32to8_err : List Iter := Kernels.utf32to8_westmere_err
