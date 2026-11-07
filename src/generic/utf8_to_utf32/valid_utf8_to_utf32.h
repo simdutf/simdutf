@@ -9,7 +9,14 @@ simdutf_warn_unused size_t convert_valid(const char *input, size_t size,
                                          char32_t *utf32_output) noexcept {
   size_t pos = 0;
   char32_t *start{utf32_output};
-  const size_t safety_margin = 16; // to avoid overruns!
+  // The least margin proved in formal/safety_margins for the kernels that
+  // compile this header. The LoongArch calls overshoot by at most
+  // 2 units and need 4; the others overshoot by 4 and need 12.
+#if defined(SIMDUTF_IS_LSX) || defined(SIMDUTF_IS_LASX)
+  const size_t safety_margin = 4;
+#else
+  const size_t safety_margin = 12;
+#endif
   while (pos + 64 + safety_margin <= size) {
     simd8x64<int8_t> in(reinterpret_cast<const int8_t *>(input + pos));
     if (in.is_ascii()) {

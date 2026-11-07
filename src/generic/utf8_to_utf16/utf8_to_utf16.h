@@ -4,6 +4,17 @@ namespace {
 namespace utf8_to_utf16 {
 using namespace simd;
 
+// Leading bytes counted back from the end of the input for the dynamic
+// safety margin: the least value proved in formal/safety_margins for the
+// kernels that compile this header. The arm64 stores need 2;
+// the 16-byte loads at pos + 51 need at least 2 everywhere; the other
+// kernels' stores need 3.
+#if defined(SIMDUTF_IS_ARM64)
+constexpr size_t utf16_leading_bytes = 2;
+#else
+constexpr size_t utf16_leading_bytes = 3;
+#endif
+
 simdutf_really_inline simd8<uint8_t>
 check_special_cases(const simd8<uint8_t> input, const simd8<uint8_t> prev1) {
   // Bit 0 = Too Short (lead byte/ASCII followed by lead byte/ASCII)
@@ -172,14 +183,15 @@ struct validating_transcoder {
     // last 16 bytes, and if the data is valid, then it is entirely safe because
     // 16 UTF-8 bytes generate much more than 8 bytes. However, you cannot
     // generally assume that you have valid UTF-8 input, so we are going to go
-    // back from the end counting 8 leading bytes, to give us a good margin.
+    // back from the end counting utf16_leading_bytes leading bytes, the margin
+    // proved in formal/safety_margins.
     size_t leading_byte = 0;
     size_t margin = size;
-    for (; margin > 0 && leading_byte < 8; margin--) {
+    for (; margin > 0 && leading_byte < utf16_leading_bytes; margin--) {
       leading_byte += (int8_t(in[margin - 1]) > -65);
     }
-    // If the input is long enough, then we have that margin is the eighth last
-    // leading byte.
+    // If the input is long enough, then margin is the position of the
+    // utf16_leading_bytes-th last leading byte.
     const size_t safety_margin = size - margin + 1; // to avoid overruns!
     while (pos + 64 + safety_margin <= size) {
       simd8x64<int8_t> input(reinterpret_cast<const int8_t *>(in + pos));
@@ -269,14 +281,15 @@ struct validating_transcoder {
     // last 16 bytes, and if the data is valid, then it is entirely safe because
     // 16 UTF-8 bytes generate much more than 8 bytes. However, you cannot
     // generally assume that you have valid UTF-8 input, so we are going to go
-    // back from the end counting 8 leading bytes, to give us a good margin.
+    // back from the end counting utf16_leading_bytes leading bytes, the margin
+    // proved in formal/safety_margins.
     size_t leading_byte = 0;
     size_t margin = size;
-    for (; margin > 0 && leading_byte < 8; margin--) {
+    for (; margin > 0 && leading_byte < utf16_leading_bytes; margin--) {
       leading_byte += (int8_t(in[margin - 1]) > -65);
     }
-    // If the input is long enough, then we have that margin is the eighth last
-    // leading byte.
+    // If the input is long enough, then margin is the position of the
+    // utf16_leading_bytes-th last leading byte.
     const size_t safety_margin = size - margin + 1; // to avoid overruns!
     while (pos + 64 + safety_margin <= size) {
       simd8x64<int8_t> input(reinterpret_cast<const int8_t *>(in + pos));

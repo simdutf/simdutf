@@ -4,6 +4,17 @@ namespace {
 namespace utf8_to_latin1 {
 using namespace simd;
 
+// Leading bytes counted back from the end of the input for the dynamic
+// safety margin: the least value proved in formal/safety_margins for the
+// kernels that compile this header. The LoongArch stores need 0,
+// but the 16-byte loads at pos + 51 need at least 2; the other kernels'
+// stores need 3.
+#if defined(SIMDUTF_IS_LSX) || defined(SIMDUTF_IS_LASX)
+constexpr size_t latin1_leading_bytes = 2;
+#else
+constexpr size_t latin1_leading_bytes = 3;
+#endif
+
 simdutf_really_inline simd8<uint8_t>
 check_special_cases(const simd8<uint8_t> input, const simd8<uint8_t> prev1) {
   // For UTF-8 to Latin 1, we can allow any ASCII character, and any
@@ -155,14 +166,15 @@ struct validating_transcoder {
     // last 16 bytes, and if the data is valid, then it is entirely safe because
     // 16 UTF-8 bytes generate at least 4 bytes. However, you cannot
     // generally assume that you have valid UTF-8 input, so we are going to go
-    // back from the end counting 16 leading bytes, to give us a good margin.
+    // back from the end counting latin1_leading_bytes leading bytes, the margin
+    // proved in formal/safety_margins.
     size_t leading_byte = 0;
     size_t margin = size;
-    for (; margin > 0 && leading_byte < 16; margin--) {
+    for (; margin > 0 && leading_byte < latin1_leading_bytes; margin--) {
       leading_byte += (int8_t(in[margin - 1]) >
                        -65); // twos complement of -65 is 1011 1111 ...
     }
-    // If the input is long enough, then we have that margin is the sixteenth
+    // If the input is long enough, then we have that margin is the third
     // last leading byte.
     const size_t safety_margin = size - margin + 1; // to avoid overruns!
     while (pos + 64 + safety_margin <= size) {
@@ -253,14 +265,15 @@ struct validating_transcoder {
     // last 16 bytes, and if the data is valid, then it is entirely safe because
     // 16 UTF-8 bytes generate at least 4 bytes. However, you cannot
     // generally assume that you have valid UTF-8 input, so we are going to go
-    // back from the end counting 8 leading bytes, to give us a good margin.
+    // back from the end counting latin1_leading_bytes leading bytes, the margin
+    // proved in formal/safety_margins.
     size_t leading_byte = 0;
     size_t margin = size;
-    for (; margin > 0 && leading_byte < 8; margin--) {
+    for (; margin > 0 && leading_byte < latin1_leading_bytes; margin--) {
       leading_byte += (int8_t(in[margin - 1]) > -65);
     }
-    // If the input is long enough, then we have that margin is the eighth last
-    // leading byte.
+    // If the input is long enough, then margin is the position of the
+    // latin1_leading_bytes-th last leading byte.
     const size_t safety_margin = size - margin + 1; // to avoid overruns!
     while (pos + 64 + safety_margin <= size) {
       simd8x64<int8_t> input(reinterpret_cast<const int8_t *>(in + pos));

@@ -9,9 +9,7 @@ lsx_convert_utf32_to_utf8(const char32_t *buf, size_t len, char *utf8_out) {
   __m128i v_d800 = lsx_splat_u16(0xd800);
   __m128i forbidden_bytemask = __lsx_vldi(0x0);
 
-  const size_t safety_margin =
-      12; // to avoid overruns, see issue
-          // https://github.com/simdutf/simdutf/issues/92
+  const size_t safety_margin = 3; // proved in formal/safety_margins
 
   while (end - buf > std::ptrdiff_t(16 + safety_margin)) {
     __m128i in = __lsx_vld(reinterpret_cast<const uint32_t *>(buf), 0);
@@ -238,9 +236,7 @@ lsx_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
   __m128i v_dfff = lsx_splat_u16(0xdfff);
   __m128i v_d800 = lsx_splat_u16(0xd800);
   __m128i forbidden_bytemask = __lsx_vldi(0x0);
-  const size_t safety_margin =
-      12; // to avoid overruns, see issue
-          // https://github.com/simdutf/simdutf/issues/92
+  const size_t safety_margin = 3; // proved in formal/safety_margins
 
   while (end - buf > std::ptrdiff_t(16 + safety_margin)) {
     __m128i in = __lsx_vld(reinterpret_cast<const uint32_t *>(buf), 0);

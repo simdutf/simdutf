@@ -4,16 +4,14 @@ avx2_convert_utf32_to_utf16(const char32_t *buf, size_t len,
                             char16_t *utf16_output) {
   const char32_t *end = buf + len;
 
-  const size_t safety_margin =
-      12; // to avoid overruns, see issue
-          // https://github.com/simdutf/simdutf/issues/92
   __m256i forbidden_bytemask = _mm256_setzero_si256();
 
   const __m256i v_ffff0000 = _mm256_set1_epi32((int32_t)0xffff0000);
   const __m256i v_f800 = _mm256_set1_epi32((uint32_t)0xf800);
   const __m256i v_d800 = _mm256_set1_epi32((uint32_t)0xd800);
 
-  while (end - buf >= std::ptrdiff_t(8 + safety_margin)) {
+  // no safety margin needed, see formal/safety_margins
+  while (end - buf >= 8) {
     const __m256i in = _mm256_loadu_si256((__m256i *)buf);
 
     if (simdutf_likely(_mm256_testz_si256(in, v_ffff0000))) {
@@ -87,15 +85,12 @@ avx2_convert_utf32_to_utf16_with_errors(const char32_t *buf, size_t len,
   const char32_t *start = buf;
   const char32_t *end = buf + len;
 
-  const size_t safety_margin =
-      12; // to avoid overruns, see issue
-          // https://github.com/simdutf/simdutf/issues/92
-
   const __m256i v_ffff0000 = _mm256_set1_epi32((int32_t)0xffff0000);
   const __m256i v_f800 = _mm256_set1_epi32((uint32_t)0xf800);
   const __m256i v_d800 = _mm256_set1_epi32((uint32_t)0xd800);
 
-  while (end - buf >= std::ptrdiff_t(8 + safety_margin)) {
+  // no safety margin needed, see formal/safety_margins
+  while (end - buf >= 8) {
     const __m256i in = _mm256_loadu_si256((__m256i *)buf);
 
     if (simdutf_likely(_mm256_testz_si256(in, v_ffff0000))) {

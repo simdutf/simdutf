@@ -21,7 +21,7 @@ sse_convert_latin1_to_utf8(const char *latin_input,
   // slow path writes useful 8-15 bytes twice (eagerly writes 16 bytes and then
   // adjust the pointer) so the last write can exceed the utf8_output size by
   // 8 bytes by reserving 8 extra input bytes, we expect the output to have
-  // 8-16 bytes free
+  // 8-16 bytes free, see formal/safety_margins
   while (end - latin_input >= 16 + 8) {
     // Load 16 Latin1 characters (16 bytes) into a 128-bit register
     __m128i v_latin = _mm_loadu_si128((__m128i *)latin_input);
