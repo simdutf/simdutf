@@ -229,6 +229,20 @@ theorem westmere_utf32to8_tied :
   ⟨Arch.Westmere.cur_utf32to8, fits_spec _ _ (by decide),
    scalar_ok 15 _ (by decide)⟩
 
+/-- The westmere plain loop can move its cursor forward by 8 inside an
+iteration, when the first 8 units are ASCII and the next 8 are not
+(`buf += 8`, src/westmere/sse_convert_utf32_to_utf8.cpp:79; `in = thirdin`,
+:86); the paths that follow, and the scalar fallback (:282-288), then run
+from the shifted cursor, with `r - 8` units left. Its reads still stay
+below the `r` units the loop test guarantees: at most offset 23 of the
+iteration. -/
+theorem westmere_utf32to8_shifted :
+    ∀ r k, need 16 12 false ≤ r → k < fwd 15 (r - 8) → 8 + k < r ∧ 8 + k ≤ 23 := by
+  intro r k hr hk
+  simp only [need, strictBump] at hr
+  unfold fwd at hk
+  split at hk <;> omega
+
 theorem westmere_utf32to16_tied :
     Arch.Westmere.utf32to16.all (Iter.ok (need 16 4 false)) = true ∧
     (∀ n, need 16 4 false ≤ n → ∀ p ∈ westmere_utf32to16.loads, p.1 + p.2 ≤ n) :=

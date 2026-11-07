@@ -1,7 +1,7 @@
 import SafetyMargins.Tables
 /-
 The UTF-8 check of the generic transcoders, `check_utf8_bytes`
-(src/generic/utf8_to_utf16/utf8_to_utf16.h:118 and the utf32 and latin1
+(src/generic/utf8_to_utf16/utf8_to_utf16.h:129 and the utf32 and latin1
 copies): `check_special_cases` and `check_multibyte_lengths` of
 src/generic/utf8_validation/utf8_lookup4_algorithm.h, applied to a 64-byte
 block whose first chunk has `prev_input = 0`.
@@ -43,7 +43,7 @@ def pairOK (p1 c : Nat) : Bool :=
     (decide (0xC0 ≤ p1) → decide (0xC2 ≤ p1) && decide (p1 ≤ 0xF4))
 
 theorem pair_ok : (List.range 256).all (fun p1 => (List.range 256).all fun c => pairOK p1 c) = true := by
-  native_decide
+  decide +kernel
 
 
 theorem xor_zero {a b : Nat} (h : a ^^^ b = 0) : a = b := by

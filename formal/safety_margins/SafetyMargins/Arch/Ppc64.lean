@@ -12,19 +12,19 @@ open SafetyMargins SafetyMargins.Kernels SafetyMargins.Utf8
 
 /-! ## UTF-16 to UTF-8 -/
 
-/-- src/ppc64/ppc64_convert_utf16_to_utf8.cpp:186,
+/-- src/ppc64/ppc64_convert_utf16_to_utf8.cpp:184,
 `while (end - buf >= 16 + safety_margin)`, `safety_margin = 12`.
 One 8-unit register (`reg8ppc`):
-* :229 1/2-byte path, `write_v_u16_11bits_to_utf8` (ppc64_write_to_utf8.cpp:56):
-  one 16-byte store;
-* :247 1/2/3-byte path, `ppc64_convert_utf16_to_1_2_3_bytes_of_utf8`:
-  16-byte stores at +0 and at `row0[0]` = L(first 4 units) (:157-159; the
+* :227-231 1/2-byte path, `write_v_u16_11bits_to_utf8`
+  (src/ppc64/ppc64_write_to_utf8.cpp:56): one 16-byte store;
+* ppc64_convert_utf16_to_utf8.cpp:244-249 1/2/3-byte path,
+  `ppc64_convert_utf16_to_1_2_3_bytes_of_utf8`: 16-byte stores at +0 and at `row0[0]` = L(first 4 units) (:157-159; the
   ppc64 table `ppc64_utf16_to_utf8::pack_1_2_3_utf8_bytes`);
 * :119-140 `mask == 0` (eight 3-byte units): 16-byte stores at +0 and +16,
   advance 24: ends 8 past L of the 8 units (`tail 8`);
-* :253-291 scalar fallback: `forward = 15` plus the low half of a pair, so
+* :251-290 scalar fallback: `forward = 15` plus the low half of a pair, so
   1..16 units, one byte at a time, returns on a bad pair.
-:192-218: when the first 8 units are ASCII and the next 8 are not, a 16-byte
+:190-216: when the first 8 units are ASCII and the next 8 are not, a 16-byte
 store for 8 units, then `in = nextin` and the register path runs in the same
 iteration (`afterAscii8 16`). -/
 def utf16to8 : List Iter := fallthrough8 16 reg8ppc
@@ -43,11 +43,11 @@ theorem wit_utf16to8 :
 
 /-! ## UTF-32 to UTF-8 -/
 
-/-- src/ppc64/ppc64_convert_utf32_to_utf8.cpp:22,
+/-- src/ppc64/ppc64_convert_utf32_to_utf8.cpp:20,
 `while (end - buf >= 16 + safety_margin)`, `safety_margin = 12`. Same register
-paths as UTF-16 (the 8 units are packed with unsigned saturation, :34, so a
+paths as UTF-16 (the 8 units are packed with unsigned saturation, :32, so a
 unit > 0xFFFF never looks like 1, 2 or 3 bytes), but the scalar fallback
-(:121-151) consumes at most 15 units (no pair). ASCII fall-through :45-74. -/
+(:114-150) consumes at most 15 units (no pair). ASCII fall-through :43-72. -/
 def reg8ppc32 : List Iter :=
   [ { consumed := 8, stores := [.rel 0 16] },
     { consumed := 8, stores := [.rel 0 16, .rel 4 16] },
@@ -201,10 +201,10 @@ theorem utf16to32_safe (choose : List Nat → Iter)
 
 /-! ## UTF-8 sources: dynamic margin `K`
 
-src/generic/utf8_to_utf16/utf8_to_utf16.h:178/:275,
-src/generic/utf8_to_utf32/utf8_to_utf32.h:175/:269,
-src/generic/utf8_to_latin1/utf8_to_latin1.h:161 and :259,
-src/generic/utf8_to_latin1/valid_utf8_to_latin1.h:18 (all `K = 3`), calling the
+src/generic/utf8_to_utf16/utf8_to_utf16.h:196/:294,
+src/generic/utf8_to_utf32/utf8_to_utf32.h:193/:288,
+src/generic/utf8_to_latin1/utf8_to_latin1.h:180 and :278,
+src/generic/utf8_to_latin1/valid_utf8_to_latin1.h:37 (all `K = 3`), calling the
 ppc64 `convert_masked_utf8_to_*`. Pairs are `(stored, produced + 1)`
 (`Utf8.MPath`); exact paths are omitted. The 64-byte ASCII stores and
 `convert_ascii_tail` write 1 unit per ASCII byte. -/
@@ -234,7 +234,7 @@ theorem K_ppc_utf32 : okK 3 ppc_utf32 = true ∧ okK 2 ppc_utf32 = false := by d
 theorem K_ppc_latin1 : okK 3 ppc_latin1 = true ∧ okK 2 ppc_latin1 = false := by decide
 
 set_option maxRecDepth 100000 in
-/-- The `idx < 209` UTF-16 path (:136-206) emits a surrogate pair when
+/-- The `idx < 209` UTF-16 path (ppc64_convert_utf8_to_utf16.cpp:136-206) emits a surrogate pair when
 `composed > 0x3c00000`. With the lead byte in the top byte of `perm` and every
 other field at its maximum, a lead byte `< 0xF0` keeps `composed ≤ 0x3BFFFFF`:
 so a pair (weight 2) is only produced from a lead byte that
@@ -246,8 +246,8 @@ theorem ppc_surrogate_lead :
 
 /-! ## `convert_valid` with a fixed margin
 
-src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:15 and
-src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:12 use `safety_margin = 9` and `12`.
+src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:21 and
+src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:18 use `safety_margin = 9` and `12`.
 For valid input the overshoot is at most 4 units, which needs `m ≥ 9`
 (UTF-16) and `m ≥ 12` (UTF-32): `Utf8.valid_utf16` and `Utf8.valid_utf32`. -/
 

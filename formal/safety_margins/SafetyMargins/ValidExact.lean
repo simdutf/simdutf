@@ -97,7 +97,7 @@ def closureOK : Bool :=
           goodA (step s c) f2 (decide (0xE0 ≤ p1)) (decide (0xF0 ≤ p1)) c)
 
 
-theorem closure : closureOK = true := by native_decide
+theorem closure : closureOK = true := by decide +kernel
 
 theorem goodA_lt {s f3 e2 f2 p1} (h : goodA s f3 e2 f2 p1 = true) : s < 8 := by
   unfold goodA at h

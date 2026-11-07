@@ -352,13 +352,16 @@ def lvTight : List Nat :=
 
 /-- **x86, arm64 and POWER, valid UTF-8 to Latin-1: `K = 2` overflows on
 input the contract allows.** The loop test admits the block at 0 with
-`K = 2` and rejects it with `K = 3`. The calls of the westmere, haswell,
-arm64 and ppc64 Latin-1 kernels (src/*/..._convert_utf8_to_latin1.cpp; none
-has a 16-byte ASCII path) are: the `0xfff` path at 0 and 12 (12 bytes,
-12 out), and the rows of masks `0xAAA` at 24 (12 bytes), `0xD7E` at 36
+`K = 2` and rejects it with `K = 3`. The westmere, haswell, arm64 and ppc64
+Latin-1 kernels (src/*/..._convert_utf8_to_latin1.cpp) take their `0xfff`
+path only when the whole remaining mask is `0xfff`, that is, at the end of a
+block; elsewhere they convert six ASCII bytes per table row (masks `0xFFF`,
+`0xABF`: row 0, 6 bytes). Their calls here are: rows of 6 bytes at 0, 6, 12
+and 18, then the rows of masks `0xAAA` at 24 (12 bytes), `0xD7E` at 36
 (7 bytes) and `0xFFA` at 43 (8 bytes), 6 out each (`TableFacts.lv_rows`).
 They reach byte 51 with 42 bytes out, `L` of the first 51 bytes. At 51 the
-mask is `0xfff` again: the kernel stores 16 bytes (`_mm_storeu_si128`,
+12 bits of the mask are `0xfff` and they are the last 12 of the block, so
+the whole mask is `0xfff`: the kernel stores 16 bytes (`_mm_storeu_si128`,
 `vst1q_u8`, `vec_xst`), the path `(16, 13)` of `x86_latin1` (and of
 `Arm64.arm_latin1`, `Ppc64.ppc_latin1`), and that store ends at 58, one
 byte past `L = 57`. -/
@@ -366,9 +369,10 @@ theorem lv_tight_K2 :
     let bs := lvTight
     let xs := bs.map w01
     LV bs ∧ bs.length = 67 ∧
-      emask xs 0 12 = 0xFFF ∧ emask xs 12 12 = 0xFFF ∧
+      emask xs 0 12 = 0xFFF ∧ emask xs 6 12 = 0xFFF ∧ emask xs 12 12 = 0xFFF ∧
+      emask xs 18 12 = 0xABF ∧
       emask xs 24 12 = 0xAAA ∧ emask xs 36 12 = 0xD7E ∧
-      emask xs 43 12 = 0xFFA ∧ emask xs 51 12 = 0xFFF ∧
+      emask xs 43 12 = 0xFFA ∧ emask xs 51 12 = 0xFFF ∧ 51 + 12 = 63 ∧
       VReach bs true 0 51 42 ∧ 42 = L (xs.take 51) ∧
       0 + 64 + (tk 2 xs + 1) ≤ xs.length ∧
       ¬ (0 + 64 + (tk 3 xs + 1) ≤ xs.length) ∧
@@ -377,20 +381,25 @@ theorem lv_tight_K2 :
       42 + 16 = L xs + 1 := by
   intro bs xs
   refine ⟨?_, by decide, by decide, by decide, by decide, by decide, by decide,
-    by decide, ?_, by decide, by decide, by decide, by decide, by decide, by decide⟩
+    by decide, by decide, by decide, rfl, ?_, by decide, by decide, by decide,
+    by decide, by decide, by decide⟩
   · show LV lvTight
     unfold lvTight
     simp only [List.replicate, List.flatten, List.cons_append, List.nil_append]
     lv_decide
   · have h1 : VReach bs true 0 0 0 := VReach.enter 0 0 VReach.start (by decide)
-    have h2 : VReach bs true 0 12 12 :=
-      VReach.call 0 0 0 12 12 h1 (by decide) (by decide) (by decide) (by decide)
-    have h3 : VReach bs true 0 24 24 :=
-      VReach.call 0 12 12 12 12 h2 (by decide) (by decide) (by decide) (by decide)
-    have h4 : VReach bs true 0 36 30 :=
-      VReach.call 0 24 24 12 6 h3 (by decide) (by decide) (by decide) (by decide)
-    have h5 : VReach bs true 0 43 36 :=
-      VReach.call 0 36 30 7 6 h4 (by decide) (by decide) (by decide) (by decide)
-    exact VReach.call 0 43 36 8 6 h5 (by decide) (by decide) (by decide) (by decide)
+    have h2 : VReach bs true 0 6 6 :=
+      VReach.call 0 0 0 6 6 h1 (by decide) (by decide) (by decide) (by decide)
+    have h3 : VReach bs true 0 12 12 :=
+      VReach.call 0 6 6 6 6 h2 (by decide) (by decide) (by decide) (by decide)
+    have h4 : VReach bs true 0 18 18 :=
+      VReach.call 0 12 12 6 6 h3 (by decide) (by decide) (by decide) (by decide)
+    have h5 : VReach bs true 0 24 24 :=
+      VReach.call 0 18 18 6 6 h4 (by decide) (by decide) (by decide) (by decide)
+    have h6 : VReach bs true 0 36 30 :=
+      VReach.call 0 24 24 12 6 h5 (by decide) (by decide) (by decide) (by decide)
+    have h7 : VReach bs true 0 43 36 :=
+      VReach.call 0 36 30 7 6 h6 (by decide) (by decide) (by decide) (by decide)
+    exact VReach.call 0 43 36 8 6 h7 (by decide) (by decide) (by decide) (by decide)
 
 end SafetyMargins.ValidLatin1

@@ -28,7 +28,7 @@ theorem cur_latin1to32 : latin1to32.all (Iter.ok (need 16 0 false)) = true := by
 
 /-! ## Latin-1 to UTF-8 -/
 
-/-- src/arm64/arm_convert_latin1_to_utf8.cpp:13, `while (end - in >= 16)`:
+/-- src/arm64/arm_convert_latin1_to_utf8.cpp:12, `while (end - in >= 16)`:
 ASCII path stores 16 for 16; otherwise only the low 8 bytes are converted and
 one 16-byte store is done (`Kernels.latin1to8_one`). -/
 def latin1to8 : List Iter := latin1to8_one
@@ -55,13 +55,13 @@ theorem cur_toLatin1 : toLatin1.all (Iter.ok (need 8 0 false)) = true := by deci
 
 /-! ## UTF-16 to UTF-8 -/
 
-/-- src/arm64/arm_convert_utf16_to_utf8.cpp:65 (plain) and :334
+/-- src/arm64/arm_convert_utf16_to_utf8.cpp:63 (plain) and :330
 (`_with_errors`), `while (end - buf >= 16 + 12)`. ASCII test on 16 units; if
 only the first 8 are ASCII, an 8-byte store and `in = nextin` fall-through
 into the 1/2-byte path (one 16-byte store), the 1/2/3-byte path (16-byte
 stores at `L` of 0 and 4 units), or the scalar fallback (at most 16 units).
 Same as `Kernels.utf16to8_arm64`. Also used, unchanged, by
-`convert_utf16*_to_utf8_with_replacement` (implementation.cpp:1183). -/
+`convert_utf16*_to_utf8_with_replacement` (src/arm64/implementation.cpp:1183). -/
 def utf16to8 : List Iter := utf16to8_arm64
 
 theorem m_utf16to8 : optimalMargin 16 false utf16to8 = 12 := by decide
@@ -77,7 +77,7 @@ theorem wit_utf16to8 :
 
 /-! ## UTF-32 to UTF-8 -/
 
-/-- src/arm64/arm_convert_utf32_to_utf8.cpp:13 (plain) and :264
+/-- src/arm64/arm_convert_utf32_to_utf8.cpp:11 (plain) and :260
 (`_with_errors`), `while (buf + 16 + 3 < end)` (strict): 8 units per
 iteration, ASCII 8-byte store, 1/2-byte path (one 16-byte store), 1/2/3-byte
 path (16-byte stores at 0 and `L(4 units)`), scalar fallback (at most 15
@@ -102,7 +102,7 @@ theorem wit_utf32to8 :
 
 /-! ## UTF-32 to UTF-16 -/
 
-/-- src/arm64/arm_convert_utf32_to_utf16.cpp:77 (plain) and :132
+/-- src/arm64/arm_convert_utf32_to_utf16.cpp:76 (plain) and :130
 (`_with_errors`), `while (end - buf >= 8 + 4)`: BMP path stores 8 for 8; the
 supplementary path stores 8 `char16_t` per group of 4 units, at
 `u16count = 4 + popcount` = `L` of the first 4. The `_with_errors` error path
@@ -193,10 +193,10 @@ theorem utf16to32_safe (choose : List Nat → Iter)
 
 /-! ## UTF-8 sources: dynamic margin `K`
 
-src/generic/utf8_to_utf16/utf8_to_utf16.h:178/:275,
-src/generic/utf8_to_utf32/utf8_to_utf32.h:175/:269,
-src/generic/utf8_to_latin1/utf8_to_latin1.h:161 and :259,
-src/generic/utf8_to_latin1/valid_utf8_to_latin1.h:18 (all `K = 3`), calling the
+src/generic/utf8_to_utf16/utf8_to_utf16.h:174/:271,
+src/generic/utf8_to_utf32/utf8_to_utf32.h:171/:266,
+src/generic/utf8_to_latin1/utf8_to_latin1.h:157 and :255,
+src/generic/utf8_to_latin1/valid_utf8_to_latin1.h:19 (`K = 2` for UTF-16 on arm64, `K = 3` for the others), calling the
 arm64 `convert_masked_utf8_to_*`. Pairs are `(stored, produced + 1)`, see
 `Utf8.MPath`; exact paths are omitted. -/
 
@@ -210,12 +210,12 @@ example : Utf8.arm_utf16 = [⟨8, 7⟩, ⟨8, 7⟩, ⟨6, 4⟩] := rfl
 
 /-- src/arm64/arm_convert_utf8_to_utf32.cpp: `0xfff` (:23, 16 stored by
 `store_ascii_as_utf32_tbl`, 12 produced), `0xaaa` (:44, 8, 6), `idx < 64`
-(:61, 8, 6), `0x888` (:103, 4, 3), `idx < 209` (:138, 4, 3). `0x924` and
+(:61, 8, 6), `0x888` (:103, 4, 3), `idx < 209` (:136-174, 4, 3). `0x924` and
 `idx < 145` are exact. Same pairs as `Utf8.x86_utf32`. -/
 def arm_utf32 : List MPath := [⟨16, 13⟩, ⟨8, 7⟩, ⟨8, 7⟩, ⟨4, 4⟩, ⟨4, 4⟩]
 
 /-- src/arm64/arm_convert_utf8_to_latin1.cpp: `0xfff` (:23, 16 stored, 12
-produced), `idx < 64` (:61, 8 stored, 6 produced). Same as `Utf8.x86_latin1`. -/
+produced), `idx < 64` (:40-68, 8 stored, 6 produced). Same as `Utf8.x86_latin1`. -/
 def arm_latin1 : List MPath := [⟨16, 13⟩, ⟨8, 7⟩]
 
 /-- The same store paths as `Utf8.x86_latin1`, so `ValidLatin1.lv_tight_K2`
@@ -249,8 +249,8 @@ theorem arm_fff_tight :
 
 /-! ## `convert_valid` with a fixed margin (valid input only)
 
-src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:15 (9) and
-src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:12 (12). On valid input the arm64
+src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:21 (9; 3 on arm64, :19) and
+src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:18 (12). On valid input the arm64
 UTF-16 paths overshoot by at most 2 (`0xaaa`, `idx < 64`; `0x888` is exact
 on valid input), the UTF-32 paths by at most 4 (`0xfff`), which needs 12
 (`Utf8.valid_utf32`, `Utf8.valid_utf32_tight`). -/

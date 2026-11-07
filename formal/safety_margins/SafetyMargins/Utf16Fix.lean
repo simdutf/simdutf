@@ -174,7 +174,7 @@ writes `output[i]`, and, for `1 ≤ i`, may write `output[i - 1]` (line 199;
 `high_surrogate_prev` is false at `i = 0`); after the loop, `output[len - 1]`
 for `1 ≤ len` (line 212). Used for `n < 9` on westmere and haswell, `n < 17`
 on arm64, `n < N + 1` on lsx and lasx, and always on fallback and ppc64
-(src/ppc64/implementation.cpp:268-277). -/
+(src/ppc64/implementation.cpp:268-278). -/
 def scalarAcc (n : Nat) : List Acc :=
   (List.range n).flatMap (fun i =>
     [⟨.inp, i, 1⟩, ⟨.out, i, 1⟩] ++
@@ -233,8 +233,10 @@ theorem haswell_inBounds (n : Nat) : AllInB n (haswellAcc n) := by
 
 /-- `utf16fix_short`, src/icelake/icelake_utf16fix.cpp:63-104, for
 `1 ≤ n ≤ 32`: `mask` has the low `n` bits (line 68). The lookback load at
-`in - 1` uses `mask << 1` (lines 72-73), so its active lanes `1 .. n` are
-`in[0, n)` and `in[-1]` is not read; the block load (line 74) and the store
+`in - 1` uses `mask << 1` (lines 72-73), so its active lanes are
+`1 .. min n 31` (bit 32 of the shifted 32-bit mask is dropped when `n = 32`),
+within `in[0, n)`, and `in[-1]` is not read; the model takes all of
+`in[0, n)`, a safe over-approximation; the block load (line 74) and the store
 (lines 94-99) use `mask`: `in[0, n)`, `out[0, n)`. Then `out[n - 1]`
 (line 101). -/
 def icelakeShortAcc (n : Nat) : List Acc :=
@@ -320,9 +322,9 @@ theorem arm64_inBounds (n : Nat) : AllInB n (arm64Acc n) := by
 
 /-- `utf16::to_well_formed<N>`, src/generic/utf16/to_well_formed.h:53-88,
 with `N = vector_u16::ELEMENTS`: 8 on lsx (16-byte `__m128i`,
-src/simdutf/lsx/simd16-inl.h:4-6; used at src/lsx/implementation.cpp:385-392)
+src/simdutf/lsx/simd16-inl.h:4-6; used at src/lsx/implementation.cpp:385-393)
 and 16 on lasx (32-byte `__m256i`, src/simdutf/lasx/simd16-inl.h:15-18; used
-at src/lasx/implementation.cpp:385-392). Scalar for `n < N + 1` (line 58);
+at src/lasx/implementation.cpp:385-393). Scalar for `n < N + 1` (line 58);
 otherwise `out[0]` (line 65), blocks of `N` at `i = 1, N + 1, ...` while
 `i + N < n` (lines 71, 78), the final block at `n - N` (lines 75, 82), and
 `out[n - 1]` (line 85). The block, lines 16-51, loads at `in - 1` and `in`

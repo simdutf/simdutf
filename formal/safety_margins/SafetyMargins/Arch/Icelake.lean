@@ -15,8 +15,8 @@ open SafetyMargins SafetyMargins.Kernels SafetyMargins.Utf8
 `latin1_to_utf8_avx512_branch` (line 74): ASCII stores 64 bytes (line 80);
 otherwise `latin1_to_utf8_avx512_vec(..., mask_output = 0)` stores 64 bytes at
 the cursor (line 67) and 64 bytes at `output_sizeA` = 32 + nonascii(first 32)
-= L(first 32 bytes) (lines 53, 68-69). The two calls after the loop (lines 95,
-101) use masked stores of exactly the produced count. -/
+= L(first 32 bytes) (lines 53, 68-69). After the loop, the two calls (lines
+98, 105) use masked stores of exactly the produced count. -/
 def latin1to8 : List Iter :=
   [ { consumed := 64, stores := [.rel 0 64] },
     { consumed := 64, stores := [.rel 0 64, .rel 32 64] } ]
@@ -83,7 +83,7 @@ theorem cur_utf32to1 : utf32to1.all (Iter.ok (need 16 0 false)) = true := by dec
 
 /-! ## UTF-32 to UTF-8 -/
 
-/-- src/icelake/icelake_convert_utf32_to_utf8.inl.cpp:21 and :306
+/-- src/icelake/icelake_convert_utf32_to_utf8.inl.cpp:19 and :302
 (`_with_errors`), `end - buf >= 16 + 12`. The haswell code: ASCII path one
 16-byte store (`continue`), 1/2-byte path two 16-byte stores at L of 0 and 8
 units (`pack_1_2_utf8_bytes`), 1/2/3-byte path four 16-byte stores at L of 0,
@@ -122,7 +122,7 @@ theorem cur_utf32to16 : utf32to16.all (Iter.ok (need 16 0 false)) = true := by d
 src/icelake/icelake_convert_utf16_to_utf32.inl.cpp:144, `end - buf >= 32`.
 `utf32_length_from_utf16` gives 0 to a low surrogate, so `Pos` fails.
 * No surrogate (lines 249-254): 32 units in, 32 out, exact.
-* Surrogates with `V = L ^ (carry | H << 1) == 0` (line 165): 31 consumed;
+* Surrogates with `V = L ^ (carry | H << 1) == 0` (line 166): 31 consumed;
   an unmasked 16-unit store at the cursor (line 227), then a store masked to
   the produced count (line 234). The output is exact: a high surrogate in lane
   30 is paired with lane 31, which is consumed (and weighs 0) next time.
@@ -598,24 +598,25 @@ Ice Lake does not include the generic `utf8_to_utf16.h` / `utf8_to_utf32.h` /
 `utf8_to_latin1.h` headers, so there is no `K`. Every store is masked to the
 number of code units it produces.
 
-* `process_block_utf8_to_utf16` (src/icelake/icelake_utf8_common.inl.cpp:24,
+* `process_block_utf8_to_utf16` (src/icelake/icelake_utf8_common.inl.cpp:25,
   driven by src/icelake/icelake_convert_utf8_to_utf16.inl.cpp:21 and :50,
   `final_in - in >= 64` for a full block, masked load otherwise). With
   `validate = true` every store path runs after the block passed the structure
-  check (`mc` against `m1234`, lines 146-157, 324-335, 376-387), which forces
+  check (`mc` against `m1234`, icelake_utf8_common.inl.cpp:143-158, :322-336,
+:377-388), which forces
   byte 0 to be a leading byte and every continuation byte to belong to a lead
   in the block. Then the produced count is the number of character ends in the
   consumed bytes, which is exactly `utf16_length_from_utf8` of them. `tail 0`.
-* `validating_utf8_to_fixed_length` (src/icelake/icelake_from_utf8.inl.cpp:32),
-  `_with_constant_checks` (:160) and `valid_utf8_to_fixed_length`
-  (src/icelake/icelake_from_valid_utf8.inl.cpp:45): each 16-byte lane emits
+* `validating_utf8_to_fixed_length` (src/icelake/icelake_from_utf8.inl.cpp:9),
+  `_with_constant_checks` (:137) and `valid_utf8_to_fixed_length`
+  (src/icelake/icelake_from_valid_utf8.inl.cpp:22): each 16-byte lane emits
   `count_ones(leading_bytes)`, the number of non-continuation bytes of that
   lane (`expand_and_identify`, icelake_utf8_common.inl.cpp:734), stored masked
   (`SIMDUTF_ICELAKE_WRITE_UTF16_OR_UTF32(..., true)`). That is exactly
   `utf32_length_from_utf8` of the lane, for every input, valid or not, and
   even though the validating version only checks errors after the loop.
   The `64 + 4` loop bound is for the 4-byte read at `ptr + 64`.
-* `utf8_to_latin1_avx512` (src/icelake/icelake_convert_utf8_to_latin1.inl.cpp:70):
+* `utf8_to_latin1_avx512` (src/icelake/icelake_convert_utf8_to_latin1.inl.cpp:59):
   a validated block stores `ascii + continuation` bytes, which is `L(block)`
   minus a lead in byte 63 plus a lead carried in. `latin1_lag` shows the
   cursor is `L(prefix) - e` with `e` the pending lead, so every store ends at

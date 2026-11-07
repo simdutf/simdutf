@@ -19,9 +19,11 @@ lake build
 
 `lean-toolchain` pins Lean 4.35. There is no mathlib and no `sorry`.
 `native_decide` is used only for finite checks: the lookup tables
-(`TableFacts.lean`), the validator on all byte pairs (`Validator.pair_ok`),
-the pair tests on all valid 4-byte characters (`Exact.pair4`), and the
-validator on every state of the UTF-8 automaton (`ValidExact.closure`).
+(`TableFacts.lean`) and the pair tests on all valid 4-byte characters
+(`Exact.pair4`). The other exhaustive checks (the validator on all byte
+pairs, `Validator.pair_ok`; on every state of the UTF-8 automaton,
+`ValidExact.closure`, `ValidatorSound.sound_closure`; the 16-bit lane facts
+of the replacement files) use `decide +kernel`, checked by the Lean kernel.
 
 ## Files
 
@@ -41,6 +43,13 @@ validator on every state of the UTF-8 automaton (`ValidExact.closure`).
 | `SafetyMargins/Utf16Fix.lean` | every access of every `utf16fix` kernel, for every length (§7) |
 | `SafetyMargins/Replacement.lean` | the two conversions with replacement (§7) |
 | `SafetyMargins/ValidExact.lean` | the `convert_valid` cursor and tail on valid UTF-8 (§7) |
+| `SafetyMargins/LoadsAll.lean` | the input loads of every other fixed-margin loop (§7) |
+| `SafetyMargins/ReplacementMore.lean` | `maximal_subpart`, the replacement length functions, the scalar validator (§7) |
+| `SafetyMargins/ReplacementRest.lean` | the Ice Lake replacement length, the window boundary, the whole UTF-8 → UTF-16 driver, the `_safe` UTF-16 → UTF-8 entry points (§7) |
+| `SafetyMargins/ValidatorSound.lean` | the SIMD UTF-8 validator accepts exactly valid UTF-8; the replacement driver end to end (§7) |
+| `SafetyMargins/RvvExact.lean` | every rvv kernel, on its lane values (§7) |
+| `SafetyMargins/ValidTight.lean` | a valid input on which the `convert_valid` UTF-8 → UTF-32 margin 11 overflows on x86, arm64 and POWER |
+| `check_citations.py` | checks that every C++ `file:line` cited in the Lean files exists, and that every cited loop test is a loop |
 | `SafetyMargins/IcelakeReal.lean` | the Ice Lake UTF-16 loops on the unit values, which discharge the data hypotheses of `safe_utf16to32_real` and `safe_utf16to8_real` (§7) |
 
 ## 1. Model (`Basic.lean`)
@@ -230,9 +239,11 @@ contract allows.
   controls fault.
 - `ValidLatin1.lv_tight_K2` gives `K = 2` failing for
   `valid_utf8_to_latin1.h` on x86, arm64 and POWER, on 67 bytes the contract
-  allows: a `VReach` derivation to byte 51 with the output at `L` of the
-  consumed bytes, then the `0xfff` path, which stores 16 bytes and ends one
-  past `L`. The three kernels have the same store paths
+  allows: a `VReach` derivation of the kernels' calls to byte 51 (table rows
+  of six ASCII bytes, then rows of 12, 7 and 8 bytes) with the output at `L`
+  of the consumed bytes, then the `0xfff` path, which stores 16 bytes and
+  ends one past `L`. The kernels compare the whole remaining mask with
+  `0xfff`, so that path runs only on the last 12 bits of a block. The three kernels have the same store paths
   (`Arm64.arm_latin1_eq_x86`, `Ppc64.ppc_latin1_eq_x86`).
 
 ### 3.1 The ASCII tail (`Validator.lean`, `Exact.lean`)
@@ -318,6 +329,10 @@ characters.
   only 3 units.
 - **UTF-32.** A character of at most 4 bytes gives one unit. A deficit of 4
   therefore needs `m ≥ 12` (`valid_utf32`, `valid_utf32_tight`).
+  `ValidTight.valid_utf32_tight` gives a valid 75-byte input on which the
+  x86, arm64 and POWER kernels, with margin 11, call at byte 51 through the
+  loop model of `ValidExact`, and the 12-ASCII path there stores 16 units,
+  one past `L`.
 
 `valid_utf16` and `valid_utf32` count units. The store forms
 (`overshoot_le`) give `s ≤ L (pre ++ expansion)` once the store ends at
@@ -464,9 +479,8 @@ Every loop now uses its optimal margin, for each target.
   replacement gives at least `⌈len/3⌉` units (`count_ge`), so the 32
   held-back bytes give at least 11 (`count_ge_11`, attained by
   `tight32_count`), and `bulk_store` bounds every store of the vector part.
-  Read from the C++: that the kernel reports the first unpaired surrogate;
-  that the vector length functions equal the scalar ones; that
-  `maximal_subpart` restarts the decoder as modelled.
+  The hypotheses of this file are discharged below
+  (`ReplacementMore`, `ReplacementRest`, `ValidatorSound`).
 - **`convert_valid` (`ValidExact.lean`).** Valid UTF-8 is the automaton of
   Unicode Table 3-7. A 64-byte block of valid UTF-8 that starts on a
   character boundary passes `check_utf8_bytes` (`checkedAt_of_valid`, through
@@ -481,3 +495,44 @@ Every loop now uses its optimal margin, for each target.
   `safe_utf16to8_real`, proved for every lane vector;
   `safe_utf16to32_kernel` and `safe_utf16to8_kernel` bound the whole loops
   with no data hypothesis.
+- **All other loads (`LoadsAll.lean`).** Every other fixed-margin loop of
+  the path tables (76 loop definitions over westmere, haswell, icelake,
+  arm64, ppc64, lsx and lasx): every vector load, every clamped scalar read
+  and every read before the cursor fits the units its loop test guarantees
+  (`all_fit`). Two loops read past what they consume, and the read sets
+  their margin: the icelake UTF-16 → UTF-8 loop (`read_utf16to8`) and the
+  icelake fixed-length UTF-8 decoders, whose `+ 4` is tight
+  (`icelake_utf8_fixed_tight`). In the 8-unit UTF-16 → UTF-32 loops only the
+  `end - buf - 1` clamp keeps the scalar fallback in the input
+  (`clamp_needed`).
+- **The rest of the replacement conversions.** `ReplacementMore`:
+  `maximal_subpart` (`subpart_of_none`), the scalar and vector length
+  functions with replacement equal the models (`lenRepl_eq`,
+  `bytemask_eq`, `armLen_eq`), the scalar kernel reports the first unpaired
+  surrogate (`sc8_spec`). `ReplacementRest`: the icelake length function
+  (`iceLen_eq`), the window of the UTF-8 → UTF-16 driver ends before a
+  leading byte, so an error inside it is an error of the whole input
+  (`window_error`), the whole entry point stays in the buffer
+  (`convertRepl_safe`, `tr_safe`), and the `_safe` UTF-16 → UTF-8 entry
+  points never write past their capacity (`replSafe_safe`, `crs_safe`).
+  `ValidatorSound`: the SIMD validator, over whole inputs with the carry
+  between blocks and `check_eof`, flags nothing exactly on valid UTF-8
+  (`flag_iff`); the vector `validate_utf8_with_counts` meets the
+  specification the driver needs (`vecV_spec`), and the UTF-8 → UTF-16
+  driver with replacement is exact end to end (`transcode_exact`).
+- **rvv (`RvvExact.lean`).** Every rvv kernel (base64 excluded), on the lane
+  values and any `vl` with `1 ≤ vl ≤ n`: no store ends past the length its
+  function gives (`*_safe`). The reparse step of the UTF-8 decoders needs
+  two leading bytes among the consumed bytes (`utf8_tail`); valid input and
+  the validating prologue guarantee it. On input that breaks the contract of
+  `convert_valid_utf8_to_utf16`/`utf32`, it can move before the output and
+  read `dst[-1]` outside it.
+- **Differential tests.** The models of `Replacement`, `IcelakeReal` and
+  `ValidExact` agree with the C++ on 200,000 random inputs on arm64, haswell
+  and icelake (the article's `bench/difftest`).
+
+What remains read from the C++ after §7: the transcriptions themselves
+(path tables, call shapes, load offsets, lane arithmetic), the RVV
+semantics of `vsetvl`, `vcompress` and `vcpop`, that `convert_valid_prefix`
+and `utf16_length_from_utf8` are exact on valid input, and that arm64's
+`neon_counter` sums the same counts as the generic code.

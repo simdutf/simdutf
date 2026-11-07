@@ -22,8 +22,9 @@ docstring), down to the bytes the `compress` masks keep. It then proves
 * the real-end safety of the whole loop, iteration after iteration, with no
   data hypothesis (`safe_utf16to32_kernel`, `safe_utf16to8_kernel`).
 
-Values are the units after the big-endian byte swap (line 26 / line 148), so
-both endiannesses are covered. A 16-bit lane `v` is a high surrogate when
+Values are the units after the big-endian byte swap
+(icelake_convert_utf16_to_utf8.inl.cpp:26,
+icelake_convert_utf16_to_utf32.inl.cpp:148), so both endiannesses are covered. A 16-bit lane `v` is a high surrogate when
 `(v & 0xfc00) == 0xd800`, that is `0xD800 ≤ v < 0xDC00` (`hiS`), and a low
 surrogate when `(v & 0xfc00) == 0xdc00` (`loS`).
 -/
@@ -71,7 +72,7 @@ Per iteration, on the 32 loaded lanes `l` and the carry `c`:
 * `H | L == 0` (line 158 false): no surrogate. Two unmasked 16-unit stores at
   the cursor and the cursor + 16 (lines 249-253): they end at 32. Advance 32
   (line 254), carry 0.
-* `V == 0` (line 166), `V = L ^ (carry | H << 1)`: the unmasked store of
+* `V == 0` with `V = L ^ (carry | H << 1)` (line 166): the unmasked store of
   `compressed_first` (16 units, line 227), then a store masked to `howmany2`
   units at the cursor + `howmany1` (line 234), with
   `howmany1 + howmany2 = popcount(~L & 0x7fffffff)`, the non-low lanes among

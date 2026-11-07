@@ -12,7 +12,7 @@ open SafetyMargins SafetyMargins.Kernels SafetyMargins.Utf8
 /-! ## Latin-1 to UTF-8 -/
 
 /-- src/lasx/lasx_convert_latin1_to_utf8.cpp:13, `end - latin1_input >= 16 + 8`.
-ASCII (:18-23): one 16-byte store, advance 16. Otherwise (:42-61): a 16-byte
+ASCII (:16-20): one 16-byte store, advance 16. Otherwise (:22-59): a 16-byte
 store at 0 and a 16-byte store at `row0[0]` = L(bytes 0..7)
 (`lasx_1_2_utf8_bytes_mask` maps the 8-bit ASCII mask to a `pack_1_2_utf8_bytes`
 row whose count is that sum; checked over all 256 masks). No scalar path, no
@@ -39,14 +39,14 @@ theorem wit_latin1to8 :
 /-- src/lasx/lasx_convert_latin1_to_utf16.cpp:12 (LE) and :50 (BE),
 `end - buf >= 32`: two `xvst` of 16 char16 for 32 bytes. -/
 def latin1to16 : List Iter := [{ consumed := 32, stores := [.rel 0 16, .rel 16 16] }]
-/-- The one-shot block after the loop, :25 and :63, `end - buf >= 16`: two
-`vst` of 8 char16. -/
+/-- The one-shot block after the loop: `if (end - buf >= 16)` at :25 and :63;
+two `vst` of 8 char16. -/
 def latin1to16_tail : List Iter := [{ consumed := 16, stores := [.rel 0 8, .rel 8 8] }]
 /-- src/lasx/lasx_convert_latin1_to_utf32.cpp:12, `end - buf >= 32`: four `xvst`
 of 8 char32. -/
 def latin1to32 : List Iter :=
   [{ consumed := 32, stores := [.rel 0 8, .rel 8 8, .rel 16 8, .rel 24 8] }]
-/-- :34, `end - buf >= 16`: four `vst` of 4 char32. -/
+/-- The one-shot block `if (end - buf >= 16)` at :34: four `vst` of 4 char32. -/
 def latin1to32_tail : List Iter :=
   [{ consumed := 16, stores := [.rel 0 4, .rel 4 4, .rel 8 4, .rel 12 4] }]
 
@@ -73,11 +73,11 @@ theorem cur_toLatin1 : toLatin1.all (Iter.ok (need 16 0 false)) = true := by dec
 
 /-! ## UTF-16 to UTF-8 -/
 
-/-- src/lasx/lasx_convert_utf16_to_utf8.cpp:67 and :319 (`_with_errors`),
-`end - buf >= 16 + 12`: ASCII (:72-83, one 16-byte store), 1/2-byte (:85-129,
-16-byte stores at 0 and `row1[0]` = L(units 0..7)), 1/2/3-byte (:134-251, four
+/-- src/lasx/lasx_convert_utf16_to_utf8.cpp:65 and :315 (`_with_errors`),
+`end - buf >= 16 + 12`: ASCII (:70-80, one 16-byte store), 1/2-byte (:83-127,
+16-byte stores at 0 and `row1[0]` = L(units 0..7)), 1/2/3-byte (:132-249, four
 16-byte stores at L of 0, 4, 8, 12 units, `pack_1_2_3_utf8_bytes`), surrogates
-(:253-292, scalar, 15 or 16 units, returns on a bad pair). Every path
+(:251-290, scalar, 15 or 16 units, returns on a bad pair). Every path
 `continue`s or ends the iteration: no half-register fall-through. This is
 `Kernels.wide16`. -/
 def utf16to8 : List Iter := Kernels.wide16
@@ -205,10 +205,10 @@ theorem curK : okK 3 lasx_utf32 = true ∧ okK 3 lasx_latin1 = true := by decide
 
 /-! ## `convert_valid` on valid input
 
-UTF-16 (src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:15): the worst lasx
+UTF-16 (src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:21): the worst lasx
 deficit is 8 - 4 = 4 (`0x924`, `idx < 145`), so margin 9 suffices
 (`Utf8.valid_utf16`, tight by `Utf8.valid_utf16_tight`).
-UTF-32 (src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:12): `0xaaa` and
+UTF-32 (src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:16): `0xaaa` and
 `idx < 64` store 8 units and produce 6, deficit 2, so the `1 + m` bytes after
 the call must hold 2 code points: m = 4. The 16-byte loads need only m ≥ 3. -/
 

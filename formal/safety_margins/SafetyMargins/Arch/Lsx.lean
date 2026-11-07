@@ -83,7 +83,7 @@ theorem wit_utf32toLatin1 :
 
 /-! ## UTF-16 to UTF-8 -/
 
-/-- src/lsx/lsx_convert_utf16_to_utf8.cpp:64 (plain) and :299 (`_with_errors`),
+/-- src/lsx/lsx_convert_utf16_to_utf8.cpp:62 (plain) and :295 (`_with_errors`),
 loop `end - buf >= 16 + 12`: the existing `Kernels.utf16to8_lsx` (16-byte ASCII
 store, then `in = nextin` fall-through into the 1/2-byte, 1/2/3-byte or scalar
 path, `forward = 15`). -/
@@ -100,7 +100,7 @@ theorem wit_utf16to8 :
 
 /-! ## UTF-32 to UTF-8 -/
 
-/-- src/lsx/lsx_convert_utf32_to_utf8.cpp:16 (plain) and :245 (`_with_errors`),
+/-- src/lsx/lsx_convert_utf32_to_utf8.cpp:14 (plain) and :241 (`_with_errors`),
 loop `end - buf > 16 + 3`: the existing `Kernels.utf32to8_lsx` (8 units per
 iteration, ASCII path `continue`s; scalar `forward = 15`, a subset of
 `scalar 16`). -/
@@ -176,7 +176,8 @@ theorem curK_utf8toLatin1 : okK 3 utf8toLatin1 = true := by decide
 
 /-! ## `convert_valid` on valid input
 
-src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:12, fixed margin 12. On
+src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:15-19: margin 4 on LoongArch,
+12 elsewhere. On
 `0xaaa` and `idx < 64` the lsx kernel stores 8 units and produces 6, a deficit
 of 2, so the 1 + m bytes after the call must hold 2 code points: m = 4
 (against 12 elsewhere, `Utf8.valid_utf32`). UTF-16 keeps deficit 4

@@ -206,7 +206,7 @@ theorem wR_append (a b : List Nat) (h : ¬ (endsHigh a = true ∧ startsLow b = 
 `r` is an unpaired surrogate, a low one not preceded by a high one, or a high
 one not followed by a low one. From src/westmere/sse_convert_utf16_to_utf8.cpp
 :476-487 (`buf - start + k - 1`, the index of the first unit of the failed
-pair) and include/simdutf/scalar/utf16_to_utf8/utf16_to_utf8.h:176-191
+pair) and include/simdutf/scalar/utf16_to_utf8/utf16_to_utf8.h:178-190
 (`SURROGATE, pos`). -/
 def UnpairedAt (r : List Nat) (ic : Nat) : Prop :=
   ∃ u rest, r.drop ic = u :: rest ∧
@@ -517,9 +517,10 @@ def tight32 : List Nat :=
 
 theorem tight32_count : tight32.length = 32 ∧ count tight32 = 11 := by decide
 
-/-- On 32 bytes of valid 4-byte characters the count is 16, the figure of the
-C++ comment (src/utf8_to_utf16_with_replacement.inl.h:46-50), which holds only
-for valid input. -/
+/-- On 32 bytes of valid 4-byte characters the count is 16, the figure that
+an earlier C++ comment gave for the held-back bytes; it holds only for valid
+input. The comment (src/utf8_to_utf16_with_replacement.inl.h:46-52) now says
+11, after `count_ge_11` and `tight32_count`. -/
 example : count (List.replicate 8 [0xF0, 0x9F, 0x98, 0x80]).flatten = 16 := by decide
 
 /-- After a complete valid prefix the decoder is back in its initial state. -/
@@ -547,8 +548,8 @@ example : ValidRun [0x41, 0xC3, 0xA9, 0xF0, 0x9F, 0x98, 0x80] 4 := by
 
 /-! ## (iii) The driver
 
-src/utf8_to_utf16_with_replacement.inl.h. `utf8_boundary_before` (:53-63) and
-the window (:107-111). -/
+src/utf8_to_utf16_with_replacement.inl.h. `utf8_boundary_before` (:55-65) and
+the window (:109-112). -/
 
 def isCont (b : Nat) : Bool := decide (0x80 ≤ b ∧ b ≤ 0xBF)
 
@@ -563,23 +564,25 @@ theorem boundaryBefore_le (bs : List Nat) (l : Nat) : boundaryBefore bs l ≤ l 
   | succ i ih => unfold boundaryBefore; split <;> omega
 
 /-- The window handed to the kernel leaves at least `kernel_overflow_tail = 32`
-bytes (:51, :108-110). -/
+bytes (:53, :109-112). -/
 theorem held_back (bs : List Nat) (pos : Nat) (hr : 32 + 64 < bs.length - pos) :
     pos + boundaryBefore (bs.drop pos) (bs.length - pos - 32) + 32 ≤ bs.length := by
   have := boundaryBefore_le (bs.drop pos) (bs.length - pos - 32)
   omega
 
 /-- One U+FFFD for the `m`-byte maximal subpart at the head of `ys`, after
-which the decoder restarts: `maximal_subpart` (:33-69 of the scalar header)
+which the decoder restarts: `maximal_subpart`
+(include/simdutf/scalar/utf8_to_utf16/utf8_to_utf16_with_replacement.h:33-69)
 follows the same `lo`/`hi` automaton as `transcode_with_replacement`. -/
 def Subpart (ys : List Nat) (m : Nat) : Prop := count ys = 1 + count (ys.drop m)
 
 /-- States `(pos, written)` of `transcode_utf8_to_utf16_with_replacement`
-(:87-186) and of `convert_using_locations` (:193-234) on input `xs`.
-* `valid`: a valid run of `w` bytes converted (bulk success :114-118; or a
-  `convert_valid_prefix` before an error :157-164, :211-213, :226-227).
+(src/utf8_to_utf16_with_replacement.inl.h:88-188) and of
+`convert_using_locations` (:194-236) on input `xs`.
+* `valid`: a valid run of `w` bytes converted (bulk success :114-120; or a
+  `convert_valid_prefix` before an error :159-166, :213-216, :227-230).
 * `error`: a valid run of `k` bytes, then U+FFFD for the maximal subpart of
-  `m` bytes at the error (:120-141, :168-183, :215-219). -/
+  `m` bytes at the error (:122-143, :170-185, :217-221). -/
 inductive RReach (xs : List Nat) : Nat → Nat → Prop
   | start : RReach xs 0 0
   | valid (pos written w u : Nat) (h : RReach xs pos written)
@@ -609,10 +612,10 @@ theorem rreach_inv (xs : List Nat) (pos written : Nat) (h : RReach xs pos writte
     rw [List.drop_drop] at hm
     rw [← ih, this, hm]; omega
 
-/-- U+FFFD stores (:125, :172, :215), `convert_valid_prefix` stores bounded by
+/-- U+FFFD stores (:127, :174, :217), `convert_valid_prefix` stores bounded by
 the units of the valid run (`Utf8.valid_utf16_store` and its arm64 form), and
-`finish_with_scalar` (:67-84, writing `count` of the rest one unit at a time)
-end inside the buffer. A nested `transcode` on the rest (:207, :231) whose own
+`finish_with_scalar` (:67-86, writing `count` of the rest one unit at a time)
+end inside the buffer. A nested `transcode` on the rest (:209, :233) whose own
 stores end within `count (xs.drop pos)` does too. -/
 theorem rreach_exact_store (xs : List Nat) (pos written se : Nat)
     (h : RReach xs pos written) (hse : se ≤ count (xs.drop pos)) :

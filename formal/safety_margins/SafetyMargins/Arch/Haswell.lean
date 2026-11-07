@@ -74,13 +74,13 @@ theorem cur_utf32to1 : utf32to1.all (Iter.ok (need 32 0 false)) = true := by dec
 
 /-! ## UTF-16 to UTF-8 and UTF-32 to UTF-8 -/
 
-/-- src/haswell/avx2_convert_utf16_to_utf8.cpp:66 (plain) and :345
-(`_with_errors`), loop `end - buf >= 16 + 12`. ASCII store (81), 1/2-byte path
-(139, 142), 1/2/3-byte path (270, 272, 274, 276: units 0-3, 4-7, 8-11, 12-15,
+/-- src/haswell/avx2_convert_utf16_to_utf8.cpp:64 (plain) and :341
+(`_with_errors`), loop `end - buf >= 16 + 12`. ASCII store (79), 1/2-byte path
+(137, 140), 1/2/3-byte path (268, 270, 272, 274: units 0-3, 4-7, 8-11, 12-15,
 from the per-lane unpack of `out0`/`out1`), scalar fallback of at most 16 units
 (15 plus the low half of a pair). Same table as `Kernels.wide16`.
 
-src/haswell/avx2_convert_utf32_to_utf8.cpp:17 (plain) and :301
+src/haswell/avx2_convert_utf32_to_utf8.cpp:15 (plain) and :297
 (`_with_errors`): the same paths on the packed 16-unit register, the scalar
 fallback consuming at most 15 units. -/
 def utf16to8 : List Iter := wide16
@@ -107,9 +107,9 @@ theorem wit_utf32to8 :
 
 /-! ## UTF-32 to UTF-16 -/
 
-/-- src/haswell/avx2_convert_utf32_to_utf16.cpp:16 (plain) and :98
+/-- src/haswell/avx2_convert_utf32_to_utf16.cpp:14 (plain) and :93
 (`_with_errors`), loop `end - buf >= 8`: BMP path stores exactly 8 units
-(lines 33, 119); otherwise a scalar loop of at most 7 units. Same table as
+(lines 31, 114); otherwise a scalar loop of at most 7 units. Same table as
 `Kernels.utf32to16_haswell`. -/
 def utf32to16 : List Iter := utf32to16_haswell
 theorem m_utf32to16 : optimalMargin 8 false utf32to16 = 0 := by decide

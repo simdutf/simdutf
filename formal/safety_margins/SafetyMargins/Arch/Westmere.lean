@@ -11,12 +11,13 @@ open SafetyMargins SafetyMargins.Kernels SafetyMargins.Utf8
 
 /-! ## UTF-16 to UTF-8 -/
 
-/-- src/westmere/sse_convert_utf16_to_utf8.cpp:67 (`sse_convert_utf16_to_utf8`)
-and :296 (`_with_errors`), loop `end - buf >= 16 + 12`. ASCII 16 (:96-102),
-ASCII 8 then fall-through `in = nextin` (:83-92), 1/2-byte path (:118-123),
-1/2/3-byte path (:224-228), `mask == 0` path (:197-208, second store at +12 =
-L(first 4 units)), scalar fallback consuming at most 16 units (:235-268).
-Also used by `convert_utf16*_to_utf8_with_replacement` (implementation.cpp:1243)
+/-- src/westmere/sse_convert_utf16_to_utf8.cpp:65 (`sse_convert_utf16_to_utf8`)
+and :292 (`_with_errors`), loop `end - buf >= 16 + 12`. ASCII 16 (:91-101),
+ASCII 8 then fall-through `in = nextin` (:81-90), 1/2-byte path (:116-121),
+1/2/3-byte path (:222-227), `mask == 0` path (:195-206, second store at +12 =
+L(first 4 units)), scalar fallback consuming at most 16 units (:229-267).
+Also used by `convert_utf16*_to_utf8_with_replacement`
+(src/westmere/implementation.cpp:1245)
 through `convert_utf16_to_utf8_with_details`. Same table as `Kernels`. -/
 def utf16to8 : List Iter := Kernels.utf16to8_westmere
 
@@ -31,9 +32,9 @@ theorem wit_utf16to8 :
 
 /-! ## UTF-32 to UTF-8 -/
 
-/-- src/westmere/sse_convert_utf32_to_utf8.cpp:22, plain function, loop
+/-- src/westmere/sse_convert_utf32_to_utf8.cpp:20, plain function, loop
 `end - buf >= 16 + 12`; the ASCII test over 16 units falls through to the
-second pair of registers (:70-89). -/
+second pair of registers (:68-87). -/
 def utf32to8 : List Iter := Kernels.utf32to8_westmere
 
 theorem m_utf32to8 : optimalMargin 16 false utf32to8 = 12 := by decide
@@ -46,7 +47,7 @@ theorem wit_utf32to8 :
 
 /-- src/westmere/sse_convert_utf32_to_utf8.cpp:345, `_with_errors`, loop
 `end - buf >= 16 + 4`; ASCII path stores 16 bytes for 8 units and
-`continue`s (:369-379). -/
+`continue`s (:365-375). -/
 def utf32to8_err : List Iter := Kernels.utf32to8_westmere_err
 
 theorem m_utf32to8_err : optimalMargin 16 false utf32to8_err = 4 := by decide
@@ -65,10 +66,10 @@ theorem wit_utf32to8_err :
 
 /-! ## UTF-32 to UTF-16 -/
 
-/-- src/westmere/sse_convert_utf32_to_utf16.cpp:65, plain function, inline
-loop `end - buf >= 16 + 4`: BMP path two stores of 8 (:94-95); otherwise
-validated (:99) and four `sse_expand_surrogate` stores of 8 char16_t each
-advancing `4 + popcount` (:103-117). -/
+/-- src/westmere/sse_convert_utf32_to_utf16.cpp:66, plain function, inline
+loop `end - buf >= 16 + 4`: BMP path two stores of 8 (:95-96); otherwise
+validated (:100) and four `sse_expand_surrogate` stores of 8 char16_t each
+advancing `4 + popcount` (:104-118). -/
 def utf32to16 : List Iter := Kernels.utf32to16_westmere
 
 theorem m_utf32to16 : optimalMargin 16 false utf32to16 = 4 := by decide
@@ -85,9 +86,9 @@ theorem wit_utf32to16 :
     it ∈ utf32to16 ∧ xs.length = need 16 3 false ∧
       written (need 16 3 false) (fun _ => it) 1 xs = L xs + 1 := by decide
 
-/-- src/westmere/sse_convert_utf32_to_utf16.cpp:140, `_with_errors`, loop
-`end - buf >= 8`: BMP path stores exactly 8 (:164); otherwise scalar over
-`forward = 7` units (:168-204). Same shape as `Kernels.utf32to16_haswell`. -/
+/-- src/westmere/sse_convert_utf32_to_utf16.cpp:141, `_with_errors`, loop
+`end - buf >= 8`: BMP path stores exactly 8 (:165); otherwise scalar over
+`forward = 7` units (:169-205). Same shape as `Kernels.utf32to16_haswell`. -/
 def utf32to16_err : List Iter := Kernels.utf32to16_haswell
 
 theorem m_utf32to16_err : optimalMargin 8 false utf32to16_err = 0 := by decide
@@ -157,8 +158,8 @@ theorem cur_utf32tolatin1 : utf32tolatin1.all (Iter.ok (need 16 0 false)) = true
 theorem m_utf32tolatin1_err : optimalMargin 16 false utf32tolatin1_err = 0 := by decide
 theorem cur_utf32tolatin1_err : utf32tolatin1_err.all (Iter.ok (need 16 0 false)) = true := by decide
 
-/-- src/generic/utf16/change_endianness.h:10 (westmere implementation.cpp:1102),
-`pos < size / 32 * 32`: one 32-unit store. -/
+/-- src/generic/utf16/change_endianness.h:10, `pos < size / 32 * 32` (called
+from src/westmere/implementation.cpp:1102): one 32-unit store. -/
 def changeEndianness : List Iter := [{ consumed := 32, stores := [.rel 0 32] }]
 theorem m_changeEndianness : optimalMargin 32 false changeEndianness = 0 := by decide
 theorem cur_changeEndianness : changeEndianness.all (Iter.ok (need 32 0 false)) = true := by decide
@@ -194,12 +195,13 @@ theorem safe_utf16to32 (choose : List Nat → Iter)
 
 src/westmere/sse_convert_utf8_to_utf16.cpp, sse_convert_utf8_to_utf32.cpp and
 sse_convert_utf8_to_latin1.cpp are the `convert_masked_*` callees of
-src/generic/utf8_to_utf16/utf8_to_utf16.h (:178 and :275),
-src/generic/utf8_to_utf32/utf8_to_utf32.h (:175 and :269),
-src/generic/utf8_to_latin1/utf8_to_latin1.h (:161 and :259) and
-src/generic/utf8_to_latin1/valid_utf8_to_latin1.h (:18), all with `K = 3`.
+src/generic/utf8_to_utf16/utf8_to_utf16.h (:174 and :271),
+src/generic/utf8_to_utf32/utf8_to_utf32.h (:171 and :266),
+src/generic/utf8_to_latin1/utf8_to_latin1.h (:157 and :255) and
+src/generic/utf8_to_latin1/valid_utf8_to_latin1.h (:19), all with `K = 3`.
 The store paths are `Utf8.x86_utf16`, `x86_utf32`, `x86_latin1`; the
-0xaaaa paths (utf16 :42-57, utf32 :37-53) and utf32 `0x924` and `idx < 145`
+0xaaaa paths (src/westmere/sse_convert_utf8_to_utf16.cpp:42-57,
+sse_convert_utf8_to_utf32.cpp:37-53) and utf32 `0x924` and `idx < 145`
 store exactly what they produce and are omitted, as in `Utf8`. `K = 3` is
 optimal for all three (`Utf8.K_x86_utf16`, `K_x86_utf32`, `K_x86_latin1`). -/
 

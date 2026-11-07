@@ -61,11 +61,11 @@ before the first surrogate (:131-176): byte 2 of each 32-bit lane is always
 kept (`m4mulp2`), byte 1 is `v2 | 0x80` on m234 lanes and 0 elsewhere, byte 0 is
 `v3 | 0xE0` on m34 lanes and 0 elsewhere, byte 3 is 0, so `vlOut` is the UTF-8
 length of the prefix. Then scalar pairs (4 bytes for weight 2 + 2), returning
-before writing on a bad pair (:178-212). -/
+before writing on a bad pair (:179-212). -/
 def utf16to8 := vlaFamily
 /-- src/rvv/rvv_utf32_to.inl.cpp:45, UTF-32 to UTF-8: same three vector paths
 on the prefix before the first unit > 0xFFFF (:110-154), then scalar 4-byte
-units, returning before writing on > 0x10FFFF (:156-169). Values > 0x10FFFF
+units, returning before writing on > 0x10FFFF (:157-169). Values > 0x10FFFF
 and surrogates are rejected before any store in the validating version
 (:94-108); `convert_valid` writes 3 bytes (weight 3) for a surrogate and
 returns on > 0x10FFFF. -/
@@ -93,7 +93,7 @@ block. UTF-32 and the UTF-16 1/2 and 1/2/3 paths (max < 0xF0) store `vlOut`.
 The UTF-16 4-byte path stores `rvv_utf32_store_utf16_m4`, 2 units only for a
 value > 0xFFFF, which needs a lead byte ≥ 0xF0 (`rvv_bmp_lead`), weight 2.
 An invalid block returns before its stores (:80-100). `convert_valid`
-instantiates the same helper with `validate = false`; its reparse step at :252
+instantiates the same helper with `validate = false`; its reparse step at :252-263
 (`--dst` before the scalar tail) is not modelled. -/
 def utf8to16 := vlaFamily
 def utf8to32 := vlaFamily
