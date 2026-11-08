@@ -470,12 +470,11 @@ theorem la_924_tight :
     Reach.call 0 32 32 44 36 h3 (by decide) (Step.conv 32 32 12 4 (by decide) (by decide) (by decide))
   exact Reach.call 0 44 36 51 40 h4 (by decide) (Step.conv 44 36 7 4 (by decide) (by decide) (by decide))
 
-/-! ## `convert_valid` with a fixed margin
+/-! ## Valid strings as lists of characters
 
-For valid input the output is exact (`o = L (xs.take t)`) and the bytes from
-the end of the last call (at most `pos + 63`) to the end of the input form at
-least `1 + m` bytes of complete characters. A valid string is described by the
-list of its character lengths. -/
+A valid string is described by the list of its character lengths. These
+lemmas describe the bytes after a character boundary (`ValidExact.tail_expand`);
+`ValidDynamic` bounds the `convert_valid` stores with the dynamic margin. -/
 
 def bytes : List Nat → Nat
   | [] => 0
@@ -505,24 +504,6 @@ theorem bytes_le_4u32 (ks : List Nat) (h : Valid ks) : bytes ks ≤ 4 * ks.lengt
     have := ih (fun j hj => h j (by simp [hj]))
     simp only [bytes, List.length_cons]
     omega
-
-/-- UTF-16 output, overshoot 4 (x86, ppc64, lsx, lasx): margin 9 suffices. -/
-theorem valid_utf16 (ks : List Nat) (h : Valid ks) (m : Nat) (hm : 9 ≤ m)
-    (hb : 1 + m ≤ bytes ks) : 4 ≤ u16 ks := by
-  have := bytes_le_3u16 ks h
-  omega
-
-/-- and 8 does not: three 3-byte characters fill 9 bytes with 3 units. -/
-theorem valid_utf16_tight : bytes [3, 3, 3] = 1 + 8 ∧ u16 [3, 3, 3] = 3 := by decide
-
-/-- UTF-32 output, overshoot 4 (x86, ppc64, arm64): margin 12 suffices. -/
-theorem valid_utf32 (ks : List Nat) (h : Valid ks) (m : Nat) (hm : 12 ≤ m)
-    (hb : 1 + m ≤ bytes ks) : 4 ≤ ks.length := by
-  have := bytes_le_4u32 ks h
-  omega
-
-/-- and 11 does not: three 4-byte characters fill 12 bytes with 3 units. -/
-theorem valid_utf32_tight : bytes [4, 4, 4] = 1 + 11 ∧ [4, 4, 4].length = 3 := by decide
 
 /-- A store that ends at most `d` past `L` of the consumed prefix lands in the
 buffer once the unread tail weighs at least `d`. -/
@@ -609,24 +590,5 @@ theorem length_expand32 (ks : List Nat) (h : Valid ks) :
     have hk := h k (by simp)
     rw [expand32, List.length_append, length_chars32 k hk.1 hk.2,
       ih (fun j hj => h j (List.mem_cons_of_mem k hj)), bytes]
-
-/-- Store form of `valid_utf16`. The kernel hypotheses, read from the C++ and
-not parsed here, are that the cursor is `L` of the consumed prefix and the
-store ends at most 4 past it, and that the unread tail is `1 + m` bytes of
-complete characters (`length_expand16`). The shared header
-`valid_utf8_to_utf16.h` has this deficit on x86, ppc64, lsx and lasx. -/
-theorem valid_utf16_store (pre : List Nat) (ks : List Nat) (s m : Nat)
-    (h : Valid ks) (hm : 9 ≤ m) (hb : 1 + m ≤ bytes ks)
-    (hs : s ≤ L pre + 4) : s ≤ L (pre ++ expand16 ks) := by
-  have hden := valid_utf16 ks h m hm hb
-  exact overshoot_le pre (expand16 ks) s 4 hs (by rw [L_expand16 ks h]; exact hden)
-
-/-- Store form of `valid_utf32`, deficit 4. This is the shared header
-`valid_utf8_to_utf32.h`: x86, ppc64 and arm64 write 16 and produce 12. -/
-theorem valid_utf32_store (pre : List Nat) (ks : List Nat) (s m : Nat)
-    (h : Valid ks) (hm : 12 ≤ m) (hb : 1 + m ≤ bytes ks)
-    (hs : s ≤ L pre + 4) : s ≤ L (pre ++ expand32 ks) := by
-  have hden := valid_utf32 ks h m hm hb
-  exact overshoot_le pre (expand32 ks) s 4 hs (by rw [L_expand32 ks h]; exact hden)
 
 end SafetyMargins.Utf8

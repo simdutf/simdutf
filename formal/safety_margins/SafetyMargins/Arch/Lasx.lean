@@ -205,29 +205,11 @@ theorem curK : okK 3 lasx_utf32 = true ∧ okK 3 lasx_latin1 = true := by decide
 
 /-! ## `convert_valid` on valid input
 
-UTF-16 (src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:21): the worst lasx
-deficit is 8 - 4 = 4 (`0x924`, `idx < 145`), so margin 9 suffices
-(`Utf8.valid_utf16`, tight by `Utf8.valid_utf16_tight`).
-UTF-32 (src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:16): `0xaaa` and
-`idx < 64` store 8 units and produce 6, deficit 2, so the `1 + m` bytes after
-the call must hold 2 code points: m = 4. The 16-byte loads need only m ≥ 3. -/
-
-theorem valid_utf32_lasx (ks : List Nat) (h : Valid ks) (m : Nat) (hm : 4 ≤ m)
-    (hb : 1 + m ≤ bytes ks) : 2 ≤ ks.length := by
-  have := bytes_le_4u32 ks h
-  omega
-
-/-- and 3 does not: one 4-byte character fills 4 bytes with 1 unit. -/
-theorem valid_utf32_lasx_tight : bytes [4] = 1 + 3 ∧ [4].length = 1 := by decide
-
-/-- Store form of `valid_utf32_lasx`, same deficit as lsx. The shared header
-stays `Utf8.valid_utf32_store`. -/
-theorem valid_utf32_lasx_store (pre : List Nat) (ks : List Nat) (s m : Nat)
-    (h : Valid ks) (hm : 4 ≤ m) (hb : 1 + m ≤ bytes ks)
-    (hs : s ≤ L pre + 2) : s ≤ L (pre ++ expand32 ks) := by
-  have hden := valid_utf32_lasx ks h m hm hb
-  exact overshoot_le pre (expand32 ks) s 2 hs (by rw [L_expand32 ks h]; exact hden)
-
+UTF-16 (src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:20-24, `K = 3`): the
+worst lasx deficit is 8 - 4 = 4 (`0x924`, `idx < 145`).
+UTF-32 (src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:17-21, `K = 2`):
+`0xaaa` and `idx < 64` store 8 units and produce 6, deficit 2, so the stores
+need `K = 1` and the 16-byte loads 2. See `ValidDynamic`. -/
 
 /-! ## Per-target header constants (same as lsx; see `Lsx.hdr_utf8to32`) -/
 
@@ -236,12 +218,6 @@ theorem hdr_utf8to32 : okK 2 lasx_utf32 = true ∧ (∀ pos xs, pos + 64 + (tk 2
 
 theorem hdr_utf8toLatin1 : okK 2 lasx_latin1 = true ∧ (∀ pos xs, pos + 64 + (tk 2 xs + 1) ≤ xs.length → pos + 66 < xs.length) :=
   ⟨by decide, fun pos xs h => read_ok 2 pos xs (by decide) h⟩
-
-/-- `valid_utf8_to_utf32.h` uses margin 4 on LoongArch
-(`valid_utf32_lasx_store`). -/
-theorem hdr_valid_utf8to32 (pos size : Nat) (h : pos + 64 + 4 ≤ size) :
-    pos + 66 < size := by omega
-
 
 /-- `valid_utf8_to_latin1.h` counts `K = 2` leading bytes on LoongArch. On the
 input its contract allows (`ValidLatin1.LV`), every store of a call fits with

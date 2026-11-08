@@ -8,11 +8,11 @@ decoders, on the input their contract allows: valid UTF-8 (`Valid8`, the
 automaton of Unicode Table 3-7: shortest form, no surrogates, at most
 U+10FFFF).
 
-`Utf8.valid_utf16_store`, `Utf8.valid_utf32_store`,
-`Arm64.valid_utf16_arm_store`, `Lsx.valid_utf32_lsx_store` and
-`Lasx.valid_utf32_lasx_store` assume that the cursor is `L` of the consumed
-prefix and that the unread bytes are complete characters. Here both are
-proved, from a model of the loop (`VX`), as `ValidLatin1.lean` does for
+The loop runs a block while `pos + 64 + safety_margin <= size`, with the
+dynamic margin of the validating decoders (`K` leading bytes counted back from
+the end). Its store bound needs the cursor to be `L` of the consumed prefix and
+the byte after each call to be a leading byte. Here both are proved, from a
+model of the loop (`VX`), as `ValidLatin1.lean` does for
 `valid_utf8_to_latin1.h`:
 
 * a block of valid UTF-8 that starts on a character boundary passes
@@ -24,9 +24,8 @@ proved, from a model of the loop (`VX`), as `ValidLatin1.lean` does for
   on a character boundary (`vx_inv`);
 * the bytes after a boundary are complete characters (`tail_expand`).
 
-The store theorems (`valid_utf32_vx`, `valid_utf32_lsx_vx`,
-`valid_utf32_lasx_vx`, `valid_utf16_vx`, `valid_utf16_arm_vx`) then apply the
-five theorems above with no hypothesis on the cursor or the tail.
+`ValidDynamic.lean` models the loop test and proves the stores and loads with
+the header's `K`, end to end with the scalar tail.
 -/
 namespace SafetyMargins.ValidExact
 open SafetyMargins SafetyMargins.Utf8 SafetyMargins.Validator SafetyMargins.Exact
@@ -649,14 +648,11 @@ theorem tail_expand {bs : List Nat} (hv : Valid8 bs) {t : Nat} (hb : Bd bs t) :
 
 /-! ## The stores
 
-The hypotheses of `Utf8.valid_utf16_store`, `Utf8.valid_utf32_store`,
-`Arm64.valid_utf16_arm_store`, `Lsx.valid_utf32_lsx_store` and
-`Lasx.valid_utf32_lasx_store` (the cursor is `L` of the consumed prefix; the
-unread bytes are complete characters) now follow from `vx_inv` and
-`tail_expand`. What stays read from the C++ is, per path, the deficit
-`s ≤ p + d` (as for the `okK` lists) and that a call ends by `pos + 63`
-(`hd`; the end-of-code-point mask has bit 63 clear, and a call ends at a set
-bit). -/
+What the store bounds of `ValidDynamic` use: the cursor after a call, the
+ASCII block, the scalar tail, and that a table call ends by `pos + 63`. What
+stays read from the C++ is, per path, the deficit `s ≤ p + d` (as for the
+`okK` lists) and that a call ends by `pos + 63` (`hd`; the end-of-code-point
+mask has bit 63 clear, and a call ends at a set bit). -/
 
 /-- After a call: the cursor is `L` of the consumed bytes, which end on a
 character boundary. -/
@@ -666,62 +662,6 @@ theorem vx_after_call {w : Nat → Nat} (hw : WOK w) {bs : List Nat} (hv : Valid
     o + p = L ((bs.map w).take (t + c)) ∧ Bd bs (t + c) :=
   have hi := vx_inv hw hv _ _ _ _ (VX.call pos t o c p h ht hx)
   ⟨hi.1, hi.2.1⟩
-
-/-- **`valid_utf8_to_utf32.h`, x86, ppc64 and arm64 (margin 12).** A store of
-`s ≤ p + 4` units at a call that produces `p` fits. -/
-theorem valid_utf32_vx {bs : List Nat} (hv : Valid8 bs) {m pos t o c p s : Nat}
-    (h : VX w01 bs true pos t o) (ht : t < pos + 52) (hx : XStep (bs.map w01) t c p)
-    (hd : t + c + 1 ≤ pos + 64) (hloop : pos + 64 + m ≤ bs.length) (hm : 12 ≤ m)
-    (hs : s ≤ p + 4) : o + s ≤ L (bs.map w01) := by
-  obtain ⟨hL, hb⟩ := vx_after_call wok_w01 hv h ht hx
-  obtain ⟨ks, hks, -, e32, eb⟩ := tail_expand hv hb
-  have := valid_utf32_store ((bs.map w01).take (t + c)) ks (o + s) m hks hm (by omega) (by omega)
-  rwa [← e32, List.take_append_drop] at this
-
-/-- **`valid_utf8_to_utf32.h`, lsx (margin 4)**, deficit 2. -/
-theorem valid_utf32_lsx_vx {bs : List Nat} (hv : Valid8 bs) {m pos t o c p s : Nat}
-    (h : VX w01 bs true pos t o) (ht : t < pos + 52) (hx : XStep (bs.map w01) t c p)
-    (hd : t + c + 1 ≤ pos + 64) (hloop : pos + 64 + m ≤ bs.length) (hm : 4 ≤ m)
-    (hs : s ≤ p + 2) : o + s ≤ L (bs.map w01) := by
-  obtain ⟨hL, hb⟩ := vx_after_call wok_w01 hv h ht hx
-  obtain ⟨ks, hks, -, e32, eb⟩ := tail_expand hv hb
-  have := Arch.Lsx.valid_utf32_lsx_store ((bs.map w01).take (t + c)) ks (o + s) m hks hm
-    (by omega) (by omega)
-  rwa [← e32, List.take_append_drop] at this
-
-/-- **`valid_utf8_to_utf32.h`, lasx (margin 4)**, deficit 2. -/
-theorem valid_utf32_lasx_vx {bs : List Nat} (hv : Valid8 bs) {m pos t o c p s : Nat}
-    (h : VX w01 bs true pos t o) (ht : t < pos + 52) (hx : XStep (bs.map w01) t c p)
-    (hd : t + c + 1 ≤ pos + 64) (hloop : pos + 64 + m ≤ bs.length) (hm : 4 ≤ m)
-    (hs : s ≤ p + 2) : o + s ≤ L (bs.map w01) := by
-  obtain ⟨hL, hb⟩ := vx_after_call wok_w01 hv h ht hx
-  obtain ⟨ks, hks, -, e32, eb⟩ := tail_expand hv hb
-  have := Arch.Lasx.valid_utf32_lasx_store ((bs.map w01).take (t + c)) ks (o + s) m hks hm
-    (by omega) (by omega)
-  rwa [← e32, List.take_append_drop] at this
-
-/-- **`valid_utf8_to_utf16.h`, x86, ppc64, lsx and lasx (margin 9).** -/
-theorem valid_utf16_vx {bs : List Nat} (hv : Valid8 bs) {m pos t o c p s : Nat}
-    (h : VX w16 bs true pos t o) (ht : t < pos + 52) (hx : XStep (bs.map w16) t c p)
-    (hd : t + c + 1 ≤ pos + 64) (hloop : pos + 64 + m ≤ bs.length) (hm : 9 ≤ m)
-    (hs : s ≤ p + 4) : o + s ≤ L (bs.map w16) := by
-  obtain ⟨hL, hb⟩ := vx_after_call wok_w16 hv h ht hx
-  obtain ⟨ks, hks, e16, -, eb⟩ := tail_expand hv hb
-  have := valid_utf16_store ((bs.map w16).take (t + c)) ks (o + s) m hks hm (by omega) (by omega)
-  rwa [← e16, List.take_append_drop] at this
-
-/-- **`valid_utf8_to_utf16.h`, arm64 (margin 3)**, deficit 2. The `0x888`
-path stores before its check, but on valid input the check passes and the
-store is the call's output (`vx_888`: deficit 0). -/
-theorem valid_utf16_arm_vx {bs : List Nat} (hv : Valid8 bs) {m pos t o c p s : Nat}
-    (h : VX w16 bs true pos t o) (ht : t < pos + 52) (hx : XStep (bs.map w16) t c p)
-    (hd : t + c + 1 ≤ pos + 64) (hloop : pos + 64 + m ≤ bs.length) (hm : 3 ≤ m)
-    (hs : s ≤ p + 2) : o + s ≤ L (bs.map w16) := by
-  obtain ⟨hL, hb⟩ := vx_after_call wok_w16 hv h ht hx
-  obtain ⟨ks, hks, e16, -, eb⟩ := tail_expand hv hb
-  have := Arch.Arm64.valid_utf16_arm_store ((bs.map w16).take (t + c)) ks (o + s) m hks hm
-    (by omega) (by omega)
-  rwa [← e16, List.take_append_drop] at this
 
 /-- The ASCII block: its 64 units end at `L` of the consumed bytes. -/
 theorem vx_ascii_store {w : Nat → Nat} (hw : WOK w) {bs : List Nat} (hv : Valid8 bs)
@@ -749,60 +689,6 @@ theorem row_hd {xs : List Nat} {pos t : Nat} (ht : t < pos + 52) :
   have := (List.all_eq_true.mp bigconsumed_le) (row xs t).m (row xs t).hmem
   simp only [decide_eq_true_eq] at this
   omega
-
-/-! ### Table calls, end to end
-
-A table call needs no hypothesis but its deficit: on valid input it is exact
-(`vx_w01`, `vx_utf16_145`, `vx_utf16_3`) and ends by `pos + 63` (`row_hd`). -/
-
-/-- UTF-32, margin 12: a table call storing `s ≤ units + 4`. -/
-theorem valid_utf32_row {bs : List Nat} (hv : Valid8 bs) {m pos t o s : Nat}
-    (h : VX w01 bs true pos t o) (ht : t < pos + 52) (hloop : pos + 64 + m ≤ bs.length)
-    (hm : 12 ≤ m) (hs : s ≤ units bigIdx[(row (bs.map w01) t).m]! + 4) :
-    o + s ≤ L (bs.map w01) :=
-  valid_utf32_vx hv h ht (vx_w01 hv h ht).2 (row_hd ht) hloop hm hs
-
-/-- UTF-32, lsx and lasx, margin 4: a table call storing `s ≤ units + 2`. -/
-theorem valid_utf32_la_row {bs : List Nat} (hv : Valid8 bs) {m pos t o s : Nat}
-    (h : VX w01 bs true pos t o) (ht : t < pos + 52) (hloop : pos + 64 + m ≤ bs.length)
-    (hm : 4 ≤ m) (hs : s ≤ units bigIdx[(row (bs.map w01) t).m]! + 2) :
-    o + s ≤ L (bs.map w01) :=
-  valid_utf32_lsx_vx hv h ht (vx_w01 hv h ht).2 (row_hd ht) hloop hm hs
-
-/-- UTF-16, margin 9: a row below 145 storing `s ≤ units + 4`. -/
-theorem valid_utf16_row145 {bs : List Nat} (hv : Valid8 bs) {m pos t o s : Nat}
-    (h : VX w16 bs true pos t o) (ht : t < pos + 52) (hloop : pos + 64 + m ≤ bs.length)
-    (hm : 9 ≤ m) (hi : bigIdx[(row (bs.map w16) t).m]! < 145)
-    (hs : s ≤ units bigIdx[(row (bs.map w16) t).m]! + 4) :
-    o + s ≤ L (bs.map w16) :=
-  valid_utf16_vx hv h ht (vx_utf16_145 hv h ht hi) (row_hd ht) hloop hm hs
-
-/-- UTF-16, arm64, margin 3: a row below 145 storing `s ≤ units + 2`. -/
-theorem valid_utf16_arm_row145 {bs : List Nat} (hv : Valid8 bs) {m pos t o s : Nat}
-    (h : VX w16 bs true pos t o) (ht : t < pos + 52) (hloop : pos + 64 + m ≤ bs.length)
-    (hm : 3 ≤ m) (hi : bigIdx[(row (bs.map w16) t).m]! < 145)
-    (hs : s ≤ units bigIdx[(row (bs.map w16) t).m]! + 2) :
-    o + s ≤ L (bs.map w16) :=
-  valid_utf16_arm_vx hv h ht (vx_utf16_145 hv h ht hi) (row_hd ht) hloop hm hs
-
-/-- UTF-16, margin 9: a three-code-point row, whose output (one or two units
-per lane, by the pair test) is exact; its store is at most the output plus 4. -/
-theorem valid_utf16_row3 (arm : Bool) {bs : List Nat} (hv : Valid8 bs) {m pos t o s : Nat}
-    (h : VX w16 bs true pos t o) (ht : t < pos + 52) (hloop : pos + 64 + m ≤ bs.length)
-    (hm : 9 ≤ m) (hi1 : 145 ≤ bigIdx[(row (bs.map w16) t).m]!)
-    (hi2 : bigIdx[(row (bs.map w16) t).m]! < 209)
-    (hs : s ≤ (if pairTest arm (perm bs t bigIdx[(row (bs.map w16) t).m]! 0) then 2 else 1) +
-       (if pairTest arm (perm bs t bigIdx[(row (bs.map w16) t).m]! 1) then 2 else 1) +
-       (if pairTest arm (perm bs t bigIdx[(row (bs.map w16) t).m]! 2) then 2 else 1) + 4) :
-    o + s ≤ L (bs.map w16) :=
-  valid_utf16_vx hv h ht (vx_utf16_3 arm hv h ht hi1 hi2) (row_hd ht) hloop hm hs
-
-/-- arm64 UTF-16, the `0x888` path: on valid input its 6 units fit with margin 3. -/
-theorem valid_utf16_arm_888 {bs : List Nat} (hv : Valid8 bs) {m pos t o : Nat}
-    (h : VX w16 bs true pos t o) (ht : t < pos + 52) (hloop : pos + 64 + m ≤ bs.length)
-    (hm : 3 ≤ m) (hmask : emask (bs.map w16) t 12 = 0x888) :
-    o + 6 ≤ L (bs.map w16) :=
-  valid_utf16_arm_vx hv h ht (vx_888 hv h ht hmask).2 (by omega) hloop hm (by omega)
 
 set_option maxRecDepth 4000 in
 /-- The model is not vacuous: 64 ASCII bytes, then `é` and 5 ASCII bytes, is

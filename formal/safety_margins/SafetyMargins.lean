@@ -24,7 +24,7 @@ import SafetyMargins.ReplacementMore
 import SafetyMargins.ReplacementRest
 import SafetyMargins.ValidatorSound
 import SafetyMargins.RvvExact
-import SafetyMargins.ValidTight
+import SafetyMargins.ValidDynamic
 import SafetyMargins.Scalar
 import SafetyMargins.ReplacementClose
 import SafetyMargins.LoadsRest

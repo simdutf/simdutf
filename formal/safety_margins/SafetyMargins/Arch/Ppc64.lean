@@ -244,11 +244,12 @@ theorem ppc_surrogate_lead :
       ((b <<< 24) >>> 6) ||| (0x3f0000 >>> 4) ||| (0x3f00 >>> 2) ||| 0x7f ≤ 0x3c00000 := by
   decide
 
-/-! ## `convert_valid` with a fixed margin
+/-! ## `convert_valid`
 
-src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:21 and
-src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:18 use `safety_margin = 9` and `12`.
-For valid input the overshoot is at most 4 units, which needs `m ≥ 9`
-(UTF-16) and `m ≥ 12` (UTF-32): `Utf8.valid_utf16` and `Utf8.valid_utf32`. -/
+src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:20-24 and
+src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:17-21 count `K = 3` leading
+bytes on POWER. For valid input the overshoot is at most 4 units, which needs
+`K = 3`: `ValidDynamic.utf16_safe`, `ValidDynamic.utf32_safe`, and `K = 2`
+fails (`ValidDynamic.utf16_x86_K2`, `ValidDynamic.utf32_x86_K2`). -/
 
 end SafetyMargins.Arch.Ppc64

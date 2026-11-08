@@ -247,31 +247,16 @@ theorem arm_fff_tight :
     tk 2 xs = 2 ∧ 0 + 64 + (tk 2 xs + 1) ≤ xs.length ∧
       L (xs.take 48) + 16 = L xs + 1 := by decide
 
-/-! ## `convert_valid` with a fixed margin (valid input only)
+/-! ## `convert_valid` (valid input only)
 
-src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:21 (9; 3 on arm64, :19) and
-src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:18 (12). On valid input the arm64
-UTF-16 paths overshoot by at most 2 (`0xaaa`, `idx < 64`; `0x888` is exact
-on valid input), the UTF-32 paths by at most 4 (`0xfff`), which needs 12
-(`Utf8.valid_utf32`, `Utf8.valid_utf32_tight`). -/
-
-theorem valid_utf16_arm (ks : List Nat) (h : Valid ks) (m : Nat) (hm : 3 ≤ m)
-    (hb : 1 + m ≤ bytes ks) : 2 ≤ u16 ks := by
-  have := bytes_le_3u16 ks h
-  omega
-
-/-- and 2 does not: one 3-byte character is 3 bytes and 1 unit. -/
-theorem valid_utf16_arm_tight : bytes [3] = 1 + 2 ∧ u16 [3] = 1 := by decide
-
-/-- Store form of `valid_utf16_arm`: overshoot at most 2, tail of `1 + m`
-bytes of complete characters with `m ≥ 3`. The shared header keeps margin 9
-(`Utf8.valid_utf16_store`) because x86 overshoots by 4. -/
-theorem valid_utf16_arm_store (pre : List Nat) (ks : List Nat) (s m : Nat)
-    (h : Valid ks) (hm : 3 ≤ m) (hb : 1 + m ≤ bytes ks)
-    (hs : s ≤ L pre + 2) : s ≤ L (pre ++ expand16 ks) := by
-  have hden := valid_utf16_arm ks h m hm hb
-  exact overshoot_le pre (expand16 ks) s 2 hs (by rw [L_expand16 ks h]; exact hden)
-
+src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:20-24 counts `K = 2` leading
+bytes on arm64 and src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:17-21 `K = 3`.
+On valid input the arm64 UTF-16 paths overshoot their output by at most 2
+(`0xaaa`, `idx < 64`; `0x888` is exact on valid input) and the UTF-32 paths by
+at most 4 (`0xfff`). `ValidDynamic` proves the stores and loads with these
+`K` (`ValidDynamic.utf16_safe`, `ValidDynamic.utf32_safe`), that `K = 2`
+fails for UTF-32 (`ValidDynamic.utf32_x86_K2`) and that `K = 1` reads past
+the input for UTF-16 (`ValidDynamic.read_K1`). -/
 
 /-! ## Per-target header constants
 
@@ -286,11 +271,5 @@ theorem hdr_utf8to16 :
     okK 2 Utf8.arm_utf16 = true ∧ okK 1 Utf8.arm_utf16 = false ∧
       (∀ pos xs, pos + 64 + (tk 2 xs + 1) ≤ xs.length → pos + 66 < xs.length) :=
   ⟨K_arm_utf16.1, K_arm_utf16.2, fun pos xs h => read_ok 2 pos xs (by decide) h⟩
-
-/-- `valid_utf8_to_utf16.h` uses margin 3 on arm64: the stores fit
-(`valid_utf16_arm_store`, `m ≥ 3`), the 16-byte loads at `pos + 51` stay in
-the input, and margin 2 fails the stores (`valid_utf16_arm_tight`). -/
-theorem hdr_valid_utf8to16 (pos size : Nat) (h : pos + 64 + 3 ≤ size) :
-    pos + 66 < size := by omega
 
 end SafetyMargins.Arch.Arm64

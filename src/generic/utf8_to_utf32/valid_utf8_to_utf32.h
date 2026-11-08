@@ -9,14 +9,24 @@ simdutf_warn_unused size_t convert_valid(const char *input, size_t size,
                                          char32_t *utf32_output) noexcept {
   size_t pos = 0;
   char32_t *start{utf32_output};
-  // The least margin proved in formal/safety_margins for the kernels that
-  // compile this header. The LoongArch calls overshoot by at most
-  // 2 units and need 4; the others overshoot by 4 and need 12.
+  // As in utf8_to_utf32.h, the margin counts leading bytes back from the end
+  // of the input: the least value proved in formal/safety_margins for the
+  // kernels that compile this header. On valid input the LoongArch calls
+  // overshoot by at most 2 units and the others by 4, so the stores need 1
+  // and 3 leading bytes; the 16-byte loads at pos + 51 need 2.
 #if defined(SIMDUTF_IS_LSX) || defined(SIMDUTF_IS_LASX)
-  const size_t safety_margin = 4;
+  constexpr size_t valid_utf32_leading_bytes = 2;
 #else
-  const size_t safety_margin = 12;
+  constexpr size_t valid_utf32_leading_bytes = 3;
 #endif
+  size_t leading_byte = 0;
+  size_t margin = size;
+  for (; margin > 0 && leading_byte < valid_utf32_leading_bytes; margin--) {
+    leading_byte += (int8_t(input[margin - 1]) > -65);
+  }
+  // If the input is long enough, then margin is the position of the
+  // valid_utf32_leading_bytes-th last leading byte.
+  const size_t safety_margin = size - margin + 1;
   while (pos + 64 + safety_margin <= size) {
     simd8x64<int8_t> in(reinterpret_cast<const int8_t *>(input + pos));
     if (in.is_ascii()) {

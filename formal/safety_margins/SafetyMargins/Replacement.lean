@@ -613,7 +613,7 @@ theorem rreach_inv (xs : List Nat) (pos written : Nat) (h : RReach xs pos writte
     rw [← ih, this, hm]; omega
 
 /-- U+FFFD stores (:127, :174, :217), `convert_valid_prefix` stores bounded by
-the units of the valid run (`Utf8.valid_utf16_store` and its arm64 form), and
+the units of the valid run (`ValidDynamic.dyn_store`), and
 `finish_with_scalar` (:67-86, writing `count` of the rest one unit at a time)
 end inside the buffer. A nested `transcode` on the rest (:209, :233) whose own
 stores end within `count (xs.drop pos)` does too. -/
