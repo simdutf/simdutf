@@ -58,6 +58,16 @@ of the replacement files) use `decide +kernel`, checked by the Lean kernel.
 | `SafetyMargins/IcelakeMask.lean`, `IcelakeUtf8.lean`, `IcelakeUtf8Fixed.lean` | the icelake UTF-8 → UTF-16 / UTF-32 / Latin-1 decoders at the level of 64-byte blocks and masks: every store within the length function, every load within the input (§8) |
 | `SafetyMargins/Lengths*.lean` | every ordinary length function, scalar and on every kernel, returns the per-unit sum on every input, except two over-estimates of `utf8_length_from_utf16` on ill-formed input (§8) |
 | `SafetyMargins/ReplacementLengths.lean` | the replacement and `_safe` entry points of the generic kernels with each kernel's own length function: no length hypothesis left (§8) |
+| `SafetyMargins/GenericUtf8.lean` | the generic validating UTF-8 decoders (UTF-16, UTF-32, Latin-1; plain and `_with_errors`) end to end: loop, error exits, rewind and tails, every store and load, on every input and every generic target (§9) |
+| `SafetyMargins/ReplacementProbe.lean` | the ASCII probe of the scalar UTF-16 → UTF-8 tail is sound (`ProbeOK`); the generic `_safe` theorems without that hypothesis (§9) |
+| `SafetyMargins/IcelakeReplacementBlock.lean`, `IcelakeReplacement.lean` | the icelake UTF-8 → UTF-16 `_with_errors` and `convert_valid` kernels meet `BSpec` and `CVSpec`: block soundness of the range checks, exact counts, error positions (§9) |
+| `SafetyMargins/IcelakeReplacement16.lean` | the icelake UTF-16 → UTF-8 kernel with details meets `VKSpec'`; the icelake `_safe` entry points (§9) |
+| `SafetyMargins/RvvReplacement.lean` | rvv: `VSpec2`, `BSpec`, `CVSpec` on the real lane check, and UTF-8 → UTF-16 with replacement end to end (§9) |
+| `SafetyMargins/RvvReplacement16.lean` | the rvv UTF-16 → UTF-8 kernel with details meets `VKSpec'`; the rvv `_safe` and replacement entry points (§9) |
+| `SafetyMargins/IcelakeValidator.lean` | the icelake `validate_utf8_with_counts` (AVX-512 checker, misaligned head, ASCII skip, masked tail, rewind) meets `VSpec2` for every buffer address (§9) |
+| `SafetyMargins/ReplacementAll.lean` | the icelake replacement and `_safe` entry points end to end, with the C++ probe and every buffer address (§9) |
+| `SafetyMargins/IcelakeUtf32Tail.lean` | the icelake UTF-16 → UTF-32 masked tail and the whole function with its three entry points (§9) |
+| `SafetyMargins/IcelakeReplLength.lean` | the icelake `utf8_length_from_utf16_with_replacement` tiles the input and returns the scalar result, error flag included (§9) |
 
 ## 1. Model (`Basic.lean`)
 
@@ -327,17 +337,19 @@ that starts on a continuation byte, and the tail is scalar.
 
 `valid_utf8_to_utf16.h` and `valid_utf8_to_utf32.h` used a fixed
 `safety_margin` of 16 bytes. They now run their block loop on a smaller fixed
-margin. After the loop, except on arm64 for UTF-16 and on LoongArch for
-UTF-32, they scan back once from the end for 3 leading bytes (the dynamic
+margin. After the loop, except on arm64 for UTF-16, they scan back once
+from the end for 3 leading bytes (2 for UTF-32 on lsx and lasx; the dynamic
 margin of §3) and convert one more block if it admits it; fewer than 64
-bytes then remain, and the scalar tail finishes.
+bytes then remain, and the scalar tail finishes. Both loops advance through
+the same blocks, so `convert_valid` runs a vector block wherever the
+validating decoder does (an argument from the code, not a theorem).
 
 | header | target | fixed margin | extra block |
 |---|---|---|---|
 | `valid_utf8_to_utf16.h` | westmere, haswell, ppc64, lsx, lasx | 9 | `K = 3` |
 | `valid_utf8_to_utf16.h` | arm64 | 3 | none |
 | `valid_utf8_to_utf32.h` | westmere, haswell, ppc64, arm64 | 12 | `K = 3` |
-| `valid_utf8_to_utf32.h` | lsx, lasx | 4 | none |
+| `valid_utf8_to_utf32.h` | lsx, lasx | 4 | `K = 2` (the loads; the stores need 1) |
 
 - **The loop.** `ValidHybrid.head` decides whether a block runs: the fixed
   test in the loop, then once the test of the extra block
@@ -383,6 +395,7 @@ witnesses state it. The calls of each kernel to byte 51 are those of
 | `k16_la`: `K = 2` | lsx, lasx UTF-16 | `la924b`, 68 bytes | same |
 | `fix32_la`: fixed 3 | lsx, lasx UTF-32 | `la32fix`, 67 bytes | `0xaaa` at 51: 8 units for 6 |
 | `fix16_arm_read`: fixed 2 | arm64 UTF-16 | `laRead`, 66 bytes | the call at 51 loads byte 66 |
+| `k32_la_read`: `K = 1` | lsx, lasx UTF-32 | `laRead`, 66 bytes | same |
 
 The inputs, in hex: `lvTight` is `41`×24, `C3 A9`×7, `41`×5, `C3 A9`×2,
 `41`×16, `C3 A9 41 41`; `v16fix` and `v32fix` replace its last 4 bytes by
@@ -392,8 +405,7 @@ last 5 bytes by `E3 81 82`×3. `la32fix` is `41`×32, `C3 A9`×7, `41`×5,
 `C3 A9`×6, `F0 9F 98 80`. `laRead` is `41`×32, `C3 A9`×7, `41`×20.
 `ValidDynamic` also has the dynamic test alone, for any `K`: `utf16_x86_K2`,
 `utf32_x86_K2`, `utf16_la_K2`, and `read_K1` (`K = 1` loads past the input
-with the arm64 UTF-16 and LoongArch UTF-32 kernels, targets whose headers
-have no dynamic block).
+with the arm64 UTF-16 and LoongArch UTF-32 kernels).
 
 These functions require valid input. On invalid input no fixed margin bounds
 them, because a tail of continuation bytes has `L = 0`. The same holds for
@@ -563,9 +575,11 @@ Every loop now uses its optimal margin, for each target.
   the validating prologue guarantee it. On input that breaks the contract of
   `convert_valid_utf8_to_utf16`/`utf32`, it can move before the output and
   read `dst[-1]` outside it.
-- **Differential tests.** The models of `Replacement`, `IcelakeReal` and
-  `ValidExact` agree with the C++ on 200,000 random inputs on arm64, haswell
-  and icelake (the article's `bench/difftest`).
+- **Differential tests.** The models of the scalar converters, the length
+  functions, `Replacement*`, `IcelakeReal`, the icelake UTF-8 decoders and
+  UTF-8 validity are compared with the C++ on 406,360 inputs on arm64,
+  haswell, westmere, icelake and the fallback kernel (the article's
+  `bench/difftest`, at 811cd8a5).
 
 What remains read from the C++ after §7: the transcriptions themselves
 (path tables, call shapes, load offsets, lane arithmetic), the RVV
@@ -611,8 +625,7 @@ drivers on the generic kernels, and the remaining loads.
   loop models. End to end: `convertRepl_generic`, `trRun_generic`,
   `replSafe_generic`, `dSafe_generic`, and the two entry points not modelled
   before, `pSafe_generic` (`convert_utf16_to_utf8_safe`) and `latin1Safe`
-  (`convert_latin1_to_utf8_safe`). Icelake and rvv are not discharged for
-  these contracts.
+  (`convert_latin1_to_utf8_safe`). Icelake and rvv: §9.
 - **Loads (`LoadsRest.lean`).** The rvv loops (`rvv_all`, with the
   look-ahead of the UTF-8 loops tight, `rvv_utf8_tight`), the backward scans
   (`walk_errors`, `walk_counts`, `rewind_convert_in`), the validators
@@ -662,3 +675,52 @@ drivers on the generic kernels, and the remaining loads.
   decode a 4-byte character twice and write 2 units past the buffer
   (`guard_needed`). `LoadsAll.icelake_utf8_block_tied` and
   `icelake_utf8_fixed_tied` are superseded by these load bounds.
+
+## 9. End-to-end decoders, the replacement contracts on icelake and rvv
+
+- **Generic UTF-8 decoders (`GenericUtf8.lean`).** `gen_safe` composes the
+  block states of `Utf8.Reach` with the loop test, the error exits
+  (`return 0`, the rewind at the block head), the ASCII tail and the scalar
+  tail; `gen_utf16_safe`, `gen_utf16_errors_safe`, `gen_utf32_safe`,
+  `gen_utf32_errors_safe`, `gen_latin1_safe`, `gen_latin1_errors_safe`
+  instantiate it for westmere, haswell, ppc64, arm64, lsx and lasx
+  (`targets`, `targets_ok`). On every byte input every store ends within
+  `L` and every load within the input. `rewind_head` bounds the rewind: it
+  steps back only from a continuation byte, which a vector call never leaves
+  at the cursor, and returns at once after an ASCII byte; where a call is not
+  exact the cursor lags. `dup_example`: a rewind that re-decoded a complete
+  character would write past `L`, and no margin would prevent it.
+  `Scalar.rewind_total` is superseded by `rewind_head`.
+- **The ASCII probe (`ReplacementProbe.lean`).** `ProbeOK` now takes `U16`
+  input (a unit of 65536 or more could pass the 64-bit mask);
+  `probeOK_real` proves it for `Scalar.probeU16` in both byte orders, and
+  `replSafe_kernels_real`, `dSafe_kernels_real` drop the hypothesis.
+- **Icelake (`IcelakeReplacementBlock`, `IcelakeReplacement`,
+  `IcelakeReplacement16`, `ReplacementAll`).** `iceK_bspec`,
+  `iceCV_cvspec`: the range checks `fail3`/`fail4` reject exactly overlong
+  forms, surrogates and values above U+10FFFF (`chk3_ok`, `chk4_ok`), so a
+  block that passes is valid (`block_sound`), counts are exact
+  (`pot_exact`), and an error is reported at the first failing byte, stores
+  ending at `L` of the valid prefix. `iceVK_spec`: the UTF-16 → UTF-8 kernel
+  reports the first unpaired surrogate with an exact output count;
+  `replSafe_icelake_real`, `dSafe_icelake_real`. `IcelakeValidator.iceV_spec2`:
+  the AVX-512 checker is the generic per-byte check (`next_proj`), the zero
+  lanes of the misaligned head and the ASCII skip change nothing, and the
+  rewind is proved at offsets that are not multiples of 64 (1, 2 or 3 after
+  the head). `ReplacementAll.convertRepl_icelake`, `trRun_icelake`: UTF-8 →
+  UTF-16 with replacement end to end, with the validator's misalignment
+  free at every call (`iceVA`).
+- **rvv (`RvvReplacement`, `RvvReplacement16`).** `rvvV_spec2` (the rvv
+  `validate_utf8_with_counts` is the scalar one), `rvvK_bspec`,
+  `rvvCV_cvspec` (the lane check is `Validator.err`, `laneErr_eq`; stores
+  end at most 2 units past `L` of a valid prefix), `convertRepl_rvv`,
+  `trRun_rvv`; `rvvVK_spec`, `replSafe_rvv`, `dSafe_rvv`, `via_rvvRepl`.
+  Every theorem holds for every `vl`.
+- **Icelake UTF-16 → UTF-32 (`IcelakeUtf32Tail.lean`).** The masked tail,
+  the loop and the scalar tail transcribed; `safe_utf16to32_full`: every
+  store within `L`, every load in the input, for the plain, `_with_errors`
+  and `convert_valid` entry points, with no charge left from
+  `IcelakeReal.run32`.
+- **Icelake replacement length (`IcelakeReplLength.lean`).**
+  `icelake_tiling`, and `iceRes_eq`: the icelake function returns exactly
+  the scalar result, error flag included.

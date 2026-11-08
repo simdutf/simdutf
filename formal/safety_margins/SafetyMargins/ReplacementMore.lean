@@ -1512,7 +1512,9 @@ of `iw` and `matches` the adjacent (high, low) pairs, is `countRepl`. That
 the three loops of `icelake_utf8_length_from_utf16_with_replacement`
 (:115-269: unrolled `2N` blocks with two straddle words, one `N` block with
 one straddle word, a masked tail whose low lanes are zero) count each unit
-once and each adjacent pair once is read from the C++, not proved. -/
+once and each adjacent pair once is proved on their transcription:
+`ReplacementRest.iceLen_eq`, and `IcelakeReplLength.icelake_tiling`,
+`iceRes_eq` (with the error flag). -/
 theorem icelake_identity (xs : List Nat) : L (xs.map iw) = countRepl xs + 2 * prs xs := by
   induction xs using wR.induct with
   | case1 => rfl

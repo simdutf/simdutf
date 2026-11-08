@@ -191,7 +191,7 @@ theorem walk_errors (byte : Int → Nat) (cont : Nat → Bool) (h0 : cont (byte 
   rw [Int.sub_self] at this
   rw [h0] at this; cases this
 
-/-- **`rewind_and_validate_with_counts`** (include/simdutf/scalar/utf8.h:400-447): when
+/-- **`rewind_and_validate_with_counts`** (include/simdutf/scalar/utf8.h:400-449): when
 `buf ≠ start` it steps back first and reads `byte[c - k]`, `k = 1, 2, 3, 4`,
 stepping again only on a continuation byte; the first byte is checked at
 :403-405. Every step reached has `k ≤ c`. The comment at :419-422 says callers
@@ -208,7 +208,7 @@ theorem walk_counts (byte : Int → Nat) (cont : Nat → Bool) (h0 : cont (byte 
   rw [h0] at this; cases this
 
 /-- After the scan, `validate_with_errors(buf, len + extra_len)` /
-`validate_with_counts(buf, len + extra_len)` (include/simdutf/scalar/utf8.h:249, :443)
+`validate_with_counts(buf, len + extra_len)` (include/simdutf/scalar/utf8.h:249, :445)
 reads `[c - extra, c - extra + (n - c) + extra) = [c - extra, n)`. -/
 theorem rewind_validate_range (n c extra : Nat) (hc : c ≤ n) (he : extra ≤ c) :
     c - extra + ((n - c) + extra) = n := by omega

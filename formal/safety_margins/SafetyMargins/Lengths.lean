@@ -309,10 +309,10 @@ def sc8of16 (u : Nat) : Nat :=
 /-- include/simdutf/scalar/utf16.h:106-116 and :78-87 (`count_code_points`). -/
 def sc32of16 (u : Nat) : Nat := ind (u &&& 0xFC00 != 0xDC00)
 
-/-- include/simdutf/scalar/utf8.h:450-465 (`count_code_points`). -/
+/-- include/simdutf/scalar/utf8.h:452-467 (`count_code_points`). -/
 def scCount8 (b : Nat) : Nat := ind (decide (i8 b > -65))
 
-/-- include/simdutf/scalar/utf8.h:467-482 (`utf16_length_from_utf8`). -/
+/-- include/simdutf/scalar/utf8.h:469-484 (`utf16_length_from_utf8`). -/
 def sc16of8 (b : Nat) : Nat := ind (decide (i8 b > -65)) + ind (decide (b ≥ 240))
 
 /-- include/simdutf/scalar/utf32.h:53-65 (`utf8_length_from_utf32`). -/

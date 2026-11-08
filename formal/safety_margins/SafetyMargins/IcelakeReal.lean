@@ -144,9 +144,11 @@ theorem nosur_L (l : List Nat) (h : l.any (fun v => hiS v || loS v) = false) :
 
 /-- The loop, on the units `us` not yet consumed, with carry `c`: the furthest
 end of a store, from the cursor. After the loop (fewer than 32 units left) or
-when the fuel is spent, the rest is assumed exact, as in `realWritten32`
+when the fuel is spent, the rest is charged as exact, as in `realWritten32`
 (`convert_utf16_to_utf32_masked`, line 3, uses masked stores of the produced
-count; the scalar tail writes one unit per non-low unit). -/
+count; the scalar tail writes one unit per non-low unit). The masked tail and
+the whole function are transcribed and proved in `IcelakeUtf32Tail`
+(`safe_utf16to32_full`), with no such charge. -/
 def run32 : Nat → Bool → List Nat → Nat
   | 0, _, us => L (us.map w32v)
   | n + 1, c, us =>

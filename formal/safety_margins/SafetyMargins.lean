@@ -47,3 +47,7 @@ import SafetyMargins.ReplacementAll
 import SafetyMargins.IcelakeReplacementBlock
 import SafetyMargins.IcelakeReplacement
 import SafetyMargins.RvvReplacement
+import SafetyMargins.IcelakeUtf32Tail
+import SafetyMargins.IcelakeReplLength
+import SafetyMargins.GenericUtf8
+import SafetyMargins.IcelakeValidator

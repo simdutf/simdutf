@@ -35,7 +35,7 @@ and both directions are proved for it.
   states, bits, `p1` and `c`, that a byte that passes keeps `H`.
 * **`validate_utf8_with_counts` (`vecV`, `vecV_spec`).** On an error the C++
   rewinds at most 4 bytes to a leading byte and runs the scalar
-  `validate_with_counts` from there (include/simdutf/scalar/utf8.h:400-448,
+  `validate_with_counts` from there (include/simdutf/scalar/utf8.h:400-450,
   transcribed as `rewindV`, the scalar loop as `vwc4F`), then adds back the
   counts of the blocks before. `vecV_spec` proves `ReplacementMore.VSpec`
   for it: on success the input is valid and `utf16_length()` is `L` of its
@@ -720,7 +720,7 @@ theorem vwc4F_spec (ys : List Nat) (hb : Bytes ys) :
 
 /-- `rewind_and_validate_with_counts` steps back over at most 4 bytes: to the
 first byte before `buf` that is not a continuation byte, or 4 bytes
-(include/simdutf/scalar/utf8.h:423-441; `(b & 0xC0) != 0x80` is `!isCont b`
+(include/simdutf/scalar/utf8.h:423-443; `(b & 0xC0) != 0x80` is `!isCont b`
 on bytes, `ReplacementMore.masks`). -/
 def ext (bs : List Nat) (idx : Nat) : Nat :=
   if isCont (bs.getD (idx - 1) 0) = false then 1
@@ -728,12 +728,12 @@ def ext (bs : List Nat) (idx : Nat) : Nat :=
   else if isCont (bs.getD (idx - 3) 0) = false then 3 else 4
 
 /-- `rewind_and_validate_with_counts(input, input + count, length - count)`
-(include/simdutf/scalar/utf8.h:400-448) followed by the caller's additions
+(include/simdutf/scalar/utf8.h:400-450) followed by the caller's additions
 (utf8_validator.h:124-131, :143-151): `C` and `F` are the counters of the
 blocks before `count`. A first byte that is a continuation byte gives
 `TOO_LONG` at 0 (include/simdutf/scalar/utf8.h:403-405); at `count = 0` the scalar validator runs on the
 whole input (:408-410); otherwise it runs from `count - ext`, and the counts
-of the bytes stepped over are subtracted (:423-447). Every error of the
+of the bytes stepped over are subtracted (:423-449). Every error of the
 scalar validator is a validation error (`verr`). The `size_t` arithmetic is
 done in `Int` (see the header). -/
 def rewindV (bs : List Nat) (count C F : Nat) : VRes :=
