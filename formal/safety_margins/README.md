@@ -51,6 +51,12 @@ of the replacement files) use `decide +kernel`, checked by the Lean kernel.
 | `SafetyMargins/ValidTight.lean` | a valid input on which the `convert_valid` UTF-8 → UTF-32 margin 11 overflows on x86, arm64 and POWER |
 | `check_citations.py` | checks that every C++ `file:line` cited in the Lean files exists, and that every cited loop test is a loop |
 | `SafetyMargins/IcelakeReal.lean` | the Ice Lake UTF-16 loops on the unit values, which discharge the data hypotheses of `safe_utf16to32_real` and `safe_utf16to8_real` (§7) |
+| `SafetyMargins/Scalar.lean` | the scalar code: every `scalar::` converter, `rewind_and_convert_with_errors` and the scalar fallbacks inside the vector loops write at most `L` of what they are given; the charge of `Basic.written` for the tail is met (§8) |
+| `SafetyMargins/ReplacementClose.lean` | the contracts of the conversions with replacement discharged for the generic kernels; the `_safe` entry points `convert_utf16_to_utf8_safe` and `convert_latin1_to_utf8_safe` (§8) |
+| `SafetyMargins/LoadsRest.lean` | the loads of the rvv kernels, the validators, the backward scans and the replacement drivers (§8) |
+| `SafetyMargins/IcelakeMask.lean`, `IcelakeUtf8.lean`, `IcelakeUtf8Fixed.lean` | the icelake UTF-8 → UTF-16 / UTF-32 / Latin-1 decoders at the level of 64-byte blocks and masks: every store within the length function, every load within the input (§8) |
+| `SafetyMargins/Lengths*.lean` | every ordinary length function, scalar and on every kernel, returns the per-unit sum on every input, except two over-estimates of `utf8_length_from_utf16` on ill-formed input (§8) |
+| `SafetyMargins/ReplacementLengths.lean` | the replacement and `_safe` entry points of the generic kernels with each kernel's own length function: no length hypothesis left (§8) |
 
 ## 1. Model (`Basic.lean`)
 
@@ -410,7 +416,9 @@ For the loops with no margin:
   gives the hypothesis from `utf16to32_ahead` when that iteration runs only
   for `V == 0` (`vzero_noAdj`).
 - **rvv:** every loop is `vl`-exact (`Rvv.safe_vla`).
-- **icelake UTF-8 decoders** store exact counts (`Icelake.safe_utf8`).
+- **icelake UTF-8 decoders**: `IcelakeUtf8.icelake_utf8_safe` (§8), from a
+  transcription at the level of masks; `Icelake.safe_utf8` is the earlier
+  abstract table.
 
 Every loop now uses its optimal margin, for each target.
 
@@ -432,8 +440,8 @@ Every loop now uses its optimal margin, for each target.
   prefix and the unread tail is the expansion of complete characters.
   `ValidExact` proves both on valid UTF-8 (§7); what remains read from the
   C++ is the shape of each call, as for the other decoders. `valid_utf8_to_latin1.h` is not among them; §3.2
-  covers it, under its contract (`LV` input). That the scalar tail writes one
-  byte per character is read from the C++.
+  covers it, under its contract (`LV` input). The scalar tails are proved
+  in `Scalar.lean` (§8).
 - **Ice Lake real ends.** `safe_utf16to32_real` assumes the surrogate
   iteration runs only when `16 ≤ L` of the 32 loaded lanes.
   `safe_utf16to8_real` assumes each `.ahead` iteration's extra bytes are the
@@ -533,6 +541,96 @@ Every loop now uses its optimal margin, for each target.
 
 What remains read from the C++ after §7: the transcriptions themselves
 (path tables, call shapes, load offsets, lane arithmetic), the RVV
-semantics of `vsetvl`, `vcompress` and `vcpop`, that `convert_valid_prefix`
-and `utf16_length_from_utf8` are exact on valid input, and that arm64's
-`neon_counter` sums the same counts as the generic code.
+semantics of `vsetvl`, `vcompress` and `vcpop`. §8 proves the scalar code,
+the length functions, `neon_counter`, the contracts of the replacement
+drivers on the generic kernels, and the remaining loads.
+
+## 8. The scalar code, the remaining contracts, the remaining loads
+
+- **Scalar code (`Scalar.lean`).** `Basic.written` charges the code that
+  finishes a conversion `L` of the units it is given (fuel `0`, and an
+  iteration with fewer than `N` units). `run` is a scalar loop as a step
+  function, and `run_le`: if every step writes at most `L` of what it
+  consumes, the loop writes at most `L` of its input, for any fuel. Each
+  converter of `include/simdutf/scalar/` is transcribed with its fast path:
+  - UTF-8 sources (`utf8to16_le`, `utf8to32_le`, `utf8toL_le`,
+    `valid8to16_le`, `valid8to32_le`, `valid8toL_le`), on every byte string,
+    the `convert_valid` ones included. The 16- and 8-byte ASCII tests on the
+    64-bit words that `memcpy` reads hold only on ASCII bytes
+    (`probe16_ascii`, `probe8_ascii`, through `le64_and_gen`).
+  - UTF-16 sources (`utf16to8_le`, `utf16to32_le`, `utf16toL_le`), on every
+    input and for any fast-path test; `convert_valid` (`valid16to8_le`,
+    `valid16to32_le`) on valid UTF-16, its contract, in both byte orders: the
+    4-unit test, with the rotation of the other byte order, holds only on
+    units below 0x80 (`probeU16_ascii`). On invalid input `convert_valid`
+    can write more (`valid_16to8_over`).
+  - UTF-32 and Latin-1 sources (`utf32to8_le`, `utf32to16_le`,
+    `utf32toL_le`, `latin1to8_le`, `oneEach_run`), on every input, with the
+    32-bit masks as arithmetic (`and_high`).
+  - `rewind_and_convert_with_errors` (`rewind_le`, `rewind_total`,
+    `rewind_rest`): it writes at most `L` of the bytes from the leading byte
+    it steps back to, and at most `L` of the bytes from the cursor when the
+    byte there is not a continuation byte or the byte before it is ASCII.
+  - The scalar fallbacks inside the vector loops (`runK`,
+    `fallback_scalar`): the 54 loops listed in the file are iterations of
+    `Kernels.scalar k` writing at most `L` of what they consume
+    (`fbA_scalar`, `fbB_scalar`, `fbC_scalar`, `fbD_scalar`, `fbL_scalar`).
+  - `writtenT_le`, `safe_of_paths_tail`: with a tail within `L`, the whole
+    conversion stays within `Basic.written`, hence within `L`.
+- **The contracts of the replacement drivers (`ReplacementClose.lean`).**
+  `BSpec`, `CVSpec`, `VKSpec` and `VSpec2` are proved for the kernels built
+  from src/generic (westmere, haswell, arm64, ppc64, lsx, lasx), from the
+  loop models. End to end: `convertRepl_generic`, `trRun_generic`,
+  `replSafe_generic`, `dSafe_generic`, and the two entry points not modelled
+  before, `pSafe_generic` (`convert_utf16_to_utf8_safe`) and `latin1Safe`
+  (`convert_latin1_to_utf8_safe`). Icelake and rvv are not discharged for
+  these contracts.
+- **Loads (`LoadsRest.lean`).** The rvv loops (`rvv_all`, with the
+  look-ahead of the UTF-8 loops tight, `rvv_utf8_tight`), the backward scans
+  (`walk_errors`, `walk_counts`, `rewind_convert_in`), the validators
+  (`validators_fit`, the AVX-512 masked heads and tails) and the replacement
+  drivers (`culCalls_in` for every list of offsets, `tr_calls_in`,
+  `chunk_in`, `latin1_safe_in`) read only inside the input.
+- **Length functions (`Lengths.lean`, `LengthsGeneric.lean`,
+  `LengthsArch.lean`, `LengthsIcelake.lean`, `LengthsRvv.lean`,
+  `LengthsNeon.lean`, `LengthsSpec.lean`).** The documentation calls the
+  result of a length function on ill-formed input implementation defined.
+  Every ordinary length function, scalar, generic and per-kernel (westmere,
+  haswell, icelake, arm64, ppc64, lsx, lasx, rvv for every `vl`), returns the
+  per-unit sum `L (xs.map w)` on every input (`LengthsSpec.lengths_all`,
+  `Lengths.scalar_lengths`, `LengthsRvv.rvv_lengths`), with the lane counters
+  at their real widths and their flushes (no overflow), and arm64's
+  `neon_counter` sums the generic counts (`LengthsNeon.neon_counts`). Two
+  exceptions, both over-estimates on ill-formed input (`exceptions_ge`):
+  arm64 `utf8_length_from_utf16` adds 2 when the length is a multiple of 16,
+  at least 32, and the last unit is a high surrogate (`arm8of16_eq`,
+  src/arm64/arm_convert_utf16_to_utf8.cpp:631-633); icelake below 33 units
+  counts an unpaired surrogate as 3 (`ice8of16_eq`,
+  src/icelake/icelake_utf8_length_from_utf16.inl.cpp:7-12). A larger buffer is
+  safe, so the store theorems hold for buffers sized by any of them.
+- **No length hypothesis (`ReplacementLengths.lean`).** `SLSpec` is false
+  for arm64 and icelake; the drivers need it only on prefixes with no
+  unpaired surrogate (`SLSpec'`), which holds for every kernel, since the
+  vector kernels report the first unpaired surrogate (`VKSpec'`).
+  `replSafe_kernels`, `dSafe_kernels`, `convertRepl_kernels` and
+  `trRun_kernels` instantiate each generic kernel with its own length
+  function.
+- **Ice Lake UTF-8 decoders (`IcelakeMask.lean`, `IcelakeUtf8.lean`,
+  `IcelakeUtf8Fixed.lean`).** `process_block_utf8_to_utf16`, the fixed-length
+  UTF-32 decoders and both Latin-1 kernels transcribed on 64-byte blocks and
+  64-bit masks (popcount, lzcnt, pdep, pext), with their drivers, scalar
+  tails and the rewind. `icelake_utf8_safe` collects the results:
+  `convert` and `_with_errors` of the three conversions keep every store
+  within `L` of the input and every load inside it on every input
+  (`conv16_safe`, `conv16err_safe`, `conv32_safe`, `conv32err_safe`,
+  `convL1_safe`, `convL1err_safe`); `convert_valid` on valid UTF-8
+  (`conv16valid_safe`; `conv32valid_safe` holds on every input) and on
+  valid Latin-1-representable UTF-8 (`convL1valid_safe`; valid UTF-8 alone
+  is not enough, `latin1_valid_needs_LV`). The block check is the structure
+  check of the kernel (`block16_core`, `pot`), and a valid block passes it
+  (`struct_of_valid`); the UTF-32 and Latin-1 proofs hold for every verdict
+  of the AVX-512 validator, so they need no proof of it. The `TOO_LONG`
+  test before the UTF-16 rewind is needed: without it the rewind would
+  decode a 4-byte character twice and write 2 units past the buffer
+  (`guard_needed`). `LoadsAll.icelake_utf8_block_tied` and
+  `icelake_utf8_fixed_tied` are superseded by these load bounds.

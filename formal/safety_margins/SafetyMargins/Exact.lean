@@ -69,9 +69,9 @@ theorem lead_map {w : Nat → Nat} (hw : ContZero w) {bs : List Nat} (hb : ∀ b
   have := hw _ hl
   generalize bs.getD i 0 = b at *
   by_cases hc : isCont b = true
-  · rw [if_pos (this.mpr hc), if_pos hc]
+  · rw [ite_eq_left (this.mpr hc), ite_eq_left hc]
   · have h0 : w b ≠ 0 := fun h0 => hc (this.mp h0)
-    rw [if_neg h0, if_neg hc]
+    rw [ite_eq_right h0, ite_eq_right hc]
 
 /-- The mask of a call inside a checked block is well shaped. -/
 theorem well_call {xm w bs pos t} (hw : ContZero w) (h : CheckedAt xm bs pos) (ht1 : pos ≤ t)
@@ -121,7 +121,7 @@ theorem row_exact (xs : List Nat) (t : Nat) (r : Row xs t) (hi : bigIdx[r.m]! < 
     (fun k hk => by rw [hb k (by omega), Nat.add_right_comm]), L_window,
     sumUpTo_congr _ (fun k => lead xs (t + k)) _ hw1, sumUpTo_shift (lead xs) t c']
   have hn : lead xs (t + 1 + c') = 1 := by
-    unfold lead; rw [show t + 1 + c' = t + (c' + 1) by omega, if_neg hnext]
+    unfold lead; rw [show t + 1 + c' = t + (c' + 1) by omega, ite_eq_right hnext]
   show lead xs (t + 1 + c') + sumUpTo (fun k => lead xs (t + 1 + k)) c' =
     lead xs t + sumUpTo (fun k => lead xs (t + 1 + k)) c'
   rw [hn, hlead]
@@ -173,12 +173,12 @@ theorem f0_conts {xm bs pos u i} (h : CheckedAt xm bs pos) (hu : pos ≤ u)
     isCont (bs.getD (u + i) 0) = true := by
   have hb := getD_lt bs h.1 u
   have e : ∀ j, blk bs pos (u - pos + 3 + j) = bs.getD (u + j) 0 := by
-    intro j; unfold blk; rw [if_neg (by omega)]; congr 1; omega
+    intro j; unfold blk; rw [ite_eq_right (by omega)]; congr 1; omega
   have e0 : blk bs pos (u - pos + 3) = bs.getD u 0 := e 0
   generalize hB : bs.getD u 0 = B at hF hb e0
   have := cont_of_lead (k := i) h.2.2 (s := u - pos + 3) (by omega)
     (by rw [e0]; unfold isCont; simp; omega) (by rw [e0]; omega) hi1
-    (by rw [e0]; unfold clen; rw [if_neg (by omega), if_neg (by omega), if_neg (by omega)]; omega)
+    (by rw [e0]; unfold clen; rw [ite_eq_right (by omega), ite_eq_right (by omega), ite_eq_right (by omega)]; omega)
     (by omega)
   rwa [e i] at this
 
@@ -249,7 +249,7 @@ theorem exact_utf16_145 {xm bs pos t} (h : CheckedAt xm bs pos) (ht1 : pos ≤ t
       by_cases hc : 0x80 ≤ b ∧ b < 0xC0
       · simp [hc]
       · have : ¬ (decide (0x80 ≤ b) && decide (b < 0xC0)) = true := by simp; omega
-        simp only [hc, if_false, this]; rw [if_neg hF]; rfl
+        simp only [hc, ite_false, this]; rw [ite_eq_right hF]; rfl
 
 theorem sumUpTo_add (f g : Nat → Nat) (c : Nat) :
     sumUpTo (fun k => f k + g k) c = sumUpTo f c + sumUpTo g c := by
@@ -305,7 +305,7 @@ theorem decomp3 (f : Nat → Nat) (a b d c : Nat) (hab : a ≠ b) (had : a ≠ d
 
 theorem blk_at (bs : List Nat) (pos u j : Nat) (hu : pos ≤ u) :
     blk bs pos (u - pos + 3 + j) = bs.getD (u + j) 0 := by
-  unfold blk; rw [if_neg (by omega)]; congr 1; omega
+  unfold blk; rw [ite_eq_right (by omega)]; congr 1; omega
 
 /-- `char_shape` at input position `u`. -/
 theorem shape_at {xm bs pos u} (h : CheckedAt xm bs pos) (hu : pos ≤ u)
@@ -394,7 +394,7 @@ theorem w16_split (b : Nat) :
   · have : ¬ 0xF0 ≤ b := by omega
     simp [hc, this]
   · have h2 : (decide (0x80 ≤ b) && decide (b < 0xC0)) = false := by simp; omega
-    simp only [hc, if_false, h2]
+    simp only [hc, ite_false, h2]
     by_cases hF : 0xF0 ≤ b <;> simp [hF]
 
 /-- UTF-16, rows with three code points: in a checked block the call is exact
@@ -424,7 +424,7 @@ theorem exact_utf16_3 {xm bs pos t} (arm : Bool) (h : CheckedAt xm bs pos) (ht1 
     List.all_eq_true, List.mem_range] at hW
   simp only [hi2, ↓reduceIte, Bool.and_eq_true, beq_iff_eq, decide_eq_true_eq] at hP
   obtain ⟨-, hpop⟩ := hP
-  have hu3 : units i = 3 := by unfold units; rw [if_neg (by omega), if_neg (by omega)]
+  have hu3 : units i = 3 := by unfold units; rw [ite_eq_right (by omega), ite_eq_right (by omega)]
   refine ⟨hc1, hnext, ?_⟩
   -- leads of the consumed bytes
   have hb := r.hb
@@ -439,7 +439,7 @@ theorem exact_utf16_3 {xm bs pos t} (arm : Bool) (h : CheckedAt xm bs pos) (ht1 
     exact this.symm
   have gc : g c = 1 := by
     show lead _ _ = 1
-    unfold lead; rw [if_neg hnext]
+    unfold lead; rw [ite_eq_right hnext]
   have hsum3 : sumUpTo g c = 3 := by
     obtain ⟨c', rfl⟩ : ∃ c', c = c' + 1 := ⟨c - 1, by omega⟩
     have e := popcount_eq r.m (c' + 1) (fun k => lead (bs.map w16) (t + 1 + k))
@@ -465,7 +465,7 @@ theorem exact_utf16_3 {xm bs pos t} (arm : Bool) (h : CheckedAt xm bs pos) (ht1 
   have hother : ∀ k, k < c → k ≠ 0 → k ≠ start3 i 1 → k ≠ start3 i 2 → g k = 0 := by
     intro k hk h0 h1 h2
     have := hrest k hk
-    rw [if_pos ⟨h0, h1, h2⟩] at this
+    rw [ite_eq_left ⟨h0, h1, h2⟩] at this
     exact this
   -- the weight of the consumed bytes
   let F := fun k => if 0xF0 ≤ bs.getD (t + k) 0 then 1 else 0
@@ -477,8 +477,8 @@ theorem exact_utf16_3 {xm bs pos t} (arm : Bool) (h : CheckedAt xm bs pos) (ht1 
     generalize bs.getD (t + k) 0 = b at hbk ⊢
     by_cases hF : 0xF0 ≤ b
     · have : isCont b = false := by unfold isCont; simp; omega
-      rw [if_pos hF, this]; simp
-    · rw [if_neg hF]; exact Nat.zero_le _
+      rw [ite_eq_left hF, this]; simp
+    · rw [ite_eq_right hF]; exact Nat.zero_le _
   have hL : L (((bs.map w16).drop t).take c) = sumUpTo g c + sumUpTo F c := by
     rw [L_window, ← sumUpTo_add]
     apply sumUpTo_congr
@@ -558,7 +558,7 @@ theorem exact_utf16_3 {xm bs pos t} (arm : Bool) (h : CheckedAt xm bs pos) (ht1 
     by_cases hF : 0xF0 ≤ bs.getD (t + s) 0
     · -- a 4-byte character: the lane gathers it and the test fires
       have hc4 : clen (bs.getD (t + s) 0) = 4 := by
-        unfold clen; rw [if_neg (by omega), if_neg (by omega), if_neg (by omega)]
+        unfold clen; rw [ite_eq_right (by omega), ite_eq_right (by omega), ite_eq_right (by omega)]
       rw [heq, hc4] at hW'
       simp only [↓reduceIte, Bool.and_eq_true, beq_iff_eq] at hW'
       obtain ⟨⟨⟨e0, e1⟩, e2⟩, e3⟩ := hW'
@@ -568,8 +568,8 @@ theorem exact_utf16_3 {xm bs pos t} (arm : Bool) (h : CheckedAt xm bs pos) (ht1 
       have c3 := hc3 3 (by omega) (by omega)
       have hv := hsh.2.1 hF
       unfold perm byteAt
-      rw [e0, e1, e2, e3, if_pos (show s + 3 < 16 by omega), if_pos (show s + 2 < 16 by omega),
-        if_pos (show s + 1 < 16 by omega), if_pos (show s < 16 by omega),
+      rw [e0, e1, e2, e3, ite_eq_left (show s + 3 < 16 by omega), ite_eq_left (show s + 2 < 16 by omega),
+        ite_eq_left (show s + 1 < 16 by omega), ite_eq_left (show s < 16 by omega),
         show t + (s + 3) = t + s + 3 by omega, show t + (s + 2) = t + s + 2 by omega,
         show t + (s + 1) = t + s + 1 by omega]
       have := pair_of_valid4 arm (bs.getD (t + s) 0) (bs.getD (t + s + 1) 0) (bs.getD (t + s + 2) 0)
@@ -578,11 +578,11 @@ theorem exact_utf16_3 {xm bs pos t} (arm : Bool) (h : CheckedAt xm bs pos) (ht1 
         (cont_range _ c3).1 (cont_range _ c3).2 hv.2
       rw [this]
       show (if 0xF0 ≤ bs.getD (t + s) 0 then 1 else 0) = 1
-      rw [if_pos hF]
+      rw [ite_eq_left hF]
     · -- shorter: the top byte is zero and the test fails
       have hc4 : clen (bs.getD (t + s) 0) ≠ 4 := by
         unfold clen; split <;> (try split) <;> (try split) <;> omega
-      rw [heq, if_neg (by omega)] at hW'
+      rw [heq, ite_eq_right (by omega)] at hW'
       simp only [decide_eq_true_eq] at hW'
       have b0 : byteAt bs t shuf[16 * i + 4 * j]! < 256 := by
         unfold byteAt; split
@@ -597,11 +597,11 @@ theorem exact_utf16_3 {xm bs pos t} (arm : Bool) (h : CheckedAt xm bs pos) (ht1 
         · exact getD_lt bs h.1 _
         · omega
       have b3 : byteAt bs t shuf[16 * i + 4 * j + 3]! = 0 := by
-        unfold byteAt; rw [if_neg (by omega)]
+        unfold byteAt; rw [ite_eq_right (by omega)]
       unfold perm
       rw [b3, no_pair_top0 arm _ _ _ b0 b1 b2]
       show (if 0xF0 ≤ bs.getD (t + s) 0 then 1 else 0) = 0
-      rw [if_neg hF]
+      rw [ite_eq_right hF]
   have l0 := lane 0 (by omega)
   have l1 := lane 1 (by omega)
   have l2 := lane 2 (by omega)
@@ -619,7 +619,7 @@ theorem count_exact (xs : List Nat) (t c : Nat) (hc : 1 ≤ c) (hlead : lead xs 
   obtain ⟨c', rfl⟩ : ∃ c', c = c' + 1 := ⟨c - 1, by omega⟩
   rw [L_window, sumUpTo_congr _ (fun k => lead xs (t + k)) _ hw1, sumUpTo_shift (lead xs) t c']
   have hn : lead xs (t + 1 + c') = 1 := by
-    unfold lead; rw [show t + 1 + c' = t + (c' + 1) by omega, if_neg hnext]
+    unfold lead; rw [show t + 1 + c' = t + (c' + 1) by omega, ite_eq_right hnext]
   show lead xs (t + 1 + c') + sumUpTo (fun k => lead xs (t + 1 + k)) c' =
     lead xs t + sumUpTo (fun k => lead xs (t + 1 + k)) c'
   rw [hn, hlead]
@@ -667,7 +667,7 @@ theorem exact_count {xm bs pos t c} (h : CheckedAt xm bs pos) (ht1 : pos ≤ t) 
   · intro k hk
     have hlt := noF0 h ht1 htc hnext hshape k hk
     rw [lead_map w16_contZero h.1 _ (by omega), getD_map _ _ _ (by omega), w16_split,
-      if_neg (show ¬ 0xF0 ≤ bs.getD (t + k) 0 by omega), Nat.add_zero]
+      ite_eq_right (show ¬ 0xF0 ≤ bs.getD (t + k) 0 by omega), Nat.add_zero]
 
 /-- The `0x888` path (arm64, lsx, lasx): in a checked block its lead check
 passes, and its 6 units are exactly `L` of the 12 bytes. -/
@@ -750,7 +750,7 @@ theorem exact_888 {xm bs pos t} (h : CheckedAt xm bs pos) (ht1 : pos ≤ t) (ht2
       have := four s hs
       rw [getD_map _ _ _ (by omega)]
       unfold w16
-      rw [if_neg (by omega), if_pos this.1]
+      rw [ite_eq_right (by omega), ite_eq_left this.1]
     have wl0 : (bs.map w16).getD t 0 = 2 := wl 0 (by omega)
     simp only [sumUpTo, Nat.add_zero]
     rw [wl0, wl 4 (by omega), wl 8 (by omega), wc 1 (by omega) (by omega) (by decide),
