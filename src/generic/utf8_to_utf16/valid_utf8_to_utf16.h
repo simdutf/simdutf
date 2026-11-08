@@ -12,25 +12,43 @@ simdutf_warn_unused size_t convert_valid(const char *input, size_t size,
   // generic directory.
   size_t pos = 0;
   char16_t *start{utf16_output};
-  // As in utf8_to_utf16.h, the margin counts leading bytes back from the end
-  // of the input: the least value proved in formal/safety_margins for the
-  // kernels that compile this header. On valid input the arm64 calls
-  // overshoot by at most 2 units and the others by 4, so the stores need 1
-  // and 3 leading bytes; the 16-byte loads at pos + 51 need 2.
+  // Two margins, both proved in formal/safety_margins for the kernels that
+  // compile this header, on the valid input the contract requires. The fixed
+  // margin counts bytes. The dynamic margin counts leading bytes back from
+  // the end of the input, as in utf8_to_utf16.h; it is at least
+  // leading_bytes + 1 bytes, and it is smaller than the fixed one on text of
+  // short characters. A block runs if either admits it. The backward scan
+  // costs a few nanoseconds, so it runs at most once, only when the fixed
+  // margin stops the loop and the dynamic one could still admit a block.
+  // Where the fixed margin is at most leading_bytes + 1, there is no scan.
 #if defined(SIMDUTF_IS_ARM64)
-  constexpr size_t valid_utf16_leading_bytes = 2;
+  constexpr size_t fixed_margin = 3;
+  constexpr size_t leading_bytes = 2;
 #else
-  constexpr size_t valid_utf16_leading_bytes = 3;
+  constexpr size_t fixed_margin = 9;
+  constexpr size_t leading_bytes = 3;
 #endif
-  size_t leading_byte = 0;
-  size_t margin = size;
-  for (; margin > 0 && leading_byte < valid_utf16_leading_bytes; margin--) {
-    leading_byte += (int8_t(input[margin - 1]) > -65);
-  }
-  // If the input is long enough, then margin is the position of the
-  // valid_utf16_leading_bytes-th last leading byte.
-  const size_t safety_margin = size - margin + 1;
-  while (pos + 64 + safety_margin <= size) {
+  size_t safety_margin = fixed_margin;
+  bool scanned = fixed_margin <= leading_bytes + 1;
+  while (true) {
+    if (pos + 64 + safety_margin > size) {
+      if (scanned || pos + 64 + leading_bytes + 1 > size) {
+        break;
+      }
+      scanned = true;
+      size_t leading_byte = 0;
+      size_t margin = size;
+      for (; margin > 0 && leading_byte < leading_bytes; margin--) {
+        leading_byte += (int8_t(input[margin - 1]) > -65);
+      }
+      // If the input is long enough, margin is the position of the
+      // leading_bytes-th last leading byte.
+      const size_t dynamic_margin = size - margin + 1;
+      if (pos + 64 + dynamic_margin > size) {
+        break;
+      }
+      safety_margin = dynamic_margin;
+    }
     // this loop could be unrolled further. For example, we could process the
     // mask far more than 64 bytes.
     simd8x64<int8_t> in(reinterpret_cast<const int8_t *>(input + pos));
