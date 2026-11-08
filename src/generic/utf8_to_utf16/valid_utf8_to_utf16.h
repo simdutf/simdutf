@@ -12,43 +12,15 @@ simdutf_warn_unused size_t convert_valid(const char *input, size_t size,
   // generic directory.
   size_t pos = 0;
   char16_t *start{utf16_output};
-  // Two margins, both proved in formal/safety_margins for the kernels that
-  // compile this header, on the valid input the contract requires. The fixed
-  // margin counts bytes. The dynamic margin counts leading bytes back from
-  // the end of the input, as in utf8_to_utf16.h; it is at least
-  // leading_bytes + 1 bytes, and it is smaller than the fixed one on text of
-  // short characters. A block runs if either admits it. The backward scan
-  // costs a few nanoseconds, so it runs at most once, only when the fixed
-  // margin stops the loop and the dynamic one could still admit a block.
-  // Where the fixed margin is at most leading_bytes + 1, there is no scan.
+  // The least margin proved in formal/safety_margins for the kernels that
+  // compile this header. The arm64 calls overshoot by at most 2
+  // units and need 3; the others overshoot by 4 and need 9.
 #if defined(SIMDUTF_IS_ARM64)
-  constexpr size_t fixed_margin = 3;
-  constexpr size_t leading_bytes = 2;
+  const size_t safety_margin = 3;
 #else
-  constexpr size_t fixed_margin = 9;
-  constexpr size_t leading_bytes = 3;
+  const size_t safety_margin = 9;
 #endif
-  size_t safety_margin = fixed_margin;
-  bool scanned = fixed_margin <= leading_bytes + 1;
-  while (true) {
-    if (pos + 64 + safety_margin > size) {
-      if (scanned || pos + 64 + leading_bytes + 1 > size) {
-        break;
-      }
-      scanned = true;
-      size_t leading_byte = 0;
-      size_t margin = size;
-      for (; margin > 0 && leading_byte < leading_bytes; margin--) {
-        leading_byte += (int8_t(input[margin - 1]) > -65);
-      }
-      // If the input is long enough, margin is the position of the
-      // leading_bytes-th last leading byte.
-      const size_t dynamic_margin = size - margin + 1;
-      if (pos + 64 + dynamic_margin > size) {
-        break;
-      }
-      safety_margin = dynamic_margin;
-    }
+  while (pos + 64 + safety_margin <= size) {
     // this loop could be unrolled further. For example, we could process the
     // mask far more than 64 bytes.
     simd8x64<int8_t> in(reinterpret_cast<const int8_t *>(input + pos));
@@ -98,6 +70,43 @@ simdutf_warn_unused size_t convert_valid(const char *input, size_t size,
       // 85% to 90% efficiency.
     }
   }
+#if !defined(SIMDUTF_IS_ARM64)
+  // Near the end of the input, the dynamic margin of the validating decoders,
+  // which counts leading bytes back from the end, can admit one more block
+  // than the fixed margin, on text of short characters. Both are proved in
+  // formal/safety_margins (on valid input, 3 leading bytes). The block loop
+  // above keeps the fixed margin, so the backward scan runs only here, when
+  // such a block could fit; after it, fewer than 64 bytes remain.
+  constexpr size_t leading_bytes = 3;
+  if (pos + 64 + leading_bytes + 1 <= size) {
+    size_t leading_byte = 0;
+    size_t margin = size;
+    for (; margin > 0 && leading_byte < leading_bytes; margin--) {
+      leading_byte += (int8_t(input[margin - 1]) > -65);
+    }
+    // If the input is long enough, margin is the position of the
+    // leading_bytes-th last leading byte.
+    if (pos + 64 + (size - margin + 1) <= size) {
+      simd8x64<int8_t> in(reinterpret_cast<const int8_t *>(input + pos));
+      if (in.is_ascii()) {
+        in.store_ascii_as_utf16<endian>(utf16_output);
+        utf16_output += 64;
+        pos += 64;
+      } else {
+        uint64_t utf8_continuation_mask = in.lt(-65 + 1);
+        uint64_t utf8_leading_mask = ~utf8_continuation_mask;
+        uint64_t utf8_end_of_code_point_mask = utf8_leading_mask >> 1;
+        size_t max_starting_point = (pos + 64) - 12;
+        while (pos < max_starting_point) {
+          size_t consumed = convert_masked_utf8_to_utf16<endian>(
+              input + pos, utf8_end_of_code_point_mask, utf16_output);
+          pos += consumed;
+          utf8_end_of_code_point_mask >>= consumed;
+        }
+      }
+    }
+  }
+#endif
   utf16_output += scalar::utf8_to_utf16::convert_valid<endian>(
       input + pos, size - pos, utf16_output);
   return utf16_output - start;
