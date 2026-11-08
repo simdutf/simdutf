@@ -44,3 +44,6 @@ import SafetyMargins.ReplacementProbe
 import SafetyMargins.IcelakeReplacement16
 import SafetyMargins.RvvReplacement16
 import SafetyMargins.ReplacementAll
+import SafetyMargins.IcelakeReplacementBlock
+import SafetyMargins.IcelakeReplacement
+import SafetyMargins.RvvReplacement
