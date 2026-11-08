@@ -10,11 +10,11 @@ src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:20-40) runs a block while
 `pos + 64 + safety_margin <= size`, with `safety_margin` 9 for UTF-16 (3 on
 arm64, src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:18-22) and 12 for UTF-32 (4 on lsx and lasx,
 src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:15-19). After it, except on
-arm64 for UTF-16 and on LoongArch for UTF-32
+arm64 for UTF-16
 (src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:73-109,
-src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:41-77), if
+src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:41-80), if
 `pos + 64 + leading_bytes + 1 <= size` it scans back for `leading_bytes = 3`
-leading bytes (`ValidDynamic.safetyMargin`) and, if
+(2 on lsx and lasx for UTF-32) leading bytes (`ValidDynamic.safetyMargin`) and, if
 `pos + 64 + (size - margin + 1) <= size`, converts one more block with the
 same code. Fewer than 64 bytes then remain, so no further block runs.
 
@@ -75,16 +75,16 @@ def f32 (la : Bool) : Nat := if la then 4 else 12
 (src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:73, :80). -/
 def kd16 (arm64 : Bool) : Option Nat := if arm64 then none else some 3
 
-/-- The extra block: `leading_bytes = 3` except on lsx and lasx, which have
-none (src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:41, :48). -/
-def kd32 (la : Bool) : Option Nat := if la then none else some 3
+/-- The extra block: `leading_bytes = 3`, 2 on lsx and lasx
+(src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:48-52). -/
+def kd32 (la : Bool) : Option Nat := if la then some 2 else some 3
 
 /-- Whether a block runs at `pos`, and the next phase. In the loop
 (`sc = false`) the fixed test (src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:23,
 src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:20); when it fails, with an
 extra block (`kd = some K`), `pos + 64 + K + 1 <= size` and the dynamic test
 (src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:81-89,
-src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:49-57), after which the phase
+src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:53-61), after which the phase
 is `true`; in phase `true` no block runs (the tail follows,
 src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:110-111). -/
 def head (fm : Nat) (kd : Option Nat) (bs : List Nat) (pos : Nat) (sc : Bool) : Option Bool :=
@@ -224,7 +224,7 @@ theorem hyb_store32 {bs : List Nat} (hv : Valid8 bs) {fm : Nat} {kd : Option Nat
 /-- **Loads, on every byte string.** With `fm ≥ 3` and `K ≥ 2`, a block
 either test admits loads inside the input: 64 bytes at `pos`
 (src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:26, :90;
-src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:21, :58) and 16 bytes at each
+src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:21, :62) and 16 bytes at each
 call `t < pos + 52`. -/
 theorem hyb_load {fm : Nat} {kd : Option Nat} {pos t : Nat} {bs : List Nat} (hf : 3 ≤ fm)
     (hK : ∀ K, kd = some K → 2 ≤ K)
@@ -237,11 +237,11 @@ theorem hyb_load {fm : Nat} {kd : Option Nat} {pos t : Nat} {bs : List Nat} (hf 
 /-! ## The headers' loop, end to end -/
 
 /-- The stores of the headers' loop: a call (src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:62,
-:101; src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:34, :69) storing
+:101; src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:34, :73) storing
 `s ≤ p + d` units; an ASCII block (src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:27-30,
-:91-94; src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:22-25, :59-62); the
+:91-94; src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:22-25, :63-66); the
 scalar tail on the rest (src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:110-111,
-src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:78-79). -/
+src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:81-82). -/
 inductive HStore (w : Nat → Nat) (fm : Nat) (kd : Option Nat) (d : Nat)
     (tail : List Nat → Nat) (bs : List Nat) : Nat → Prop
   | call (pos t o c p s : Nat) (sc : Bool) (h : HX w fm kd bs true pos t o sc)
@@ -528,10 +528,9 @@ theorem k16_la (tail : List Nat → Nat) :
 bytes. -/
 theorem row_57E : Tables.bigIdx[0x57E]! = 32 ∧ Tables.bigConsumed[0x57E]! = 7 := by decide +kernel
 
-/-- **UTF-32, lsx and lasx: fixed margin 3 overflows.** These targets have
-no extra block. On `la32fix` (hex: `41`×32, `C3 A9`×7, `41`×5, `C3 A9`×6,
+/-- **UTF-32, lsx and lasx: fixed margin 3 overflows.** On `la32fix` (hex: `41`×32, `C3 A9`×7, `41`×5, `C3 A9`×6,
 `F0 9F 98 80`; 67 bytes) the fixed 3 runs the block at 0; the header's 4
-does not. The calls of src/lsx/lsx_convert_utf8_to_utf32.cpp and
+does not, nor does its extra block (`K = 2` reaches back 7 bytes). The calls of src/lsx/lsx_convert_utf8_to_utf32.cpp and
 src/lasx/lasx_convert_utf8_to_utf32.cpp: 16 ASCII bytes at 0 and 16, the
 `0xaaa` path at 32 (12 bytes, 6 units), the row of mask `0x57E` at 44 (7
 bytes, 6 units, `row_57E`), so 44 units at 51. There the mask is `0xaaa`
@@ -543,11 +542,11 @@ theorem fix32_la (tail : List Nat → Nat) :
     let xs := bs.map w01
     Valid8 bs ∧ bs.length = 67 ∧ emask xs 32 12 = 0xAAA ∧ emask xs 44 12 = 0x57E ∧
       emask xs 51 12 = 0xAAA ∧
-      head 3 none bs 0 false = some false ∧ head 4 none bs 0 false = none ∧
-      HX w01 3 none bs true 0 51 44 false ∧ HStore w01 3 none 2 tail bs (L xs + 1) := by
+      head 3 (some 2) bs 0 false = some false ∧ head 4 (some 2) bs 0 false = none ∧
+      HX w01 3 (some 2) bs true 0 51 44 false ∧ HStore w01 3 (some 2) 2 tail bs (L xs + 1) := by
   intro bs xs
-  have hh : head 3 none bs 0 false = some false := by decide
-  have h : HX w01 3 none bs true 0 51 44 false := hx_chain rdChain 0 0 51 44 (hx_enter hh) (by decide)
+  have hh : head 3 (some 2) bs 0 false = some false := by decide
+  have h : HX w01 3 (some 2) bs true 0 51 44 false := hx_chain rdChain 0 0 51 44 (hx_enter hh) (by decide)
   have hL : 44 + 8 = L xs + 1 := by decide
   refine ⟨by unfold Valid8; decide +kernel, by decide, by decide, by decide, by decide, hh,
     by decide, h, ?_⟩
@@ -571,5 +570,22 @@ theorem fix16_arm_read :
   refine ⟨h1, by decide, ?_⟩
   rw [hl]
   exact HLoad.call 0 51 44 false (hx_chain rdChain 0 0 51 44 (hx_enter h1) (by decide)) (by decide)
+
+/-- **UTF-32, lsx and lasx: `K = 1` in the extra block loads past the
+input.** On `ValidLatin1.laRead` (hex: `41`×32, `C3 A9`×7, `41`×20; 66
+bytes) the fixed 4 runs no block, `K = 1` admits the extra block at 0
+(`64 + 1 + 1 ≤ 66`), the calls of `ValidDynamic.read_K1` reach 51, and the
+call there loads bytes 51 to 66 (src/lsx/lsx_convert_utf8_to_utf32.cpp:13);
+with the header's `K = 2` no block runs. -/
+theorem k32_la_read :
+    let bs := laRead
+    head 4 (some 1) bs 0 false = some true ∧ head 4 (some 2) bs 0 false = none ∧
+      HLoad w01 4 (some 1) bs (bs.length + 1) := by
+  intro bs
+  have h1 : head 4 (some 1) bs 0 false = some true := by decide
+  have hl : bs.length + 1 = 51 + 16 := by decide
+  refine ⟨h1, by decide, ?_⟩
+  rw [hl]
+  exact HLoad.call 0 51 44 true (hx_chain rdChain 0 0 51 44 (hx_enter h1) (by decide)) (by decide)
 
 end SafetyMargins.ValidHybrid

@@ -11,7 +11,7 @@ arm64 for UTF-16 and on LoongArch for UTF-32, they scan back from the end
 until they have seen `K = leading_bytes = 3` leading bytes and run one more
 block if `pos + 64 + (size - margin + 1) <= size`
 (src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:80-89,
-src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:48-57). This file proves the
+src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:48-61). This file proves the
 blocks such a dynamic test admits, for any `K`; `ValidHybrid` combines it
 with the fixed margin into the code of the headers.
 
@@ -61,7 +61,7 @@ open SafetyMargins SafetyMargins.Utf8 SafetyMargins.Validator SafetyMargins.Exac
 /-! ## The loop test -/
 
 /-- `int8_t(b) > -65` (src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:85,
-src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:53): `b` read as a signed byte. -/
+src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:57): `b` read as a signed byte. -/
 def leadTest (b : Nat) : Bool :=
   decide ((if b < 128 then (b : Int) else (b : Int) - 256) > -65)
 
@@ -70,7 +70,7 @@ theorem leadTest_w01 : ∀ b, b < 256 → (if leadTest b then 1 else 0) = w01 b 
   decide +kernel
 
 /-- The `for` loop of src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:84-86
-(src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:52-54): `scanLoop bs K margin
+(src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:56-58): `scanLoop bs K margin
 leading_byte` is the final `margin`. -/
 def scanLoop (bs : List Nat) (K : Nat) : Nat → Nat → Nat
   | 0, _ => 0
@@ -80,7 +80,7 @@ def scanLoop (bs : List Nat) (K : Nat) : Nat → Nat → Nat
 
 /-- `safety_margin = size - margin + 1`
 (src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:89,
-src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:57), in the test of the extra block. -/
+src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:61), in the test of the extra block. -/
 def safetyMargin (K : Nat) (bs : List Nat) : Nat :=
   bs.length - scanLoop bs K bs.length 0 + 1
 
@@ -244,7 +244,7 @@ theorem dyn_store {w : Nat → Nat} (hw : WOK w) {bs : List Nat} (hv : Valid8 bs
 
 /-- **Loads, on every byte string.** With `K ≥ 2` the 64-byte load of the
 block at `pos` (src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:90,
-src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:58) and the 16-byte load of a
+src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:62) and the 16-byte load of a
 call at `t < pos + 52` (`vld1q_u8`, `__lsx_vld`, `_mm_loadu_si128`,
 `vector_u8::load` at `input + pos`) stay in the input. -/
 theorem dyn_load {K pos t : Nat} {bs : List Nat} (hK : 2 ≤ K) (hb : ∀ b ∈ bs, b < 256)
@@ -264,9 +264,8 @@ on arm64 (`ValidHybrid.kd16`). -/
 def k16 (arm64 : Bool) : Nat := if arm64 then 2 else 3
 
 /-- The least `K` for a UTF-32 dynamic block on each target: 2 on lsx and
-lasx, 3 elsewhere. The header uses `K = 3`
-(src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:48) and has no dynamic block
-on LoongArch (`ValidHybrid.kd32`). -/
+lasx, 3 elsewhere, which the header uses
+(src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:48-52, `ValidHybrid.kd32`). -/
 def k32 (la : Bool) : Nat := if la then 2 else 3
 
 /-- The deficit of the UTF-16 calls on valid input: 2 on arm64

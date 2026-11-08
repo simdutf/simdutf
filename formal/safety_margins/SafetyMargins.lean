@@ -40,3 +40,7 @@ import SafetyMargins.ReplacementLengths
 import SafetyMargins.IcelakeMask
 import SafetyMargins.IcelakeUtf8
 import SafetyMargins.IcelakeUtf8Fixed
+import SafetyMargins.ReplacementProbe
+import SafetyMargins.IcelakeReplacement16
+import SafetyMargins.RvvReplacement16
+import SafetyMargins.ReplacementAll

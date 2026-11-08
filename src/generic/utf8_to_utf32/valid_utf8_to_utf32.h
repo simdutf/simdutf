@@ -38,14 +38,18 @@ simdutf_warn_unused size_t convert_valid(const char *input, size_t size,
       }
     }
   }
-#if !defined(SIMDUTF_IS_LSX) && !defined(SIMDUTF_IS_LASX)
   // Near the end of the input, the dynamic margin of the validating decoders,
   // which counts leading bytes back from the end, can admit one more block
   // than the fixed margin, on text of short characters. Both are proved in
-  // formal/safety_margins (on valid input, 3 leading bytes). The block loop
-  // above keeps the fixed margin, so the backward scan runs only here, when
-  // such a block could fit; after it, fewer than 64 bytes remain.
+  // formal/safety_margins (on valid input, 3 leading bytes, 2 on LoongArch).
+  // The block loop above keeps the fixed margin, so the backward scan runs
+  // only here, when such a block could fit; after it, fewer than 64 bytes
+  // remain.
+#if defined(SIMDUTF_IS_LSX) || defined(SIMDUTF_IS_LASX)
+  constexpr size_t leading_bytes = 2;
+#else
   constexpr size_t leading_bytes = 3;
+#endif
   if (pos + 64 + leading_bytes + 1 <= size) {
     size_t leading_byte = 0;
     size_t margin = size;
@@ -74,7 +78,6 @@ simdutf_warn_unused size_t convert_valid(const char *input, size_t size,
       }
     }
   }
-#endif
   utf32_output += scalar::utf8_to_utf32::convert_valid(input + pos, size - pos,
                                                        utf32_output);
   return utf32_output - start;

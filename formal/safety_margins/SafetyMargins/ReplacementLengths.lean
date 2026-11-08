@@ -139,9 +139,10 @@ surrogate. -/
 def VKSpec' (VK : List Nat → ReplacementRest.KR) : Prop :=
   ReplacementRest.VKSpec VK ∧ ∀ ys, U16 ys → (VK ys).e ≠ 0 → unp (ys.take (VK ys).cnt) = 0
 
-/-- The ASCII probe of the scalar tail is sound. -/
+/-- The ASCII probe of the scalar tail is sound, on 16-bit units (the only
+inputs it sees). `probeOK_real` proves it for the C++ probe. -/
 def ProbeOK (probe : List Nat → Nat → Bool) : Prop :=
-  ∀ zs p, probe zs p = true → p + 4 ≤ zs.length → ∀ k, k < 4 → g zs (p + k) < 0x80
+  ∀ zs p, U16 zs → probe zs p = true → p + 4 ≤ zs.length → ∀ k, k < 4 → g zs (p + k) < 0x80
 
 theorem take_succ_g (xs : List Nat) (pos : Nat) (h : pos < xs.length) :
     xs.take (pos + 1) = xs.take pos ++ [g xs pos] := by
@@ -270,7 +271,7 @@ theorem vkspec'_of_model (N : Nat) (paths : List Iter) (hT : TableOK N paths)
     · simp [hp] at he
     simp only [hp, ↓reduceIte] at he ⊢
     have hut := cwfLoop_unp (ys.drop pos) (ReplacementRest.U16_drop hu pos) (probe (ys.drop pos))
-      (fun p h1 h2 => hpr _ p h1 h2) (2 * (ys.drop pos).length + 2) 0 0 0 0 (by simp [unp])
+      (fun p h1 h2 => hpr _ p (ReplacementRest.U16_drop hu pos) h1 h2) (2 * (ys.drop pos).length + 2) 0 0 0 0 (by simp [unp])
       (by omega) (by simp)
     obtain ⟨-, -, t3⟩ := cwf_spec (ys.drop pos) (ReplacementRest.U16_drop hu pos) (probe (ys.drop pos))
     unfold cwf at he ⊢ t3
