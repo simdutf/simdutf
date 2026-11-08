@@ -176,12 +176,14 @@ theorem curK_utf8toLatin1 : okK 3 utf8toLatin1 = true := by decide
 
 /-! ## `convert_valid` on valid input
 
-src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:17-21 counts `K = 2` leading
-bytes on LoongArch, 3 elsewhere. On `0xaaa` and `idx < 64` the lsx kernel
-stores 8 units and produces 6, a deficit of 2, so the stores need `K = 1`; the
-16-byte loads at `pos + 51` need 2. UTF-16 keeps deficit 4 and `K = 3`.
-`ValidDynamic` proves them (`ValidDynamic.utf32_safe`,
-`ValidDynamic.utf16_safe`, `ValidDynamic.read_K1`, `ValidDynamic.utf16_la_K2`). -/
+src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:15-19 uses fixed margin 4 on
+LoongArch and no dynamic block (:41). On `0xaaa` and `idx < 64` the lsx
+kernel stores 8 units and produces 6, a deficit of 2, so the stores need
+margin 4 (`ValidHybrid.fix32_la` for 3). UTF-16 keeps deficit 4, margin 9
+and one dynamic block with `K = 3`
+(src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:73-109). `ValidHybrid`
+proves them (`ValidHybrid.hyb_utf32_safe`, `ValidHybrid.hyb_utf16_safe`,
+`ValidHybrid.fix16_la`, `ValidHybrid.k16_la`). -/
 
 /-! ## Per-target header constants
 

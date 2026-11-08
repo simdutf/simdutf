@@ -1,6 +1,6 @@
 import SafetyMargins.ReplacementRest
 import SafetyMargins.ValidatorSound
-import SafetyMargins.ValidDynamic
+import SafetyMargins.ValidHybrid
 /-
 The hypotheses of the conversions with replacement, discharged from the loop
 models, and the two `_safe` entry points not modelled before.
@@ -22,9 +22,10 @@ results are results of a loop model, composing the existing models:
   (`rewind_store`: the bytes it steps back over weigh at most 2 units). Each
   ends at most 4 units past `L` of a valid prefix (`kstore_spec`).
 * **`CVSpec`** (`cvspec_of_model`): `convert_valid` is `ValidExact.VX` and
-  the scalar tail; its stores fit by `ValidDynamic.dyn_store` (the dynamic
-  margin, `K = 3` with deficit 4, `K = 2` with deficit 2 on arm64),
-  `vx_ascii_store`, `vx_tail`.
+  the scalar tail, the fixed-margin loop and the extra block
+  (`ValidHybrid.HX`); its stores fit by `ValidHybrid.hyb_store16` (fixed
+  margin 9 and `K = 3` with deficit 4, margin 3 and no extra block with
+  deficit 2 on arm64), `vx_ascii_store`, `vx_tail`.
 * **`VKSpec`** (`vkspec_of_model`): `vk` is the vector loop over the path
   table (`vkLoop`, the cursor at `L` of the consumed units, `safe_of_paths`'
   store bound per iteration) and the scalar `convert_with_errors<…, false>`
@@ -273,46 +274,56 @@ theorem genericKernels_gap4 : ∀ k ∈ genericKernels, gap4 k.2 = true := by
 `convert_valid_prefix` (src/utf8_to_utf16_with_replacement.inl.h:26-34) is
 `convert_valid_utf8_to_utf16{le,be}`, which for westmere, haswell, arm64,
 ppc64, lsx and lasx is `utf8_to_utf16::convert_valid`
-(src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:9-77): the loop
-`ValidExact.VX` (`pos + 64 + safety_margin <= size`, :33, with
-`safety_margin` counting `K` leading bytes back from the end, :25-32,
-`ValidDynamic.safetyMargin`; `K = 3`, or 2 on arm64, :20-24), then the scalar
-`convert_valid` on the rest (:83-84), which
+(src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:9-113): the loop
+`ValidHybrid.HX` (blocks on the fixed margin `m`, 9 or 3 on arm64, :18-72;
+then, except on arm64, at most one block on the dynamic margin of 3 leading
+bytes, :73-109), then the scalar `convert_valid` on the rest (:110-111), which
 writes `L` of the rest, one character at a time. Its stores (`CVStore`): a
 call storing `s ≤ p + d` units at the cursor (`d = 4`, or `d = 2` on arm64,
-the per-path deficits of `ValidExact`), a 64-unit ASCII block (:37-40), the
+the per-path deficits of `ValidExact`), a 64-unit ASCII block (:27-30), the
 scalar tail. -/
 
+/-- The extra block that goes with deficit `d`: 3 leading bytes, none on
+arm64 (`d = 2`). -/
+def cvExtra (d : Nat) : Option Nat := if d = 2 then none else some 3
+
 inductive CVStore (d m : Nat) (bs : List Nat) : Nat → Prop
-  | call (pos t o c p s : Nat) (h : ValidExact.VX w16 bs true pos t o) (ht : t < pos + 52)
-      (hx : Exact.XStep (bs.map w16) t c p) (hd : t + c + 1 ≤ pos + 64)
-      (hloop : pos + 64 + ValidDynamic.safetyMargin m bs ≤ bs.length) (hs : s ≤ p + d) :
+  | call (pos t o c p s : Nat) (sc : Bool)
+      (h : ValidHybrid.HX w16 m (cvExtra d) bs true pos t o sc) (ht : t < pos + 52)
+      (hx : Exact.XStep (bs.map w16) t c p) (hd : t + c + 1 ≤ pos + 64) (hs : s ≤ p + d) :
       CVStore d m bs (o + s)
-  | ascii (t o : Nat) (h : ValidExact.VX w16 bs false t t o) (hlen : t + 64 ≤ bs.length)
+  | ascii (t o : Nat) (sc sc' : Bool)
+      (h : ValidHybrid.HX w16 m (cvExtra d) bs false t t o sc)
+      (hh : ValidHybrid.head m (cvExtra d) bs t sc = some sc')
       (hascii : ∀ i, i < 64 → bs.getD (t + i) 0 < 0x80) : CVStore d m bs (o + 64)
-  | tail (t o : Nat) (h : ValidExact.VX w16 bs false t t o) :
+  | tail (t o : Nat) (sc : Bool) (h : ValidHybrid.HX w16 m (cvExtra d) bs false t t o sc) :
       CVStore d m bs (o + L ((bs.map w16).drop t))
 
 /-- A result `(returned units, end of stores)` of the model: the loop exits
 at some head `(t, o)` and the tail adds `L` of the rest; the end of the
 stores is one of the stores, or 0. -/
 def CVOut (d m : Nat) (bs : List Nat) (r : Nat × Nat) : Prop :=
-  (∃ t o, ValidExact.VX w16 bs false t t o ∧ r.1 = o + L ((bs.map w16).drop t)) ∧
+  (∃ t o sc, ValidHybrid.HX w16 m (cvExtra d) bs false t t o sc ∧
+    r.1 = o + L ((bs.map w16).drop t)) ∧
   (r.2 = 0 ∨ ∃ s, CVStore d m bs s ∧ r.2 ≤ s)
 
-/-- The deficits and leading-byte counts `m` (`K`) of `valid_utf8_to_utf16.h`:
-deficit 4 with `K = 3` (x86, ppc64, lsx, lasx), deficit 2 with `K = 2`
-(arm64). -/
-def CVMargin (d m : Nat) : Prop := (d = 4 ∧ m = 3) ∨ (d = 2 ∧ m = 2)
+/-- The deficits and fixed margins `m` of `valid_utf8_to_utf16.h`: deficit 4
+with margin 9 and the extra block (x86, ppc64, lsx, lasx), deficit 2 with
+margin 3 and no extra block (arm64). -/
+def CVMargin (d m : Nat) : Prop := (d = 4 ∧ m = 9) ∨ (d = 2 ∧ m = 3)
 
 theorem cvstore_le (d m : Nat) (hdm : CVMargin d m) (bs : List Nat) (hv : Valid8 bs) (s : Nat)
     (h : CVStore d m bs s) : s ≤ L (bs.map w16) := by
   cases h with
-  | call pos t o c p s h ht hx hd hloop hs =>
-    exact ValidDynamic.dyn_store ValidExact.wok_w16 hv h ht hx hd hloop
-      (by rcases hdm with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ <;> decide) hs
-  | ascii t o h hlen hascii => exact ValidExact.vx_ascii_store ValidExact.wok_w16 hv h hlen hascii
-  | tail t o h => exact Nat.le_of_eq (ValidExact.vx_tail ValidExact.wok_w16 hv h).1
+  | call pos t o c p s sc h ht hx hd hs =>
+    exact ValidHybrid.hyb_store16 hv h ht hx hd
+      (by rcases hdm with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ <;> decide)
+      (fun K hk => by rcases hdm with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ <;> simp [cvExtra] at hk <;> omega) hs
+  | ascii t o sc sc' h hh hascii =>
+    exact ValidExact.vx_ascii_store ValidExact.wok_w16 hv (ValidHybrid.hx_vx _ _ _ _ _ h).1
+      (ValidHybrid.head_admit hh).len hascii
+  | tail t o sc h =>
+    exact Nat.le_of_eq (ValidExact.vx_tail ValidExact.wok_w16 hv (ValidHybrid.hx_vx _ _ _ _ _ h).1).1
 
 /-- **`CVSpec` holds for the generic `convert_valid`.** Any function that
 returns, on valid input, a result of the model is exact and stores inside
@@ -320,8 +331,9 @@ returns, on valid input, a result of the model is exact and stores inside
 theorem cvspec_of_model (d m : Nat) (hdm : CVMargin d m) (CV : List Nat → Nat × Nat)
     (hCV : ∀ v, Valid8 v → CVOut d m v (CV v)) : ReplacementRest.CVSpec CV := by
   intro v hv
-  obtain ⟨⟨t, o, hx, h1⟩, h2⟩ := hCV v hv
-  refine ⟨by rw [h1]; exact (ValidExact.vx_tail ValidExact.wok_w16 hv hx).1, ?_⟩
+  obtain ⟨⟨t, o, sc, hx, h1⟩, h2⟩ := hCV v hv
+  refine ⟨by rw [h1]; exact (ValidExact.vx_tail ValidExact.wok_w16 hv
+    (ValidHybrid.hx_vx _ _ _ _ _ hx).1).1, ?_⟩
   rcases h2 with h0 | ⟨s, hs, hle⟩
   · rw [h0]; exact Nat.zero_le _
   · exact Nat.le_trans hle (cvstore_le d m hdm v hv s hs)
@@ -1069,7 +1081,7 @@ theorem kScalar_out (xm : Bool) (ps : List MPath) (win : List Nat) (hne : win �
 def cvScalar (v : List Nat) : Nat × Nat := (L (v.map w16), 0)
 
 theorem cvScalar_out (d m : Nat) (v : List Nat) : CVOut d m v (cvScalar v) :=
-  ⟨⟨0, 0, ValidExact.VX.start, by simp [cvScalar]⟩, Or.inl rfl⟩
+  ⟨⟨0, 0, _, ValidHybrid.HX.start, by simp [cvScalar]⟩, Or.inl rfl⟩
 
 /-- **The UTF-8 → UTF-16 entry point with these kernels**: no hypothesis
 but `ULSpec`. -/
@@ -1080,8 +1092,8 @@ theorem convertRepl_scalarKernels (xm : Bool) (UL : List Nat → Nat)
     (ReplacementRest.convertRepl kScalar (ValidatorSound.vecV xm) cvScalar UL xs).2 ≤
       lenRepl (ValidatorSound.vecV xm) xs :=
   convertRepl_generic xm Utf8.x86_utf16 gap_all.1 kScalar
-    (fun win _ hne => kScalar_out xm _ win hne) 4 3 (Or.inl ⟨rfl, rfl⟩) cvScalar
-    (fun v _ => cvScalar_out 4 3 v) UL hUL xs hb
+    (fun win _ hne => kScalar_out xm _ win hne) 4 9 (Or.inl ⟨rfl, rfl⟩) cvScalar
+    (fun v _ => cvScalar_out 4 9 v) UL hUL xs hb
 
 /-- Westmere, UTF-16 → UTF-8 with replacement, `_safe`: the instance of
 `replSafe_generic` for its table, any path choice and any error offset below

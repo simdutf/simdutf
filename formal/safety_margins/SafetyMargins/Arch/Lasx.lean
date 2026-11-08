@@ -205,11 +205,12 @@ theorem curK : okK 3 lasx_utf32 = true ∧ okK 3 lasx_latin1 = true := by decide
 
 /-! ## `convert_valid` on valid input
 
-UTF-16 (src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:20-24, `K = 3`): the
-worst lasx deficit is 8 - 4 = 4 (`0x924`, `idx < 145`).
-UTF-32 (src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:17-21, `K = 2`):
-`0xaaa` and `idx < 64` store 8 units and produce 6, deficit 2, so the stores
-need `K = 1` and the 16-byte loads 2. See `ValidDynamic`. -/
+UTF-16 (src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:18-22, fixed margin
+9, then one dynamic block with `K = 3`): the worst lasx deficit is 8 - 4 = 4
+(`0x924`, `idx < 145`).
+UTF-32 (src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:15-19, fixed margin
+4, no dynamic block): `0xaaa` and `idx < 64` store 8 units and produce 6,
+deficit 2, so the stores need margin 4. See `ValidHybrid`. -/
 
 /-! ## Per-target header constants (same as lsx; see `Lsx.hdr_utf8to32`) -/
 

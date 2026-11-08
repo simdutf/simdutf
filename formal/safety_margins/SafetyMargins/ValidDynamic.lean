@@ -2,18 +2,18 @@ import SafetyMargins.ValidExact
 import SafetyMargins.ValidLatin1
 import SafetyMargins.Scalar
 /-
-`valid_utf8_to_utf16.h` and `valid_utf8_to_utf32.h` (`convert_valid`) with
-the dynamic margin, on the input their contract allows: valid UTF-8
+`valid_utf8_to_utf16.h` and `valid_utf8_to_utf32.h` (`convert_valid`): the
+dynamic margin, on the input their contract allows: valid UTF-8
 (`ValidExact.Valid8`).
 
-The loop test (src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:25-33,
-src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:22-30) scans back from the end
-until it has seen `K` leading bytes, `safety_margin = size - margin + 1`, and
-runs a block while `pos + 64 + safety_margin <= size`. `K` is
-`valid_utf16_leading_bytes` (2 on arm64, 3 elsewhere,
-src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:20-24) and
-`valid_utf32_leading_bytes` (2 on lsx and lasx, 3 elsewhere,
-src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:17-21).
+The headers run their blocks on a fixed margin. After that loop, except on
+arm64 for UTF-16 and on LoongArch for UTF-32, they scan back from the end
+until they have seen `K = leading_bytes = 3` leading bytes and run one more
+block if `pos + 64 + (size - margin + 1) <= size`
+(src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:80-89,
+src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:48-57). This file proves the
+blocks such a dynamic test admits, for any `K`; `ValidHybrid` combines it
+with the fixed margin into the code of the headers.
 
 * **The loop test.** `scanLoop` transcribes the backward scan;
   `scan_eq_tk` proves that `size - margin` is `Utf8.tk K` of the leading-byte
@@ -31,8 +31,8 @@ src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:17-21).
 * **Loads (`dyn_load`).** The 64-byte block load at `pos` and the 16-byte
   load of each call at `t < pos + 52` stay in the input when `K ≥ 2`
   (`Utf8.read_ok`).
-* **End to end (`utf16_safe`, `utf32_safe`).** Every store of the model
-  (`DStore`: the calls, the ASCII blocks and the scalar tail, which writes at
+* **The dynamic blocks, end to end (`utf16_safe`, `utf32_safe`).** Every
+  store of a loop whose blocks pass the dynamic test (`DStore`: the calls, the ASCII blocks and the scalar tail, which writes at
   most `L` of the rest on every byte string, `Scalar.valid8to16_le`,
   `Scalar.valid8to32_le`) ends inside `L`, and every load (`DLoad`) inside the
   input, with the header's `K` for each target.
@@ -44,8 +44,9 @@ src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:17-21).
   ending one past `L`. `utf16_la_K2`: on `la924b` (68 bytes) `K = 2` admits a
   block whose call at 51 takes the lsx/lasx `0x924` path, 8 units ending one
   past `L`. `read_K1`: on `ValidLatin1.laRead` (66 bytes) `K = 1` admits a
-  block whose call at 51 loads 16 bytes, one past the input (arm64 UTF-16,
-  lsx/lasx UTF-32).
+  block whose call at 51 loads 16 bytes, one past the input (with the kernels
+  of arm64 UTF-16 and lsx/lasx UTF-32; those targets have no dynamic block in
+  the headers, so this bounds the dynamic test only).
 
 Read from the C++, as in `ValidExact`: per path, the deficit `s ≤ p + d`; that a
 call ends by `pos + 63` (`hd`; the end-of-code-point mask has bit 63 clear and
@@ -59,8 +60,8 @@ open SafetyMargins SafetyMargins.Utf8 SafetyMargins.Validator SafetyMargins.Exac
 
 /-! ## The loop test -/
 
-/-- `int8_t(b) > -65` (src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:28,
-src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:25): `b` read as a signed byte. -/
+/-- `int8_t(b) > -65` (src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:85,
+src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:53): `b` read as a signed byte. -/
 def leadTest (b : Nat) : Bool :=
   decide ((if b < 128 then (b : Int) else (b : Int) - 256) > -65)
 
@@ -68,8 +69,8 @@ def leadTest (b : Nat) : Bool :=
 theorem leadTest_w01 : ∀ b, b < 256 → (if leadTest b then 1 else 0) = w01 b := by
   decide +kernel
 
-/-- The `for` loop of src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:27-29
-(src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:24-26): `scanLoop bs K margin
+/-- The `for` loop of src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:84-86
+(src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:52-54): `scanLoop bs K margin
 leading_byte` is the final `margin`. -/
 def scanLoop (bs : List Nat) (K : Nat) : Nat → Nat → Nat
   | 0, _ => 0
@@ -78,8 +79,8 @@ def scanLoop (bs : List Nat) (K : Nat) : Nat → Nat → Nat
     else m + 1
 
 /-- `safety_margin = size - margin + 1`
-(src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:32,
-src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:29). -/
+(src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:89,
+src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:57), in the test of the extra block. -/
 def safetyMargin (K : Nat) (bs : List Nat) : Nat :=
   bs.length - scanLoop bs K bs.length 0 + 1
 
@@ -242,8 +243,8 @@ theorem dyn_store {w : Nat → Nat} (hw : WOK w) {bs : List Nat} (hv : Valid8 bs
   omega
 
 /-- **Loads, on every byte string.** With `K ≥ 2` the 64-byte load of the
-block at `pos` (src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:36,
-src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:31) and the 16-byte load of a
+block at `pos` (src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:90,
+src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:58) and the 16-byte load of a
 call at `t < pos + 52` (`vld1q_u8`, `__lsx_vld`, `_mm_loadu_si128`,
 `vector_u8::load` at `input + pos`) stay in the input. -/
 theorem dyn_load {K pos t : Nat} {bs : List Nat} (hK : 2 ≤ K) (hb : ∀ b ∈ bs, b < 256)
@@ -256,14 +257,16 @@ theorem dyn_load {K pos t : Nat} {bs : List Nat} (hK : 2 ≤ K) (hb : ∀ b ∈ 
 
 /-! ## The model, end to end -/
 
-/-- `valid_utf16_leading_bytes`
-(src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:20-24): 2 on arm64, 3 on the
-other kernels that compile the header (westmere, haswell, ppc64, lsx, lasx). -/
+/-- The least `K` for a UTF-16 dynamic block on each target (stores and
+loads): 2 on arm64, 3 elsewhere. The header uses `K = 3`
+(src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:80) and has no dynamic block
+on arm64 (`ValidHybrid.kd16`). -/
 def k16 (arm64 : Bool) : Nat := if arm64 then 2 else 3
 
-/-- `valid_utf32_leading_bytes`
-(src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:17-21): 2 on lsx and lasx, 3
-on westmere, haswell, ppc64 and arm64. -/
+/-- The least `K` for a UTF-32 dynamic block on each target: 2 on lsx and
+lasx, 3 elsewhere. The header uses `K = 3`
+(src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:48) and has no dynamic block
+on LoongArch (`ValidHybrid.kd32`). -/
 def k32 (la : Bool) : Nat := if la then 2 else 3
 
 /-- The deficit of the UTF-16 calls on valid input: 2 on arm64
@@ -275,10 +278,11 @@ def d16 (arm64 : Bool) : Nat := if arm64 then 2 else 4
 (`0xaaa`, `idx < 64`: 8 stored, 6 produced), 4 elsewhere (`0xfff`: 16 for 12). -/
 def d32 (la : Bool) : Nat := if la then 2 else 4
 
-/-- The stores of `convert_valid` with the dynamic margin `K`: a call in a
-block the loop test admitted (src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:33,
-:58-75, the call at :72), storing `s ≤ p + d` units; an ASCII block of 64 units (:37-40); the
-scalar tail `tail` on the rest (:83-84). -/
+/-- The stores of a `convert_valid` loop whose blocks pass the dynamic test
+with `K` (src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:89): a call
+(:100-105, the call at :101), storing `s ≤ p + d` units; an ASCII block of 64
+units (:91-94); the scalar tail `tail` on the rest (:110-111).
+`ValidHybrid.HStore` is the loop of the headers. -/
 inductive DStore (w : Nat → Nat) (K d : Nat) (tail : List Nat → Nat) (bs : List Nat) :
     Nat → Prop
   | call (pos t o c p s : Nat) (h : VX w bs true pos t o) (ht : t < pos + 52)
@@ -289,7 +293,7 @@ inductive DStore (w : Nat → Nat) (K d : Nat) (tail : List Nat → Nat) (bs : L
       (hascii : ∀ i, i < 64 → bs.getD (t + i) 0 < 0x80) : DStore w K d tail bs (o + 64)
   | tail (t o : Nat) (h : VX w bs false t t o) : DStore w K d tail bs (o + tail (bs.drop t))
 
-/-- The ends of the input loads: the block load at a `pos` the loop test
+/-- The ends of the input loads: the block load at a `pos` the dynamic test
 admitted, and the 16-byte load of a call at `t < pos + 52` in that block. -/
 inductive DLoad (K : Nat) (bs : List Nat) : Nat → Prop
   | block (pos : Nat) (hloop : pos + 64 + safetyMargin K bs ≤ bs.length) : DLoad K bs (pos + 64)
@@ -318,10 +322,13 @@ theorem dyn_loads {K : Nat} (hK : 2 ≤ K) {bs : List Nat} (hb : ∀ b ∈ bs, b
   | block pos hloop => exact (dyn_load (t := pos) hK hb hloop (by omega)).1
   | call pos t hloop ht => exact (dyn_load hK hb hloop ht).2
 
-/-- **`valid_utf8_to_utf16.h`, every target, end to end.** On valid UTF-8,
-with the header's `K` (`k16`) and the target's deficit (`d16`), every store
-(the calls, the ASCII blocks, the scalar `convert_valid` on the rest) ends
-inside `utf16_length_from_utf8`, and every load inside the input. -/
+/-- **UTF-16, the blocks the dynamic test admits, end to end.** On valid
+UTF-8, with the least `K` (`k16`) and the target's deficit (`d16`), every
+store of a loop whose blocks pass the dynamic test (the calls, the ASCII
+blocks, the scalar `convert_valid` on the rest) ends inside
+`utf16_length_from_utf8`, and every load inside the input. The code of the
+header (fixed-margin loop, then at most one dynamic block) is
+`ValidHybrid.hyb_utf16_safe`. -/
 theorem utf16_safe (arm64 : Bool) (f : Nat) {bs : List Nat} (hv : Valid8 bs) :
     (∀ s, DStore w16 (k16 arm64) (d16 arm64)
         (Scalar.run (fun ys => Scalar.u8valid ys 2) f) bs s → s ≤ L (bs.map w16)) ∧
@@ -330,7 +337,8 @@ theorem utf16_safe (arm64 : Bool) (f : Nat) {bs : List Nat} (hv : Valid8 bs) :
       (by cases arm64 <;> decide),
    dyn_loads (by cases arm64 <;> decide) (valid_lt256 hv)⟩
 
-/-- **`valid_utf8_to_utf32.h`, every target, end to end** (`k32`, `d32`). -/
+/-- **UTF-32, the blocks the dynamic test admits, end to end** (`k32`,
+`d32`); the header's loop is `ValidHybrid.hyb_utf32_safe`. -/
 theorem utf32_safe (la : Bool) (f : Nat) {bs : List Nat} (hv : Valid8 bs) :
     (∀ s, DStore w01 (k32 la) (d32 la)
         (Scalar.run (fun ys => Scalar.u8valid ys 1) f) bs s → s ≤ L (bs.map w01)) ∧
@@ -389,8 +397,9 @@ theorem k_values :
 /-! ## One less fails, on inputs of the contract
 
 The calls of each kernel are derived through `VX` up to byte 51, as in
-`ValidLatin1.lv_tight_K2` and `Utf8.la_924_tight`; the loop test is computed
-from the bytes with `safetyMargin`. -/
+`ValidLatin1.lv_tight_K2` and `Utf8.la_924_tight`; the dynamic test is computed
+from the bytes with `safetyMargin`. `ValidHybrid` shows which of these the
+loop of the headers reaches. -/
 
 /-- `VX` sees the weights only through `bs.map w`. -/
 theorem vx_congr {w w' : Nat → Nat} {bs : List Nat} (hm : bs.map w = bs.map w') :
@@ -427,7 +436,7 @@ theorem lv_calls :
 
 /-- **UTF-16 on westmere, haswell and ppc64: `K = 2` overflows on valid
 input.** `lvTight` (hex: `41`×24, `C3 A9`×7, `41`×5, `C3 A9`×2, `41`×16,
-`C3 A9 41 41`; 67 bytes) is valid UTF-8. The loop test admits the block at 0
+`C3 A9 41 41`; 67 bytes) is valid UTF-8. The dynamic test admits the block at 0
 with `K = 2` and rejects it with `K = 3`. The kernels
 (src/westmere/sse_convert_utf8_to_utf16.cpp, src/haswell/avx2_convert_utf8_to_utf16.cpp,
 src/ppc64/ppc64_convert_utf8_to_utf16.cpp) reach byte 51 with 42 units out
@@ -484,7 +493,7 @@ def la924b : List Nat :=
     (List.replicate 2 [0xC3, 0xA9]).flatten ++ [0x41] ++ [0xC3, 0xA9] ++
     (List.replicate 5 [0xE3, 0x81, 0x82]).flatten ++ [0x41, 0x41]
 
-/-- **UTF-16 on lsx and lasx: `K = 2` overflows on valid input.** The loop
+/-- **UTF-16 on lsx and lasx: `K = 2` overflows on valid input.** The dynamic
 test admits the block at 0 with `K = 2` and rejects it with `K = 3`. The
 calls of src/lsx/lsx_convert_utf8_to_utf16.cpp and
 src/lasx/lasx_convert_utf8_to_utf16.cpp: 16 ASCII bytes at 0 and 16
@@ -519,9 +528,12 @@ theorem utf16_la_K2 (tail : List Nat → Nat) :
   rw [← hL]
   exact DStore.call 0 51 40 12 4 8 hv (by decide) hx (by decide) (by decide) (by decide)
 
-/-- **arm64 UTF-16 and LoongArch UTF-32: `K = 1` reads past the input.**
+/-- **The kernels of arm64 UTF-16 and LoongArch UTF-32: `K = 1` reads past
+the input** (a bound on the dynamic test: these targets have no dynamic block
+in the headers, where the fixed margins 3 and 4 decide;
+`ValidHybrid.fix16_arm_read`).
 `ValidLatin1.laRead` (hex: `41`×32, `C3 A9`×7, `41`×20; 66 bytes) is valid
-UTF-8. The loop test admits the block at 0 with `K = 1` and rejects it with
+UTF-8. The dynamic test admits the block at 0 with `K = 1` and rejects it with
 `K = 2`. The calls of src/arm64/arm_convert_utf8_to_utf16.cpp and
 src/lsx/lsx_convert_utf8_to_utf32.cpp, src/lasx/lasx_convert_utf8_to_utf32.cpp:
 16 ASCII bytes at 0 and 16 (`(mask & 0xFFFF) == 0xffff`), the `0xaaa` path

@@ -48,7 +48,8 @@ of the replacement files) use `decide +kernel`, checked by the Lean kernel.
 | `SafetyMargins/ReplacementRest.lean` | the Ice Lake replacement length, the window boundary, the whole UTF-8 → UTF-16 driver, the `_safe` UTF-16 → UTF-8 entry points (§7) |
 | `SafetyMargins/ValidatorSound.lean` | the SIMD UTF-8 validator accepts exactly valid UTF-8; the replacement driver end to end (§7) |
 | `SafetyMargins/RvvExact.lean` | every rvv kernel, on its lane values (§7) |
-| `SafetyMargins/ValidDynamic.lean` | `convert_valid` with the dynamic margin: stores and loads on valid input, and valid inputs on which one less fails (§4) |
+| `SafetyMargins/ValidDynamic.lean` | the dynamic margin of `convert_valid`: the backward scan, stores and loads in the blocks it admits (§4) |
+| `SafetyMargins/ValidHybrid.lean` | `convert_valid` as the headers run it, the fixed-margin loop then at most one dynamic block: stores and loads end to end on valid input, and valid inputs on which one less fails (§4) |
 | `check_citations.py` | checks that every C++ `file:line` cited in the Lean files exists, and that every cited loop test is a loop |
 | `SafetyMargins/IcelakeReal.lean` | the Ice Lake UTF-16 loops on the unit values, which discharge the data hypotheses of `safe_utf16to32_real` and `safe_utf16to8_real` (§7) |
 | `SafetyMargins/Scalar.lean` | the scalar code: every `scalar::` converter, `rewind_and_convert_with_errors` and the scalar fallbacks inside the vector loops write at most `L` of what they are given; the charge of `Basic.written` for the tail is met (§8) |
@@ -322,38 +323,77 @@ that starts on a continuation byte, and the tail is scalar.
 - **`valid_latin1_tail`.** The scalar tail writes one byte per leading byte,
   `L` of the rest, after a cursor at most `L` of the consumed bytes.
 
-## 4. `convert_valid` on valid UTF-8 (`ValidDynamic.lean`)
+## 4. `convert_valid` on valid UTF-8 (`ValidDynamic.lean`, `ValidHybrid.lean`)
 
 `valid_utf8_to_utf16.h` and `valid_utf8_to_utf32.h` used a fixed
-`safety_margin` of 16 bytes. They now use the dynamic margin of §3: count
-back from the end until `K` leading bytes, then loop while
-`pos + 64 + safety_margin <= size`. `scanLoop` transcribes the backward
-loop, and `safetyMargin_eq` shows that it is `tk K` of the weights plus 1.
+`safety_margin` of 16 bytes. They now run their block loop on a smaller fixed
+margin. After the loop, except on arm64 for UTF-16 and on LoongArch for
+UTF-32, they scan back once from the end for 3 leading bytes (the dynamic
+margin of §3) and convert one more block if it admits it; fewer than 64
+bytes then remain, and the scalar tail finishes.
 
-On valid input the cursor is exact and every call starts on a leading byte
-(`ValidExact.vx_inv`, `vx_after_call`). A call that produces `p` units
-stores at most `p + d`: `d = 4` on x86, POWER and LoongArch for UTF-16 and on
-x86, POWER and arm64 for UTF-32; `d = 2` on arm64 for UTF-16 and on LoongArch
-for UTF-32. The leading byte that follows the call and the `K` leading bytes
-the loop test keeps after the block pay one unit each, so the stores need
-`K ≥ d - 1` (`dyn_store`, through `Utf8.cover`). The 16-byte loads at
-`pos + 51` need `K ≥ 2` (`dyn_load`). `utf16_safe` and `utf32_safe` give,
-on valid input, every store within `L` and every load inside the input,
-with the scalar tail (`Scalar.valid8to16_le`, `valid8to32_le`).
+| header | target | fixed margin | extra block |
+|---|---|---|---|
+| `valid_utf8_to_utf16.h` | westmere, haswell, ppc64, lsx, lasx | 9 | `K = 3` |
+| `valid_utf8_to_utf16.h` | arm64 | 3 | none |
+| `valid_utf8_to_utf32.h` | westmere, haswell, ppc64, arm64 | 12 | `K = 3` |
+| `valid_utf8_to_utf32.h` | lsx, lasx | 4 | none |
 
-| header | target | stores need | loads need | `K` |
-|---|---|---|---|---|
-| `valid_utf8_to_utf16.h` | westmere, haswell, ppc64, lsx, lasx | 3 | 2 | 3 |
-| `valid_utf8_to_utf16.h` | arm64 | 1 | 2 | 2 |
-| `valid_utf8_to_utf32.h` | westmere, haswell, ppc64, arm64 | 3 | 2 | 3 |
-| `valid_utf8_to_utf32.h` | lsx, lasx | 1 | 2 | 2 |
+- **The loop.** `ValidHybrid.head` decides whether a block runs: the fixed
+  test in the loop, then once the test of the extra block
+  (`pos + 64 + 4 <= size`, the scan, the dynamic test), then nothing. `HX`
+  is the loop model `ValidExact.VX` with that test at each block head.
+  `hx_vx`: every block it runs passes the fixed or the dynamic test.
+  `ValidDynamic.scanLoop` transcribes the backward scan, and
+  `safetyMargin_eq` shows that it is `tk K` of the weights plus 1.
+- **Stores.** On valid input the cursor is exact and every call starts on a
+  leading byte (`ValidExact.vx_inv`, `vx_after_call`). A call that produces
+  `p` units stores at most `p + d`: `d = 4` on x86, POWER and LoongArch for
+  UTF-16 and on x86, POWER and arm64 for UTF-32; `d = 2` on arm64 for UTF-16
+  and on LoongArch for UTF-32. In a block the fixed margin `m` admitted, the
+  `1 + m` bytes after the call are complete characters
+  (`ValidExact.tail_expand`), one UTF-16 unit per 3 bytes and one code point
+  per 4, so the stores need `3 d ≤ m + 3` (`fixed_store16`: 9 and 3) or
+  `4 d ≤ m + 4` (`fixed_store32`: 12 and 4). In the extra block, the leading
+  byte after the call and the `K` leading bytes after the block pay one unit
+  each, so `K ≥ d - 1 = 3` (`ValidDynamic.dyn_store`).
+- **Loads.** The 16-byte loads at `pos + 51` need a fixed margin of at least
+  3 or `K ≥ 2` (`hyb_load`, `ValidDynamic.dyn_load`).
+- **End to end.** `hyb_utf16_safe` and `hyb_utf32_safe`: on valid input,
+  with each target's constants, every store (calls, ASCII blocks, the scalar
+  tail, `Scalar.valid8to16_le`, `valid8to32_le`) is within `L`, and every
+  load inside the input. `constants` checks that each value is the least the
+  stores and loads allow.
 
-One less fails on a valid input, with the kernel's calls derived through
-`VX`: `utf16_x86_K2` and `utf32_x86_K2` (the 67-byte `lvTight`: rows of six
-ASCII bytes, then rows at 24, 36 and 43, then the `0xfff` path at 51,
-storing 16 units for 12), `utf16_la_K2` (`la924b`, 68 bytes, the `0x924`
-path at 51), and `read_K1` (`laRead`, 66 bytes: with `K = 1` the call at 51
-loads bytes 51 to 66).
+One less fails on a valid input, through `HX`: with the lowered constant
+`head` runs the block at 0; with the header's constants it runs no block
+there, the extra block included. A block that a lowered fixed margin runs and
+that overflows necessarily fails the dynamic test with `K = 3`
+(`dyn_store`), so the extra block cannot hide those failures; the fixed
+witnesses state it. The calls of each kernel to byte 51 are those of
+`ValidDynamic`.
+
+| control | targets | input | failure |
+|---|---|---|---|
+| `fix16_x86`: fixed 8 | westmere, haswell, ppc64 UTF-16 | `v16fix`, 72 bytes | `0xfff` at 51: 16 units for 12, one past `L` |
+| `k16_x86`: `K = 2` | westmere, haswell, ppc64 UTF-16 | `lvTight`, 67 bytes | same |
+| `fix32_x86`: fixed 11 | westmere, haswell, ppc64, arm64 UTF-32 | `v32fix`, 75 bytes | same |
+| `k32_x86`: `K = 2` | westmere, haswell, ppc64, arm64 UTF-32 | `lvTight` | same |
+| `fix16_la`: fixed 8 | lsx, lasx UTF-16 | `la16fix`, 72 bytes | `0x924` at 51: 8 units for 4 |
+| `k16_la`: `K = 2` | lsx, lasx UTF-16 | `la924b`, 68 bytes | same |
+| `fix32_la`: fixed 3 | lsx, lasx UTF-32 | `la32fix`, 67 bytes | `0xaaa` at 51: 8 units for 6 |
+| `fix16_arm_read`: fixed 2 | arm64 UTF-16 | `laRead`, 66 bytes | the call at 51 loads byte 66 |
+
+The inputs, in hex: `lvTight` is `41`×24, `C3 A9`×7, `41`×5, `C3 A9`×2,
+`41`×16, `C3 A9 41 41`; `v16fix` and `v32fix` replace its last 4 bytes by
+`E3 81 82`×3 and `F0 9F 98 80`×3. `la924b` is `41`×32, `E3 81 82`×4,
+`C3 A9`×2, `41`, `C3 A9`, `E3 81 82`×5, `41 41`; `la16fix` replaces its
+last 5 bytes by `E3 81 82`×3. `la32fix` is `41`×32, `C3 A9`×7, `41`×5,
+`C3 A9`×6, `F0 9F 98 80`. `laRead` is `41`×32, `C3 A9`×7, `41`×20.
+`ValidDynamic` also has the dynamic test alone, for any `K`: `utf16_x86_K2`,
+`utf32_x86_K2`, `utf16_la_K2`, and `read_K1` (`K = 1` loads past the input
+with the arm64 UTF-16 and LoongArch UTF-32 kernels, targets whose headers
+have no dynamic block).
 
 These functions require valid input. On invalid input no fixed margin bounds
 them, because a tail of continuation bytes has `L = 0`. The same holds for
@@ -427,7 +467,7 @@ Every loop now uses its optimal margin, for each target.
   read from the C++. So is the shape of its stores: the `okK` pairs, and the
   width `s` in `reach_count`, `reach_row`, `reach_arm_888`, `reach_lasx_888`
   and `xreach_okK`. Those theorems discharge the lead budget.
-- **`convert_valid`.** `ValidDynamic` assumes the deficit `s ≤ p + d` of each
+- **`convert_valid`.** `ValidDynamic` and `ValidHybrid` assume the deficit `s ≤ p + d` of each
   path, read from the C++ as the other call shapes, and that a call ends by
   `pos + 63`. `valid_utf8_to_latin1.h` is covered by §3.2, under its
   contract (`LV` input). The scalar tails are proved in `Scalar.lean` (§8).
@@ -483,8 +523,8 @@ Every loop now uses its optimal margin, for each target.
   character boundary passes `check_utf8_bytes` (`checkedAt_of_valid`, through
   the exhaustive `closure`), so every call of `Exact.lean` is exact; by
   induction over the loop (`vx_inv`) the cursor is `L` of the consumed bytes
-  at a character boundary; `ValidDynamic` uses it for the store bounds of
-  §4.
+  at a character boundary; `ValidDynamic` and `ValidHybrid` use it for the
+  store bounds of §4.
 - **Ice Lake (`IcelakeReal.lean`).** Both UTF-16 loops as functions of the 32
   lane values and the carry (both endiannesses). `utf16to32_hsur` and
   `utf16to8_hreal` are the data hypotheses of `safe_utf16to32_real` and

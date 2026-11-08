@@ -249,14 +249,16 @@ theorem arm_fff_tight :
 
 /-! ## `convert_valid` (valid input only)
 
-src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:20-24 counts `K = 2` leading
-bytes on arm64 and src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:17-21 `K = 3`.
-On valid input the arm64 UTF-16 paths overshoot their output by at most 2
-(`0xaaa`, `idx < 64`; `0x888` is exact on valid input) and the UTF-32 paths by
-at most 4 (`0xfff`). `ValidDynamic` proves the stores and loads with these
-`K` (`ValidDynamic.utf16_safe`, `ValidDynamic.utf32_safe`), that `K = 2`
-fails for UTF-32 (`ValidDynamic.utf32_x86_K2`) and that `K = 1` reads past
-the input for UTF-16 (`ValidDynamic.read_K1`). -/
+src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:18-22 uses fixed margin 3 on
+arm64 and no dynamic block (:73); src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:15-19
+uses 12, then one dynamic block with 3 leading bytes (:41-77). On valid input
+the arm64 UTF-16 paths overshoot their output by at most 2 (`0xaaa`,
+`idx < 64`; `0x888` is exact on valid input) and the UTF-32 paths by at most
+4 (`0xfff`). `ValidHybrid` proves the stores and loads
+(`ValidHybrid.hyb_utf16_safe`, `ValidHybrid.hyb_utf32_safe`), that fixed
+margin 11 and `K = 2` fail for UTF-32 (`ValidHybrid.fix32_x86`,
+`ValidHybrid.k32_x86`), and that fixed margin 2 reads past the input for
+UTF-16 (`ValidHybrid.fix16_arm_read`). -/
 
 /-! ## Per-target header constants
 

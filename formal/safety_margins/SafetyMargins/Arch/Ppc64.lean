@@ -246,10 +246,12 @@ theorem ppc_surrogate_lead :
 
 /-! ## `convert_valid`
 
-src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:20-24 and
-src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:17-21 count `K = 3` leading
-bytes on POWER. For valid input the overshoot is at most 4 units, which needs
-`K = 3`: `ValidDynamic.utf16_safe`, `ValidDynamic.utf32_safe`, and `K = 2`
-fails (`ValidDynamic.utf16_x86_K2`, `ValidDynamic.utf32_x86_K2`). -/
+src/generic/utf8_to_utf16/valid_utf8_to_utf16.h:18-22 and
+src/generic/utf8_to_utf32/valid_utf8_to_utf32.h:15-19 use fixed margins 9 and
+12 on POWER, then one dynamic block with `K = 3`. For valid input the
+overshoot is at most 4 units, which needs exactly these:
+`ValidHybrid.hyb_utf16_safe`, `ValidHybrid.hyb_utf32_safe`; fixed margins 8
+and 11 and `K = 2` fail (`ValidHybrid.fix16_x86`, `ValidHybrid.fix32_x86`,
+`ValidHybrid.k16_x86`, `ValidHybrid.k32_x86`). -/
 
 end SafetyMargins.Arch.Ppc64
