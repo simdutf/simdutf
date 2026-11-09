@@ -208,7 +208,7 @@ theorem pass_out_zeros (c : Bool) (a : List Nat) (m b adv : Nat) (co : Bool) (hm
       · rename_i hm'
         cases h
         obtain ⟨hc, hz⟩ := IcelakeReal.checked c a (List.replicate m 0) hinv (Bool.eq_false_iff.mpr hm')
-        have hP := IcelakeReal.pathC c a ((List.replicate m 0).headD 0) (List.replicate m 0).length hv hc
+        have hP := IcelakeReal.pathChk c a ((List.replicate m 0).headD 0) (List.replicate m 0).length hv hc
         obtain ⟨m', rfl⟩ : ∃ m', m = m' + 1 := ⟨m - 1, by omega⟩
         simp only [List.replicate_succ, IcelakeReal.chkZ, Bool.and_eq_true, beq_iff_eq] at hz
         rw [IcelakeReal.loS_zero] at hz

@@ -568,17 +568,17 @@ theorem lasxCount8_eq (a : Nat) (xs : List Nat) (hb : Bytes xs) :
 /-- The 64-bit word that `memcpy` reads from 8 bytes (little-endian: byte `k`
 at bits `8 k .. 8 k + 7`; on a big-endian target the same bytes in the other
 order, which `pop_eq` covers as well since it holds for every list of 8 bytes). -/
-def wordL : List Nat → Nat
+def wordLo : List Nat → Nat
   | [] => 0
-  | c :: cs => c + 256 * wordL cs
+  | c :: cs => c + 256 * wordLo cs
 
 theorem testBit_wordL (cs : List Nat) (h : ∀ c ∈ cs, c < 256) (j : Nat) :
-    (wordL cs).testBit j = (cs.getD (j / 8) 0).testBit (j % 8) := by
+    (wordLo cs).testBit j = (cs.getD (j / 8) 0).testBit (j % 8) := by
   induction cs generalizing j with
-  | nil => simp [wordL]
+  | nil => simp [wordLo]
   | cons c cs ih =>
     have hc : c < 2 ^ 8 := h c (by simp)
-    rw [wordL, show c + 256 * wordL cs = 2 ^ 8 * wordL cs + c by omega,
+    rw [wordLo, show c + 256 * wordLo cs = 2 ^ 8 * wordLo cs + c by omega,
       Nat.testBit_two_pow_mul_add _ hc]
     split
     · rename_i hj
@@ -604,12 +604,12 @@ theorem pop_byte (c : Nat) (h : c < 256) :
     Bool.not_eq_eq_eq_not, Bool.not_true, decide_eq_true_eq] at this
   exact ⟨this.1.1.1.1, this.1.1.1.2, this.1.1.2, this.1.2, this.2⟩
 
-theorem ones_eq : (0x0101010101010101 : Nat) = wordL [1, 1, 1, 1, 1, 1, 1, 1] := by decide
+theorem ones_eq : (0x0101010101010101 : Nat) = wordLo [1, 1, 1, 1, 1, 1, 1, 1] := by decide
 
 /-- `(v >> 7) & 0x0101010101010101` keeps the top bit of each byte, at the bottom of
 that byte. -/
 theorem mask_eq (cs : List Nat) (h : ∀ c ∈ cs, c < 256) (hl : cs.length = 8) :
-    wordL cs >>> 7 &&& 0x0101010101010101 = wordL (cs.map (· / 128)) := by
+    wordLo cs >>> 7 &&& 0x0101010101010101 = wordLo (cs.map (· / 128)) := by
   have hm : ∀ c ∈ cs.map (· / 128), c < 256 := by
     intro c hc; simp only [List.mem_map] at hc
     obtain ⟨d, hd, rfl⟩ := hc; exact (pop_byte d (h d hd)).2.2.2.1
@@ -647,10 +647,10 @@ theorem mask_eq (cs : List Nat) (h : ∀ c ∈ cs, c < 256) (hl : cs.length = 8)
 
 theorem mulpop (h0 h1 h2 h3 h4 h5 h6 h7 : Nat) (e0 : h0 ≤ 1) (e1 : h1 ≤ 1) (e2 : h2 ≤ 1)
     (e3 : h3 ≤ 1) (e4 : h4 ≤ 1) (e5 : h5 ≤ 1) (e6 : h6 ≤ 1) (e7 : h7 ≤ 1) :
-    (wordL [h0, h1, h2, h3, h4, h5, h6, h7] * 0x0101010101010101 % 2 ^ 64) >>> 56 =
+    (wordLo [h0, h1, h2, h3, h4, h5, h6, h7] * 0x0101010101010101 % 2 ^ 64) >>> 56 =
       h0 + h1 + h2 + h3 + h4 + h5 + h6 + h7 := by
   rw [Nat.shiftRight_eq_div_pow]
-  simp only [wordL]
+  simp only [wordLo]
   rcases (show h0 = 0 ∨ h0 = 1 by omega) with rfl | rfl <;>
   rcases (show h1 = 0 ∨ h1 = 1 by omega) with rfl | rfl <;>
   rcases (show h2 = 0 ∨ h2 = 1 by omega) with rfl | rfl <;>
@@ -666,7 +666,7 @@ def pop (v : Nat) : Nat := ((v >>> 7 &&& 0x0101010101010101) * 0x010101010101010
 
 /-- `pop` of 8 bytes counts those `≥ 0x80`. -/
 theorem pop_eq (cs : List Nat) (h : ∀ c ∈ cs, c < 256) (hl : cs.length = 8) :
-    pop (wordL cs) = L (cs.map fun c => ind (decide (c ≥ 128))) := by
+    pop (wordLo cs) = L (cs.map fun c => ind (decide (c ≥ 128))) := by
   unfold pop
   rw [mask_eq cs h hl]
   match cs, hl with
@@ -685,7 +685,7 @@ theorem pop_eq (cs : List Nat) (h : ∀ c ∈ cs, c < 256) (hl : cs.length = 8) 
 def bytes8 (xs : List Nat) (o : Nat) : List Nat := (List.range 8).map fun k => g xs (o + k)
 
 theorem pop8 (xs : List Nat) (hb : Bytes xs) (o : Nat) :
-    pop (wordL (bytes8 xs o)) = sumTo (fun k => ind (neg8 (g xs (o + k)))) 8 := by
+    pop (wordLo (bytes8 xs o)) = sumTo (fun k => ind (neg8 (g xs (o + k)))) 8 := by
   rw [pop_eq _ (fun c hc => by
     simp only [bytes8, List.mem_map, List.mem_range] at hc
     obtain ⟨k, -, rfl⟩ := hc; exact g_byte hb _) (by simp [bytes8])]
@@ -706,8 +706,8 @@ def swarLatin1 (xs : List Nat) : Nat :=
   let B32 := xs.length / 32
   let B8 := (xs.length - B32 * 32) / 8
   let P := B32 * 32 + B8 * 8
-  xs.length + sumTo (fun b => sumTo (fun k => pop (wordL (bytes8 xs (b * 32 + k * 8)))) 4) B32 +
-    sumTo (fun b => pop (wordL (bytes8 xs (B32 * 32 + b * 8)))) B8 + L ((xs.drop P).map fun c => c >>> 7)
+  xs.length + sumTo (fun b => sumTo (fun k => pop (wordLo (bytes8 xs (b * 32 + k * 8)))) 4) B32 +
+    sumTo (fun b => pop (wordLo (bytes8 xs (B32 * 32 + b * 8)))) B8 + L ((xs.drop P).map fun c => c >>> 7)
 
 theorem swarLatin1_eq (xs : List Nat) (hb : Bytes xs) : swarLatin1 xs = L (xs.map wL8) := by
   unfold swarLatin1
@@ -717,7 +717,7 @@ theorem swarLatin1_eq (xs : List Nat) (hb : Bytes xs) : swarLatin1 xs = L (xs.ma
   have h1 : B32 * 32 ≤ xs.length := hB32 ▸ div_mul_le _ _
   have h2 : B32 * 32 + B8 * 8 ≤ xs.length := by have := hB8 ▸ div_mul_le (xs.length - B32 * 32) 8; omega
   let f := fun j => ind (neg8 (g xs j))
-  have e1 : sumTo (fun b => sumTo (fun k => pop (wordL (bytes8 xs (b * 32 + k * 8)))) 4) B32 =
+  have e1 : sumTo (fun b => sumTo (fun k => pop (wordLo (bytes8 xs (b * 32 + k * 8)))) 4) B32 =
       sumTo f (B32 * 32) := by
     rw [← sum_blocks f 32 B32]
     refine sumTo_congr _ _ _ (fun b _ => ?_)
@@ -725,7 +725,7 @@ theorem swarLatin1_eq (xs : List Nat) (hb : Bytes xs) : swarLatin1 xs = L (xs.ma
     have := sum_blocks (fun j => f (b * 32 + j)) 8 4
     simp only [f, Nat.add_assoc] at this ⊢
     exact this
-  have e2 : sumTo (fun b => pop (wordL (bytes8 xs (B32 * 32 + b * 8)))) B8 =
+  have e2 : sumTo (fun b => pop (wordLo (bytes8 xs (B32 * 32 + b * 8)))) B8 =
       sumTo (fun j => f (B32 * 32 + j)) (B8 * 8) := by
     rw [← sum_blocks (fun j => f (B32 * 32 + j)) 8 B8]
     refine sumTo_congr _ _ _ (fun b _ => ?_)

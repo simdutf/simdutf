@@ -417,9 +417,9 @@ theorem masked_in (c lo hi n i : Nat) (h : c + hi ≤ n) (hi' : lo ≤ i ∧ i <
 :537-542, :589-593, :707-712, :776-780, :854-859), `(64 - misalignment) / 4`
 units with `len ≥ 16` (src/icelake/icelake_utf32_validation.inl.cpp:26-31), with
 `0 < misalignment < 64`. -/
-theorem ice_heads (mis len : Nat) (h1 : 0 < mis) (h2 : mis < 64) :
-    (64 ≤ len → 64 - mis ≤ len) ∧ (32 ≤ len → (64 - mis) / 2 ≤ len) ∧
-    (16 ≤ len → (64 - mis) / 4 ≤ len) := by omega
+theorem ice_heads (misal len : Nat) (h1 : 0 < misal) (h2 : misal < 64) :
+    (64 ≤ len → 64 - misal ≤ len) ∧ (32 ≤ len → (64 - misal) / 2 ≤ len) ∧
+    (16 ≤ len → (64 - misal) / 4 ≤ len) := by omega
 
 /-- `validate_utf8` / `_with_errors` heads (src/icelake/implementation.cpp:206-217, :258-274):
 a full 64-byte load at the start (`len ≥ 2048`), then lanes 61-63 of
@@ -427,14 +427,14 @@ a full 64-byte load at the start (`len ≥ 2048`), then lanes 61-63 of
 (`misalignment <= 61`, :208): bytes `adjustment - 3 .. adjustment - 1`, at
 or after the start. The address `ptr - 64` is before the buffer; the masked-off
 lanes are not accessed (fault suppression). -/
-theorem ice_prev3 (mis len : Nat) (h1 : 0 < mis) (h2 : mis ≤ 61) (hl : 2048 ≤ len) :
-    64 ≤ len ∧ 3 ≤ 64 - mis ∧ (64 - mis) - 3 + 3 ≤ len := by omega
+theorem ice_prev3 (misal len : Nat) (h1 : 0 < misal) (h2 : misal ≤ 61) (hl : 2048 ≤ len) :
+    64 ≤ len ∧ 3 ≤ 64 - misal ∧ (64 - misal) - 3 + 3 ≤ len := by omega
 
 /-- `validate_utf8_with_counts` head (src/icelake/implementation.cpp:326-331): lanes
 `misalignment .. 63` of `aligned = ptr - misalignment`, i.e. bytes
 `0 .. 63 - misalignment` of the input (`len ≥ 1024`). -/
-theorem ice_counts_head (mis len : Nat) (h2 : mis < 64) (hl : 1024 ≤ len) (i : Nat)
-    (hi : mis ≤ i ∧ i < 64) : i - mis < len := by omega
+theorem ice_counts_head (misal len : Nat) (h2 : misal < 64) (hl : 1024 ≤ len) (i : Nat)
+    (hi : misal ≤ i ∧ i < 64) : i - misal < len := by omega
 
 /-- The masked tails load lanes `0 .. end - ptr - 1` with `end - ptr` below the
 block (src/icelake/implementation.cpp:224-225, :295-296, :399-400, :473-474, :514-516,

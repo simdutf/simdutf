@@ -1648,7 +1648,7 @@ theorem utf8_tail (is16 validate : Bool) (chk : List Nat → Bool) (pick : Nat �
   have hieq : i = xs.length - 3 := by simp at hexit; omega
   have h2 := h2 i (by omega)
   refine ⟨hieq, by omega, ?_⟩
-  have hsi := utf8_sinv is16 validate chk pick M1 xs hR
+  have hs_i := utf8_sinv is16 validate chk pick M1 xs hR
   have hsplit : L (xs.map (wU8 is16)) =
       L ((xs.take (back xs i)).map (wU8 is16)) + L ((xs.drop (back xs i)).map (wU8 is16)) := by
     rw [L_take_add_drop (back xs i) (xs.map (wU8 is16)), List.map_take, List.map_drop]
@@ -1669,7 +1669,7 @@ theorem utf8_tail (is16 validate : Bool) (chk : List Nat → Bool) (pick : Nat �
           omega
       · exact h0
     have hlast := bs.2.1 hnc
-    obtain ⟨hs1, hs2⟩ := hsi
+    obtain ⟨hs1, hs2⟩ := hs_i
     rw [hlast] at hs1
     obtain ⟨⟨b, k, ph⟩, rfl⟩ : ∃ t, s = some t := by
       cases s with

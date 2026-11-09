@@ -3,10 +3,10 @@ import SafetyMargins.ValidatorSound
 /-
 Ice Lake `validate_utf8_with_counts` meets `ReplacementRest.VSpec2`.
 
-**The model** (`iceV mis`) transcribes
+**The model** (`iceV misal`) transcribes
 `implementation::validate_utf8_with_counts` (src/icelake/implementation.cpp:315-419)
-line by line, for every address `mis` of `buf` (the code reads it only as
-`misalignment = mis % 64`, :327): the early return on `len == 0` (:317-319);
+line by line, for every address `misal` of `buf` (the code reads it only as
+`misalignment = misal % 64`, :327): the early return on `len == 0` (:317-319);
 for `len >= 1024` and a nonzero misalignment the masked head load at
 `buf - misalignment` (lanes below `misalignment` are zero), the rewind from
 `buf` if it fails (:333-336), its counts (:337-340), `count = 64 - misalignment`
@@ -68,7 +68,7 @@ and `_mm512_maskz_loadu_epi8` with the masks `~0 << misalignment` and
   is not one (`ext_le`). The pull request corrects the comment
   (include/simdutf/scalar/utf8.h:422-425).
 
-**The result** (`iceV_spec2`): for every `mis`, `iceV mis` meets
+**The result** (`iceV_spec2`): for every `misal`, `iceV misal` meets
 `ReplacementRest.VSpec2`: on success the input is `Valid8`, `utf16_length()`
 (`input_count - continuation_count + four_byte_count`,
 include/simdutf/error.h:143-146) is `L (xs.map w16)` and `input_count` is the
@@ -934,21 +934,21 @@ def body (bs : List Nat) (ptr count : Nat) (s : ICS) (C F : Nat) : VRes :=
 (src/icelake/implementation.cpp:315-419) as `ReplacementMore.VRes`: `ok`
 (`error == SUCCESS`), `verr` (every error comes from the scalar rewind, all of
 whose errors are validation errors), `input_count`, `utf16_length()`.
-`mis` is the address of `buf`; the code depends on it only through
-`misalignment = mis % 64` (:327). With `len >= 1024` and a nonzero
+`misal` is the address of `buf`; the code depends on it only through
+`misalignment = misal % 64` (:327). With `len >= 1024` and a nonzero
 misalignment (:326-344) the first block is the masked load at
 `buf - misalignment`, zero below `misalignment`; an error there rewinds from
 `buf` with no additions (:333-336). The pointer `ptr` and `count` are both
 offsets from `buf`. `utf16_length()` is
 `input_count - continuation_count + four_byte_count`
 (include/simdutf/error.h:143-146). -/
-def iceV (mis : Nat) (bs : List Nat) : VRes :=
+def iceV (misal : Nat) (bs : List Nat) : VRes :=
   if bs.length = 0 then ⟨true, false, bs.length, 0⟩
-  else if 1024 ≤ bs.length ∧ mis % 64 ≠ 0 then
-    let head := maskzLoad (headMask (mis % 64)) bs (-((mis % 64 : Nat) : Int))
+  else if 1024 ≤ bs.length ∧ misal % 64 ≠ 0 then
+    let head := maskzLoad (headMask (misal % 64)) bs (-((misal % 64 : Nat) : Int))
     let r := iceNext ics0 head
     if r.1.err then rewindV bs 0 0 0
-    else body bs (64 - mis % 64) (64 - mis % 64) r.1
+    else body bs (64 - misal % 64) (64 - misal % 64) r.1
       (if !r.2 then 0 + iceConts head else 0) (if !r.2 then 0 + iceFours head else 0)
   else body bs 0 0 ics0 0 0
 
@@ -1289,18 +1289,18 @@ theorem proj_ics0 : proj ics0 = cs0 := rfl
 
 /-- **Every return of Ice Lake `validate_utf8_with_counts`**, for every
 address of `buf`, meets the contract. -/
-theorem iceV_good (mis : Nat) (bs : List Nat) (hb : Bytes bs) (hne : bs ≠ []) :
-    Good bs (iceV mis bs) := by
+theorem iceV_good (misal : Nat) (bs : List Nat) (hb : Bytes bs) (hne : bs ≠ []) :
+    Good bs (iceV misal bs) := by
   have hlen : bs.length ≠ 0 := by simpa using hne
   unfold iceV
   rw [ite_f hlen]
-  by_cases hh : 1024 ≤ bs.length ∧ mis % 64 ≠ 0
+  by_cases hh : 1024 ≤ bs.length ∧ misal % 64 ≠ 0
   · rw [ite_t hh]
-    have hm : mis % 64 < 64 := Nat.mod_lt _ (by decide)
-    have hH := head_eq bs (mis % 64) (by omega) hm (by omega)
-    have hl : (maskzLoad (headMask (mis % 64)) bs (-((mis % 64 : Nat) : Int))).length = 64 := by
+    have hm : misal % 64 < 64 := Nat.mod_lt _ (by decide)
+    have hH := head_eq bs (misal % 64) (by omega) hm (by omega)
+    have hl : (maskzLoad (headMask (misal % 64)) bs (-((misal % 64 : Nat) : Int))).length = 64 := by
       rw [hH]; simp; omega
-    have hbu : ∀ b ∈ maskzLoad (headMask (mis % 64)) bs (-((mis % 64 : Nat) : Int)), b < 256 := by
+    have hbu : ∀ b ∈ maskzLoad (headMask (misal % 64)) bs (-((misal % 64 : Nat) : Int)), b < 256 := by
       rw [hH]; intro b hmem
       rcases List.mem_append.mp hmem with h | h
       · rw [List.eq_of_mem_replicate h]; decide
@@ -1309,10 +1309,10 @@ theorem iceV_good (mis : Nat) (bs : List Nat) (hb : Bytes bs) (hne : bs ≠ []) 
       rw [show ics0.prev = List.replicate 64 0 from rfl] at h
       rw [List.eq_of_mem_replicate h]; decide)
     rw [proj_ics0] at np
-    have hne' : maskzLoad (headMask (mis % 64)) bs (-((mis % 64 : Nat) : Int)) ≠ [] := by
+    have hne' : maskzLoad (headMask (misal % 64)) bs (-((misal % 64 : Nat) : Int)) ≠ [] := by
       intro h0; rw [h0] at hl; simp at hl
     dsimp only
-    generalize iceNext ics0 (maskzLoad (headMask (mis % 64)) bs (-((mis % 64 : Nat) : Int))) = r
+    generalize iceNext ics0 (maskzLoad (headMask (misal % 64)) bs (-((misal % 64 : Nat) : Int))) = r
       at np na nb ⊢
     by_cases he : r.1.err = true
     · rw [ite_t he]
@@ -1323,14 +1323,14 @@ theorem iceV_good (mis : Nat) (bs : List Nat) (hb : Bytes bs) (hne : bs ≠ []) 
       rw [ite_f he]
       have hg1 := block_sound false gs0 _ hne' hbu (by rw [← np]; exact he')
       rw [← np, List.nil_append, hH] at hg1
-      have hX : bs.take (64 - mis % 64) ≠ [] := by
+      have hX : bs.take (64 - misal % 64) ≠ [] := by
         apply List.ne_nil_of_length_pos
         rw [List.length_take]; omega
       have hg2 := gs_zeros hg1 (zeros_ascii _) hX
-      have hcnt : conts (maskzLoad (headMask (mis % 64)) bs (-((mis % 64 : Nat) : Int))) =
-            conts (bs.take (64 - mis % 64)) ∧
-          fours (maskzLoad (headMask (mis % 64)) bs (-((mis % 64 : Nat) : Int))) =
-            fours (bs.take (64 - mis % 64)) := by
+      have hcnt : conts (maskzLoad (headMask (misal % 64)) bs (-((misal % 64 : Nat) : Int))) =
+            conts (bs.take (64 - misal % 64)) ∧
+          fours (maskzLoad (headMask (misal % 64)) bs (-((misal % 64 : Nat) : Int))) =
+            fours (bs.take (64 - misal % 64)) := by
         rw [hH, conts_append, fours_append, (conts_zeros _).1, (conts_zeros _).2]
         exact ⟨by omega, by omega⟩
       apply body_good bs hb hne
@@ -1357,9 +1357,9 @@ for every address of the input (every misalignment): on success the input is
 valid UTF-8, `utf16_length()` is `L` of its `w16` weights and `input_count`
 is its length; on a validation error at `p < len` the bytes before `p` are
 valid with `utf16_length()` units and `dchar` fails at `p`. -/
-theorem iceV_spec2 (mis : Nat) : ReplacementRest.VSpec2 (iceV mis) := by
-  refine ⟨fun ys hb hne => ?_, fun ys hb hne h => ((iceV_good mis ys hb hne).1 h).2.2⟩
-  obtain ⟨g1, g2⟩ := iceV_good mis ys hb hne
+theorem iceV_spec2 (misal : Nat) : ReplacementRest.VSpec2 (iceV misal) := by
+  refine ⟨fun ys hb hne => ?_, fun ys hb hne h => ((iceV_good misal ys hb hne).1 h).2.2⟩
+  obtain ⟨g1, g2⟩ := iceV_good misal ys hb hne
   exact ⟨fun h => ⟨(g1 h).1, (g1 h).2.1⟩, g2⟩
 
 end SafetyMargins.IcelakeValidator

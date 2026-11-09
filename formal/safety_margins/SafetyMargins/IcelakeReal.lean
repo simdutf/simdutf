@@ -693,7 +693,7 @@ theorem pass_mismatch (c : Bool) (a z : List Nat) (h : pass c a z = .mismatch) :
       · cases h
 
 /-- Path C output under the check. -/
-theorem pathC (c : Bool) (a : List Nat) (n : Nat) (zl : Nat) (hv : ∀ v ∈ a, v < 65536)
+theorem pathChk (c : Bool) (a : List Nat) (n : Nat) (zl : Nat) (hv : ∀ v ∈ a, v < 65536)
     (hc : chk c a = true) :
     2 * cb c + (sumC a n + zl * laneCz) = L (a.map w8) + 2 * cb (endP c a) := by
   rw [laneCz_eq, sumC_eq a n hv, Nat.mul_zero, Nat.add_zero]
@@ -735,7 +735,7 @@ theorem pass_ok_normal (c : Bool) (a : List Nat) (y b adv : Nat) (co : Bool)
       · rename_i hm
         cases h
         obtain ⟨hc, hz⟩ := checked c a [y] hinv (Bool.eq_false_iff.mpr hm)
-        have hP := pathC c a ([y].headD 0) [y].length hv hc
+        have hP := pathChk c a ([y].headD 0) [y].length hv hc
         have hco := endP_drop30 c a ha
         simp only [chkZ, Bool.and_eq_true, beq_iff_eq] at hz
         rw [hco]
@@ -777,7 +777,7 @@ theorem pass_ok_zeros (c : Bool) (a : List Nat) (m b adv : Nat) (co : Bool) (hm 
       · rename_i hm'
         cases h
         obtain ⟨hc, hz⟩ := checked c a (List.replicate m 0) hinv (Bool.eq_false_iff.mpr hm')
-        have hP := pathC c a ((List.replicate m 0).headD 0) (List.replicate m 0).length hv hc
+        have hP := pathChk c a ((List.replicate m 0).headD 0) (List.replicate m 0).length hv hc
         obtain ⟨m', rfl⟩ : ∃ m', m = m' + 1 := ⟨m - 1, by omega⟩
         simp only [List.replicate_succ, chkZ, Bool.and_eq_true, beq_iff_eq] at hz
         rw [loS_zero] at hz

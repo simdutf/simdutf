@@ -1420,10 +1420,10 @@ theorem conv_store (pick : Nat → Nat) (M1 : Nat) (xs : List Nat) (hb : Bytes x
     · simp only [Bool.false_eq_true, ↓reduceIte]
       exact ⟨back xs i, by omega, bv, by omega⟩
     · simp only [↓reduceIte]
-      obtain ⟨e, he, hve, hu⟩ := vwc_store _ (bytes_drop hb (back xs i))
+      obtain ⟨e, he, hv_e, hu⟩ := vwc_store _ (bytes_drop hb (back xs i))
       have hle := out2_le (hiS ((if isCont (xs.getD i 0) then out.dropLast else out).getLastD 0))
         (isCont (xs.getD i 0)) out
-      refine ⟨back xs i + e, by simp at he; omega, valid_take_add xs _ e bv hve, ?_⟩
+      refine ⟨back xs i + e, by simp at he; omega, valid_take_add xs _ e bv hv_e, ?_⟩
       rw [List.take_add, List.map_append, L_append, ← hu]
       generalize (if hiS ((if isCont (xs.getD i 0) then out.dropLast else out).getLastD 0) then
         (if isCont (xs.getD i 0) then out.dropLast else out).dropLast
@@ -1465,7 +1465,7 @@ theorem rvvCV_cvspec (pick : Nat → Nat) (M1 : Nat) : ReplacementRest.CVSpec (r
 theorem rvvKW_bspec (pick : Nat → Nat) (M1 : Nat) : ReplacementRest.BSpec (rvvKS vwc pick M1) := by
   intro win hb _
   obtain ⟨c1, hc1, hv1, hs1⟩ := conv_store pick M1 win hb
-  obtain ⟨e, he, hve, hu⟩ := vwc_store win hb
+  obtain ⟨e, he, hv_e, hu⟩ := vwc_store win hb
   obtain ⟨s1, s2⟩ := vwcF_spec win.length win hb (Nat.le_refl _)
   unfold rvvKS
   by_cases h : (rvvConvS vwc true pick M1 win).1 ≠ 0
@@ -1482,7 +1482,7 @@ theorem rvvKW_bspec (pick : Nat → Nat) (M1 : Nat) : ReplacementRest.BSpec (rvv
       simp only [hok, Bool.false_eq_true, ↓reduceIte]
       exact ⟨hvp, hd⟩
     · by_cases hm : (rvvConvS vwc true pick M1 win).2 ≤ (vwc win).2.2
-      · exact ⟨e, he, hve, by rw [Nat.max_eq_right hm, hu]; omega⟩
+      · exact ⟨e, he, hv_e, by rw [Nat.max_eq_right hm, hu]; omega⟩
       · exact ⟨c1, hc1, hv1, by rw [Nat.max_eq_left (by omega)]; omega⟩
 
 /-- **`ReplacementRest.BSpec` for the rvv `convert_utf8_to_utf16{le,be}_with_errors`**,

@@ -64,8 +64,8 @@ theorem allInB_append {n : Nat} {as bs : List Acc} :
 theorem allInB_flatMap {α : Type} {n : Nat} {xs : List α} {f : α → List Acc} :
     (∀ x ∈ xs, AllInB n (f x)) → AllInB n (xs.flatMap f) := by
   intro h a ha
-  obtain ⟨x, hx, hax⟩ := List.mem_flatMap.mp ha
-  exact h x hx a hax
+  obtain ⟨x, hx, ha_x⟩ := List.mem_flatMap.mp ha
+  exact h x hx a ha_x
 
 /-! ## The loop -/
 
