@@ -8,7 +8,7 @@ arm_convert_utf32_to_utf8(const char32_t *buf, size_t len, char *utf8_out) {
   uint16x8_t forbidden_bytemask = vmovq_n_u16(0x0);
   const size_t safety_margin = 3; // proved in formal/safety_margins
 
-  while (buf + 16 + safety_margin < end) {
+  while (end - buf > std::ptrdiff_t(16 + safety_margin)) {
     uint32x4_t in = vld1q_u32(reinterpret_cast<const uint32_t *>(buf));
     uint32x4_t nextin = vld1q_u32(reinterpret_cast<const uint32_t *>(buf + 4));
 
@@ -257,7 +257,7 @@ arm_convert_utf32_to_utf8_with_errors(const char32_t *buf, size_t len,
   const uint16x8_t v_c080 = vmovq_n_u16((uint16_t)0xc080);
   const size_t safety_margin = 3; // proved in formal/safety_margins
 
-  while (buf + 16 + safety_margin < end) {
+  while (end - buf > std::ptrdiff_t(16 + safety_margin)) {
     uint32x4_t in = vld1q_u32(reinterpret_cast<const uint32_t *>(buf));
     uint32x4_t nextin = vld1q_u32(reinterpret_cast<const uint32_t *>(buf + 4));
 
