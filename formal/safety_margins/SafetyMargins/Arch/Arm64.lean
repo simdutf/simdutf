@@ -78,7 +78,7 @@ theorem wit_utf16to8 :
 /-! ## UTF-32 to UTF-8 -/
 
 /-- src/arm64/arm_convert_utf32_to_utf8.cpp:11 (plain) and :260
-(`_with_errors`), `while (buf + 16 + 3 < end)` (strict): 8 units per
+(`_with_errors`), `while (end - buf > std::ptrdiff_t(16 + 3))` (strict): 8 units per
 iteration, ASCII 8-byte store, 1/2-byte path (one 16-byte store), 1/2/3-byte
 path (16-byte stores at 0 and `L(4 units)`), scalar fallback (at most 15
 units). Same as `Kernels.utf32to8_arm64`. -/

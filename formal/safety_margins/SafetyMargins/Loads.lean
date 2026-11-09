@@ -73,7 +73,7 @@ theorem fwd_eq_cap (cap N r : Nat) (hc : cap < N) (hr : N ≤ r) : fwd cap r = c
 /-! ## UTF-32 → UTF-8 -/
 
 /-- src/arm64/arm_convert_utf32_to_utf8.cpp:11 (plain) and :260
-(`_with_errors`), `while (buf + 16 + safety_margin < end)`, margin 3:
+(`_with_errors`), `while (end - buf > std::ptrdiff_t(16 + safety_margin))`, margin 3:
 `vld1q_u32(buf)` and `vld1q_u32(buf + 4)` (:12-13, :261-262); scalar fallback
 `forward = 15` (:208-213, :462-467). -/
 def arm64_utf32to8 : LoopLoads :=
