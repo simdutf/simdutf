@@ -158,8 +158,10 @@
         // users should update to GCC 15 or better.
         #define SIMDUTF_IMPLEMENTATION_LASX 0
       #endif
+    #elif defined(__clang__)
+      // LLVM supports runtime dispatch for LASX, see simdutf/lasx/intrinsics.h.
     #else
-      // We are not using GCC, so we assume that we can support runtime dispatch
+      // We are not using GCC or LLVM, so we do not support runtime dispatch
       // for LASX. https://godbolt.org/z/jcMnrjYhs
       #define SIMDUTF_IMPLEMENTATION_LASX 0
     #endif

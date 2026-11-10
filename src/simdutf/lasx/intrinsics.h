@@ -6,6 +6,10 @@
 // This should be the correct header whether
 // you use visual studio or other compilers.
 #include <lsxintrin.h>
+#if defined(__clang__) && !defined(__loongarch_asx)
+  #define __loongarch_asx 1
+  #define SIMDUTF_UNDEF_LOONGARCH_ASX 1
+#endif
 #include <lasxintrin.h>
 
 #if defined(__loongarch_asx)
@@ -96,6 +100,11 @@ static inline __m128i lasx_extracti128_hi(__m256i in) {
                    : [in] "f"(in));
   return out;
 }
+#endif
+
+#ifdef SIMDUTF_UNDEF_LOONGARCH_ASX
+  #undef __loongarch_asx
+  #undef SIMDUTF_UNDEF_LOONGARCH_ASX
 #endif
 
 /*
@@ -283,11 +292,12 @@ template <uint32_t x> constexpr __m256i lasx_splat_u32_aux() {
   #define lasx_splat_u32(v) lasx_splat_u32_aux<(v)>()
 #endif // QEMU_VLDI_BUG
 
-#ifndef lsx_splat_u16
-  #ifdef QEMU_VLDI_BUG
-    #define lsx_splat_u16(v) __lsx_vreplgr2vr_h(v)
-    #define lsx_splat_u32(v) __lsx_vreplgr2vr_w(v)
-  #else
+#ifdef QEMU_VLDI_BUG
+  #define lsx_splat_u16(v) __lsx_vreplgr2vr_h(v)
+  #define lsx_splat_u32(v) __lsx_vreplgr2vr_w(v)
+#else
+namespace simdutf {
+namespace lasx {
 namespace {
 template <uint16_t x> constexpr __m128i lsx_splat_u16_aux() {
   return ((int16_t(x) < 512) && (int16_t(x) > -512))
@@ -311,9 +321,10 @@ template <uint32_t x> constexpr __m128i lsx_splat_u32_aux() {
                     : __lsx_vreplgr2vr_w(x));
 }
 } // namespace
-    #define lsx_splat_u16(v) lsx_splat_u16_aux<(v)>()
-    #define lsx_splat_u32(v) lsx_splat_u32_aux<(v)>()
-  #endif // QEMU_VLDI_BUG
-#endif   // lsx_splat_u16
+} // namespace lasx
+} // namespace simdutf
+  #define lsx_splat_u16(v) lsx_splat_u16_aux<(v)>()
+  #define lsx_splat_u32(v) lsx_splat_u32_aux<(v)>()
+#endif // QEMU_VLDI_BUG
 
 #endif //  SIMDUTF_LASX_INTRINSICS_H
