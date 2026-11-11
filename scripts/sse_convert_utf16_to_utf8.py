@@ -101,28 +101,24 @@ namespace latin1_to_utf8 {
  * Packing table for latin1 -> UTF-8.
  *
  * The index is the low (resp. high) 8 bits of the mask that
- * _mm_movemask_epi8() produces on 16 latin1 input bytes. The bits are thus in
- * natural order (bit i refers to character i) and a set bit means "this
- * character is not ASCII", i.e. it expands to two UTF-8 bytes.
+ * _mm_movemask_epi8() produces on 16 latin1 input bytes, so bit i refers to
+ * character i and a set bit means "not ASCII", i.e. two UTF-8 bytes.
  *
- * Unlike @c pack_1_2_utf8_bytes, this table assumes that a two-byte sequence
- * is stored in memory order inside its 16-bit lane, i.e. `[first][second]`
- * (`[110xxxxx][10xxxxxx]`) rather than `[second][first]`. As a consequence
- * every row is simply the increasing sequence 0, 1, 2, ... with the high byte
- * of the ASCII characters removed.
+ * Unlike @c pack_1_2_utf8_bytes, the two-byte sequence is stored in memory
+ * order inside its 16-bit lane (`[110xxxxx][10xxxxxx]` instead of
+ * `[10xxxxxx][110xxxxx]`), so every row is simply 0, 1, 2, ... with the high
+ * byte of each ASCII character dropped.
  *
- * The rows carry no length byte: since only the high byte of a non-ASCII
- * character is dropped, the number of produced bytes is `8 + popcount(key)`,
- * which the kernel derives with a single `popcnt`. That value does not depend
- * on the shuffle result and is therefore off the shuffle's latency chain.
- * Keeping the row at 16 bytes also halves the padding waste.
+ * There is no length byte: the number of produced bytes is `8 + popcount(key)`,
+ * which the kernel computes with a single `popcnt`. Rows stay 16 bytes wide so
+ * that every row is 16-byte aligned.
  */
 const uint8_t pack_1_2_utf8_bytes_from_latin1[256][16] = {
 %(rows)s
   };
 
-} // latin1_to_utf8 namespace
-} // tables namespace
+} // namespace latin1_to_utf8
+} // namespace tables
 } // unnamed namespace
 } // namespace simdutf
 
@@ -143,6 +139,9 @@ def shuffle_for_conversion_1_or_2_utf8_bytes_from_latin1(file):
   #
   # No length byte is emitted: the kernel derives the output length as
   # 8 + popcount(key). A 16-byte row keeps every row 16-byte aligned.
+  #
+  # The separator is ', ' so that the generated rows already match the
+  # repository style, as produced by clang-format.
   rows = []
   indent = (' ' * 4)
   for key in range(256):
@@ -156,8 +155,8 @@ def shuffle_for_conversion_1_or_2_utf8_bytes_from_latin1(file):
     while (len(shuffle) < 16):
       shuffle.append(0x80)
 
-    array = ','.join('0x80' if value == 0x80 else str(value)
-                     for value in shuffle)
+    array = ', '.join('0x80' if value == 0x80 else str(value)
+                      for value in shuffle)
     rows.append(f'{indent}{{{array}}}')
 
   file.write(CPP_LATIN1_1_2 % {'rows': ',\n'.join(rows)})
