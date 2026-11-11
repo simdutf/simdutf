@@ -29,15 +29,13 @@ avx2_convert_latin1_to_utf8(const char *latin1_input, size_t len,
     const __m256i nonascii_bytemask = _mm256_cvtepi8_epi16(in8);
 
     // 1. prepare 2-byte values
-    // Encode every character as a two-byte sequence; lane layout, high byte
-    // first: in = [0000|0000|aabb|bbbb] -> t4 = [10bb|bbbb|1100|00aa].
     const __m256i v_003f = _mm256_set1_epi16((int16_t)0x003f);
 
-    // aa = cp >> 6; cp < 0x100, so the high byte stays clear
+    // [0000|0000|0000|00aa]
     const __m256i t0 = _mm256_srli_epi16(in, 6);
-    // bbbbbb = cp & 0x3f
+    // [0000|0000|00bb|bbbb]
     const __m256i t1 = _mm256_and_si256(in, v_003f);
-    // move the continuation byte into the high byte
+    // [00bb|bbbb|0000|0000]
     const __m256i t2 = _mm256_slli_epi16(t1, 8);
     // [00bb|bbbb|0000|00aa]
     const __m256i t3 = _mm256_or_si256(t0, t2);
