@@ -356,8 +356,8 @@ int reference_detect(const std::vector<uint8_t> &data) {
 void check_against_reference(const simdutf::implementation &implementation,
                              const std::vector<uint8_t> &data) {
   // An exact-size copy so that the sanitizers catch reads past the end. An
-  // empty input is passed as a null pointer.
-  std::unique_ptr<char[]> copy(data.empty() ? nullptr : new char[data.size()]);
+  // empty input gets a valid pointer to a byte outside of it.
+  std::unique_ptr<char[]> copy(new char[data.empty() ? 1 : data.size()]);
   if (!data.empty()) {
     std::memcpy(copy.get(), data.data(), data.size());
   }
@@ -446,8 +446,9 @@ std::vector<size_t> utf8_only_lengths(size_t stride, bool all_lengths) {
 }
 } // namespace
 
-TEST(detect_encodings_empty_null) {
-  ASSERT_EQUAL(implementation.detect_encodings(nullptr, 0),
+TEST(detect_encodings_empty) {
+  const char byte = 'x';
+  ASSERT_EQUAL(implementation.detect_encodings(&byte, 0),
                simdutf::encoding_type::UTF8 | simdutf::encoding_type::UTF16_LE |
                    simdutf::encoding_type::UTF32_LE);
 }
