@@ -358,6 +358,9 @@ simdutf_really_inline void copy_short(uint8_t *dst, const uint8_t *src,
   }
 }
 
+// How often check_blocks looks for encodings that have failed.
+constexpr size_t stride = 16 * 64;
+
 // Checks the full 64-byte blocks starting before 'end', from 'idx' on, for the
 // encodings in 'active' (the template parameters may include more). Every
 // 1024 bytes and at the end, it removes from 'active' the encodings that have
@@ -366,7 +369,6 @@ simdutf_really_inline void copy_short(uint8_t *dst, const uint8_t *src,
 template <bool check_utf8, bool check_utf16, bool check_utf32>
 size_t check_blocks(checkers &c, const uint8_t *input, size_t idx, size_t end,
                     int &active) {
-  constexpr size_t stride = 16 * 64;
   while (true) {
     const size_t stop = (end - idx > stride) ? idx + stride : end;
     for (; idx < stop; idx += 64) {
@@ -456,8 +458,18 @@ implementation::detect_encodings(const char *input,
                                                                 end, active);
       break;
     case utf8:
-      idx = encoding_detection::check_blocks<true, false, false>(c, buf, idx,
-                                                                 end, active);
+      if (idx != 0) {
+        // Only UTF-8 is left, without an error so far, and validate_utf8 is
+        // faster than our loop. The bytes before idx are valid UTF-8 except
+        // that they may end with an incomplete character (or a byte that
+        // cannot start one): validate_utf8 starts with that character.
+        const size_t start = scalar::utf8::trim_partial_utf8(input, idx);
+        return validate_utf8(input + start, length - start) ? utf8 : 0;
+      }
+      // Odd length: we check the first 1024 bytes here, so that we stop early
+      // if the input is not UTF-8.
+      idx = encoding_detection::check_blocks<true, false, false>(
+          c, buf, idx, detail::min(end, encoding_detection::stride), active);
       break;
     case utf16 | utf32:
       idx = encoding_detection::check_blocks<false, true, true>(c, buf, idx,

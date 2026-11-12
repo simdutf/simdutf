@@ -403,6 +403,47 @@ std::vector<size_t> positions_near_edges(size_t count) {
   }
   return out;
 }
+
+// Writes 'character' again and again from 'from' on, as long as it fits.
+void fill_utf8(std::vector<uint8_t> &data, size_t from,
+               const std::vector<uint8_t> &character) {
+  for (size_t i = from; i + character.size() <= data.size();
+       i += character.size()) {
+    std::copy(character.begin(), character.end(), data.begin() + i);
+  }
+}
+
+// Returns 'len' bytes of valid UTF-8, mostly ASCII, that are known not to be
+// UTF-16LE or UTF-32LE once the first 'stride' bytes are read (stride is 1024
+// or 2048). An odd length rules out both from the start. For an even length,
+// U+0628 (0xd8 0xa8) at an odd index puts a high surrogate without a low
+// surrogate in UTF-16LE: at byte 1 for a stride of 1024, at byte 1501 for a
+// stride of 2048 (ASCII alone is valid UTF-16LE). The UTF-32LE values are too
+// large.
+std::vector<uint8_t> utf8_only_after(size_t len, size_t stride) {
+  std::vector<uint8_t> data(len, 'x');
+  if (len % 2 == 0) {
+    const size_t at = stride == 1024 ? 1 : 1501;
+    data[at] = 0xd8;
+    data[at + 1] = 0xa8;
+  }
+  return data;
+}
+
+// Lengths to use with utf8_only_after(len, stride).
+std::vector<size_t> utf8_only_lengths(size_t stride, bool all_lengths) {
+  if (stride == 2048) {
+    return {2114, 2116, 2118, 2120, 2178, 2180, 3000, 4096};
+  }
+  if (!all_lengths) {
+    return {1089, 1090, 1091, 1092, 1095, 1096, 1151, 1152, 2048, 2049, 2050};
+  }
+  std::vector<size_t> out;
+  for (size_t len = 1025; len <= 2100; len++) {
+    out.push_back(len);
+  }
+  return out;
+}
 } // namespace
 
 TEST(detect_encodings_empty_null) {
@@ -621,6 +662,66 @@ TEST_LOOP(detect_encodings_random_against_reference) {
       data[rnd(uint32_t(len))] = replacements[rnd(8)];
     }
     check_against_reference(implementation, data);
+  }
+}
+
+// Once UTF-8 is the only encoding left, some implementations pass the rest of
+// the input to validate_utf8, from a multiple of 1024 bytes or from the start
+// of the character that straddles it.
+TEST(detect_encodings_utf8_character_across_stride) {
+  const std::vector<std::vector<uint8_t>> characters{
+      {0xc3, 0xa9}, {0xe2, 0x82, 0xac}, {0xf0, 0x9f, 0x98, 0x80}};
+  for (size_t stride : {size_t(1024), size_t(2048)}) {
+    for (size_t len : utf8_only_lengths(stride, true)) {
+      for (const auto &character : characters) {
+        // Every shift puts a different byte of a character at 'stride'.
+        for (size_t shift = 0; shift < character.size(); shift++) {
+          std::vector<uint8_t> data = utf8_only_after(len, stride);
+          fill_utf8(data, stride - 64 + shift, character);
+          check_against_reference(implementation, data);
+        }
+      }
+    }
+  }
+}
+
+TEST(detect_encodings_utf8_errors_across_stride) {
+  const std::vector<std::vector<uint8_t>> sequences{
+      {0xc3},                         // truncated
+      {0xe2, 0x82},                   // truncated
+      {0xf0, 0x9f, 0x98},             // truncated
+      {0x80},                         // lone continuation
+      {0xbf},                         // lone continuation
+      {0xc0, 0x80},                   // overlong
+      {0xc1, 0xbf},                   // overlong
+      {0xe0, 0x9f, 0xbf},             // overlong
+      {0xf0, 0x8f, 0xbf, 0xbf},       // overlong
+      {0xed, 0xa0, 0x80},             // surrogate
+      {0xed, 0xbf, 0xbf},             // surrogate
+      {0xf4, 0x90, 0x80, 0x80},       // too large
+      {0xf5, 0x80, 0x80, 0x80},       // too large
+      {0xf0, 0x9f, 0x98, 0x80, 0x80}, // four continuation bytes
+      {0xff},
+      {0xc3, 0xa9},              // U+00E9
+      {0xe2, 0x82, 0xac},        // U+20AC
+      {0xf0, 0x9f, 0x98, 0x80},  // U+1F600
+      {0xf4, 0x8f, 0xbf, 0xbf}}; // U+10FFFF
+  const std::vector<std::vector<uint8_t>> backgrounds{
+      {'x'}, {0xc3, 0xa9}, {0xe2, 0x82, 0xac}};
+  for (size_t stride : {size_t(1024), size_t(2048)}) {
+    for (size_t len : utf8_only_lengths(stride, false)) {
+      for (const auto &background : backgrounds) {
+        for (const auto &seq : sequences) {
+          // The sequence ends before 'stride', straddles it or follows it.
+          for (size_t p = stride - 5; p <= stride + 2; p++) {
+            std::vector<uint8_t> data = utf8_only_after(len, stride);
+            fill_utf8(data, stride - 64, background);
+            std::copy(seq.begin(), seq.end(), data.begin() + p);
+            check_against_reference(implementation, data);
+          }
+        }
+      }
+    }
   }
 }
 #endif // !SIMDUTF_IS_BIG_ENDIAN
