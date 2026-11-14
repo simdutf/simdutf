@@ -4255,6 +4255,76 @@ TEST(base64_exact_output_buffer_with_whitespace) {
   }
 }
 
+template <typename char_type>
+void check_tc39_read_includes_trailing_whitespace(
+    const simdutf::implementation &implementation,
+    simdutf::base64_options options, simdutf::last_chunk_handling_options lc,
+    bool padded) {
+  for (size_t valid : {0, 4, 8, 60, 64, 68, 124, 128, 192, 256}) {
+    for (const char *trailing :
+         {"", " ", "   ", "\n", " \t\r\n\f", "\n\n\n\n"}) {
+      if (padded && valid == 0) {
+        continue;
+      }
+      std::basic_string<char_type> input(valid, char_type('A'));
+      size_t expected = valid / 4 * 3;
+      if (padded) {
+        input[valid - 1] = char_type('=');
+        input[valid - 2] = char_type('=');
+        expected -= 2;
+      }
+      for (const char *p = trailing; *p; p++) {
+        input += char_type(*p);
+      }
+      std::vector<char> output(input.size() + 4, 1);
+      const simdutf::full_result r = implementation.base64_to_binary_details(
+          input.data(), input.size(), output.data(), options, lc);
+      ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+      ASSERT_EQUAL(r.output_count, expected);
+      ASSERT_EQUAL(r.input_count, input.size());
+
+      for (size_t capacity : {expected, expected + 1, expected + 64}) {
+        size_t outlen = capacity;
+        const simdutf::result rs = simdutf::base64_to_binary_safe(
+            input.data(), input.size(), output.data(), outlen, options, lc);
+        ASSERT_EQUAL(rs.error, simdutf::error_code::SUCCESS);
+        ASSERT_EQUAL(outlen, expected);
+        ASSERT_EQUAL(rs.count, input.size());
+      }
+    }
+  }
+}
+
+TEST(base64_tc39_read_includes_trailing_whitespace) {
+  for (auto options :
+       {simdutf::base64_default, simdutf::base64_url,
+        simdutf::base64_default_or_url, simdutf::base64_default_accept_garbage,
+        simdutf::base64_url_accept_garbage,
+        simdutf::base64_default_or_url_accept_garbage}) {
+    for (auto lc :
+         {simdutf::last_chunk_handling_options::loose,
+          simdutf::last_chunk_handling_options::strict,
+          simdutf::last_chunk_handling_options::stop_before_partial}) {
+      check_tc39_read_includes_trailing_whitespace<char>(implementation,
+                                                         options, lc, false);
+      check_tc39_read_includes_trailing_whitespace<char16_t>(
+          implementation, options, lc, false);
+    }
+  }
+  for (auto options :
+       {simdutf::base64_default, simdutf::base64_default_or_url}) {
+    for (auto lc :
+         {simdutf::last_chunk_handling_options::loose,
+          simdutf::last_chunk_handling_options::strict,
+          simdutf::last_chunk_handling_options::stop_before_partial}) {
+      check_tc39_read_includes_trailing_whitespace<char>(implementation,
+                                                         options, lc, true);
+      check_tc39_read_includes_trailing_whitespace<char16_t>(implementation,
+                                                             options, lc, true);
+    }
+  }
+}
+
 int main(int argc, char *argv[]) {
   const auto cmdline = simdutf::test::CommandLine::parse(argc, argv);
   seed = cmdline.seed;

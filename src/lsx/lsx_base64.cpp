@@ -855,5 +855,5 @@ compress_decode_base64(char *dst, const char_type *src, size_t srclen,
               true};
     }
   }
-  return {SUCCESS, srclen, size_t(dst - dstinit)};
+  return {SUCCESS, full_input_length, size_t(dst - dstinit)};
 }
