@@ -4153,6 +4153,106 @@ TEST(issue_1087) {
   }
 }
 
+template <typename char_type>
+std::basic_string<char_type> garbage_equal_input(size_t leading, size_t valid,
+                                                 size_t &equal_position) {
+  const char filler[] = " *\n";
+  std::basic_string<char_type> input;
+  for (size_t i = 0; i < leading; i++) {
+    input += char_type(filler[i % 3]);
+  }
+  for (size_t i = 0; i < valid; i++) {
+    input += char_type('A');
+    if (i % 7 == 6) {
+      input += char_type(filler[i % 3]);
+    }
+  }
+  equal_position = input.size();
+  const char trailer[] = "= AAAA*AA==A";
+  for (const char *p = trailer; *p; p++) {
+    input += char_type(*p);
+  }
+  return input;
+}
+
+template <typename char_type>
+void check_garbage_equal_details(const simdutf::implementation &implementation,
+                                 simdutf::base64_options options,
+                                 simdutf::last_chunk_handling_options lc) {
+  for (size_t leading : {0, 1, 2, 3, 63, 64, 65}) {
+    for (size_t valid : {0, 4, 8, 60, 64, 68, 124, 128, 192, 256}) {
+      size_t equal_position;
+      const auto input =
+          garbage_equal_input<char_type>(leading, valid, equal_position);
+      std::vector<char> output(input.size(), 1);
+      const simdutf::full_result r = implementation.base64_to_binary_details(
+          input.data(), input.size(), output.data(), options, lc);
+      ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+      ASSERT_EQUAL(r.output_count, valid / 4 * 3);
+      ASSERT_EQUAL(r.input_count, equal_position + 1);
+      for (size_t i = 0; i < r.output_count; i++) {
+        ASSERT_EQUAL(output[i], 0);
+      }
+    }
+  }
+}
+
+TEST(base64_garbage_equal_input_count) {
+  for (auto options : {simdutf::base64_default_accept_garbage,
+                       simdutf::base64_url_accept_garbage,
+                       simdutf::base64_default_or_url_accept_garbage}) {
+    for (auto lc :
+         {simdutf::last_chunk_handling_options::loose,
+          simdutf::last_chunk_handling_options::strict,
+          simdutf::last_chunk_handling_options::stop_before_partial}) {
+      check_garbage_equal_details<char>(implementation, options, lc);
+      check_garbage_equal_details<char16_t>(implementation, options, lc);
+    }
+  }
+}
+
+template <typename char_type>
+void check_garbage_equal_safe(simdutf::base64_options options,
+                              simdutf::last_chunk_handling_options lc) {
+  for (size_t leading : {0, 1, 2, 3, 63, 64, 65}) {
+    for (size_t valid : {0, 4, 8, 60, 64, 68, 124, 128, 192, 256}) {
+      size_t equal_position;
+      const auto input =
+          garbage_equal_input<char_type>(leading, valid, equal_position);
+      const size_t expected = valid / 4 * 3;
+      for (size_t capacity = expected; capacity <= expected + 8; capacity++) {
+        for (bool decode_up_to_bad_char : {false, true}) {
+          std::vector<char> output(capacity + 1, 1);
+          size_t outlen = capacity;
+          const simdutf::result r = simdutf::base64_to_binary_safe(
+              input.data(), input.size(), output.data(), outlen, options, lc,
+              decode_up_to_bad_char);
+          ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+          ASSERT_EQUAL(outlen, expected);
+          ASSERT_EQUAL(r.count, equal_position + 1);
+          for (size_t i = 0; i < outlen; i++) {
+            ASSERT_EQUAL(output[i], 0);
+          }
+        }
+      }
+    }
+  }
+}
+
+TEST(base64_garbage_equal_safe_any_capacity) {
+  for (auto options : {simdutf::base64_default_accept_garbage,
+                       simdutf::base64_url_accept_garbage,
+                       simdutf::base64_default_or_url_accept_garbage}) {
+    for (auto lc :
+         {simdutf::last_chunk_handling_options::loose,
+          simdutf::last_chunk_handling_options::strict,
+          simdutf::last_chunk_handling_options::stop_before_partial}) {
+      check_garbage_equal_safe<char>(options, lc);
+      check_garbage_equal_safe<char16_t>(options, lc);
+    }
+  }
+}
+
 TEST(base64_to_binary_safe_garbage_equal_any_capacity) {
   std::mt19937 gen(1087);
   const char alphabet[] = "AAAAB=  *\n";

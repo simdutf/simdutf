@@ -843,7 +843,8 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
               true};
     }
   }
-  return {SUCCESS, srclen, size_t(dst - dstinit)};
+  return {SUCCESS, ignore_garbage ? full_input_length : srclen,
+          size_t(dst - dstinit)};
 }
 
 simdutf_warn_unused size_t icelake_binary_length_from_base64(const char *input,
