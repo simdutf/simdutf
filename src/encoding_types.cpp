@@ -12,6 +12,8 @@ std::string_view to_string(encoding_type bom) {
     return "UTF32 big-endian";
   case UTF8:
     return "UTF8";
+  case Latin1:
+    return "Latin1";
   case unspecified:
     return "unknown";
   default:
