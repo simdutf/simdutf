@@ -2,6 +2,8 @@
 #include <cstdint>
 #include <array>
 #include <cstdlib>
+#include <algorithm>
+#include <vector>
 
 #include "helpers/common.h"
 #include "simdutf.h"
@@ -135,7 +137,21 @@ void decode_safe(std::span<const FromChar> base64_, const auto selected_option,
     }
   } break;
   case simdutf::error_code::SUCCESS: {
-    // possibility to compare with the normal function
+    std::vector<char> expected(simdutf::maximal_binary_length_from_base64(
+        base64.data(), base64.size()));
+    const auto expectedresult =
+        simdutf::base64_to_binary(base64.data(), base64.size(), expected.data(),
+                                  selected_option, last_chunk_option);
+    if (expectedresult.error != simdutf::error_code::SUCCESS ||
+        expectedresult.count != outlen ||
+        !std::equal(output.begin(), output.begin() + outlen,
+                    expected.begin())) {
+      std::cerr << "base64_to_binary_safe disagrees with base64_to_binary: "
+                << "decode_buf_size=" << decode_buf_size << " outlen=" << outlen
+                << " safe result=" << convertresult
+                << " regular result=" << expectedresult << '\n';
+      std::abort();
+    }
   } break;
   default:;
   }
