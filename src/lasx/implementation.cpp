@@ -229,6 +229,11 @@ convert_utf8_1_to_2_byte_to_utf16(__m128i in, size_t shufutf8_idx) {
   #include "lasx_internal_tests.cpp"
 #endif // SIMDUTF_INTERNAL_TESTS
 
+#if SIMDUTF_FEATURE_DETECT_ENCODING
+  #include "lasx/lasx_detect_encodings.cpp"
+  #include "generic/detect_encodings.h"
+#endif // SIMDUTF_FEATURE_DETECT_ENCODING
+
 //
 // Implementation-specific overrides
 //
@@ -241,26 +246,10 @@ implementation::detect_encodings(const char *input,
                                  size_t length) const noexcept {
   // If there is a BOM, then we trust it.
   auto bom_encoding = simdutf::BOM::check_bom(input, length);
-  // todo: reimplement as a one-pass algorithm.
   if (bom_encoding != encoding_type::unspecified) {
     return bom_encoding;
   }
-  int out = 0;
-  if (validate_utf8(input, length)) {
-    out |= encoding_type::UTF8;
-  }
-  if ((length % 2) == 0) {
-    if (validate_utf16le(reinterpret_cast<const char16_t *>(input),
-                         length / 2)) {
-      out |= encoding_type::UTF16_LE;
-    }
-  }
-  if ((length % 4) == 0) {
-    if (validate_utf32(reinterpret_cast<const char32_t *>(input), length / 4)) {
-      out |= encoding_type::UTF32_LE;
-    }
-  }
-  return out;
+  return encoding_detection::detect_encodings(input, length);
 }
 #endif // SIMDUTF_FEATURE_DETECT_ENCODING
 
