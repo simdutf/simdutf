@@ -5,6 +5,9 @@
 
 #include "encoding_types.cpp"
 #include "error.cpp"
+#ifndef SIMDUTF_REGULAR_VISUAL_STUDIO
+SIMDUTF_DISABLE_UNUSED_WARNING
+#endif
 // The large tables should be included once and they
 // should not depend on a kernel.
 #include "tables/utf8_to_utf16_tables.h"
@@ -17,9 +20,6 @@
 // only for peculiar build targets.
 
 // The best choice should always come first!
-#ifndef SIMDUTF_REGULAR_VISUAL_STUDIO
-SIMDUTF_DISABLE_UNUSED_WARNING
-#endif
 #include "simdutf/arm64.h"
 #include "simdutf/icelake.h"
 #include "simdutf/haswell.h"

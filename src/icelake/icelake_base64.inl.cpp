@@ -374,9 +374,6 @@ static inline void base64_decode_block_safe(char *out, const char *src) {
   base64_decode_safe(
       out, _mm512_loadu_si512(reinterpret_cast<const __m512i *>(src)));
 }
-static inline void base64_decode_block(char *out, block64 *b) {
-  base64_decode(out, b->chunks[0]);
-}
 static inline void base64_decode_block_safe(char *out, block64 *b) {
   base64_decode_safe(out, b->chunks[0]);
 }
