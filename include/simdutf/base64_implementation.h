@@ -64,6 +64,14 @@ simdutf_warn_unused simdutf_constexpr23 result base64_to_binary_safe_impl(
   static_assert(std::is_same<chartype, char>::value ||
                     std::is_same<chartype, char16_t>::value,
                 "Only char and char16_t are supported.");
+  if (options & base64_default_accept_garbage) {
+    // The first '=' ends the input, so the second pass must not see what
+    // comes after it.
+    auto it = simdutf::find(input, input + length, '=');
+    if (it != input + length) {
+      length = size_t(it - input) + 1;
+    }
+  }
   size_t remaining_input_length = length;
   size_t remaining_output_length = outlen;
   size_t input_position = 0;

@@ -4112,6 +4112,35 @@ TEST(base64_to_binary_safe_no_garbage_past_output) {
   }
 }
 
+// With accept_garbage the input stops at the first '='. The result must not
+// depend on the capacity of the output buffer.
+TEST(base64_to_binary_safe_garbage_stops_at_padding) {
+  const std::string input = "QU* J***D=***REVGREVGREVG";
+  const std::u16string input16(input.begin(), input.end());
+  for (simdutf::base64_options option :
+       {simdutf::base64_default_accept_garbage,
+        simdutf::base64_url_accept_garbage,
+        simdutf::base64_default_or_url_accept_garbage}) {
+    for (size_t capacity = 3; capacity <= 40; capacity++) {
+      std::vector<char> output(capacity, 0);
+      size_t outlen = output.size();
+      simdutf::result r = simdutf::base64_to_binary_safe(
+          input.data(), input.size(), output.data(), outlen, option);
+      ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+      ASSERT_EQUAL(outlen, 3);
+      ASSERT_EQUAL(std::string(output.data(), outlen), "ABC");
+
+      std::fill(output.begin(), output.end(), 0);
+      outlen = output.size();
+      r = simdutf::base64_to_binary_safe(input16.data(), input16.size(),
+                                         output.data(), outlen, option);
+      ASSERT_EQUAL(r.error, simdutf::error_code::SUCCESS);
+      ASSERT_EQUAL(outlen, 3);
+      ASSERT_EQUAL(std::string(output.data(), outlen), "ABC");
+    }
+  }
+}
+
 // Decode into a buffer of exactly binary_length_from_base64 bytes. A wide
 // store that sticks past that size shows up in the canary. Payload is 'A',
 // so every output byte is zero.
