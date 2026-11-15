@@ -206,10 +206,12 @@ convert_utf8_1_to_2_byte_to_utf16(uint8x16_t in, size_t shufutf8_idx) {
   #include "generic/base64lengths.h"
 #endif // SIMDUTF_FEATURE_BASE64
 
-#if SIMDUTF_FEATURE_DETECT_ENCODING && !SIMDUTF_IS_BIG_ENDIAN
-  #include "arm64/arm_detect_encodings.cpp"
-  #include "generic/detect_encodings.h"
-#endif // SIMDUTF_FEATURE_DETECT_ENCODING && !SIMDUTF_IS_BIG_ENDIAN
+#if SIMDUTF_FEATURE_DETECT_ENCODING
+  #if !SIMDUTF_IS_BIG_ENDIAN
+    #include "arm64/arm_detect_encodings.cpp"
+    #include "generic/detect_encodings.h"
+  #endif // !SIMDUTF_IS_BIG_ENDIAN
+#endif   // SIMDUTF_FEATURE_DETECT_ENCODING
 
 //
 // Implementation-specific overrides
