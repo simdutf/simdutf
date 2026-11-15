@@ -32,6 +32,7 @@ const char32_t *lsx_validate_utf32le(const char32_t *input, size_t size) {
   return input;
 }
 
+#if SIMDUTF_FEATURE_UTF32
 const result lsx_validate_utf32le_with_errors(const char32_t *input,
                                               size_t size) {
   const char32_t *start = input;
@@ -66,3 +67,4 @@ const result lsx_validate_utf32le_with_errors(const char32_t *input,
 
   return result(error_code::SUCCESS, input - start);
 }
+#endif // SIMDUTF_FEATURE_UTF32

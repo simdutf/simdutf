@@ -26,4 +26,46 @@ jobs:
              --test-implicit-all \
              --test-explicit-all \
              --test-singles \
-             --test-pairs
+             --test-pairs \
+             --test-all-but-one
+  cross-build:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: aarch64
+            package: g++-aarch64-linux-gnu
+            compiler: aarch64-linux-gnu-g++
+            flags: ""
+          - arch: ppc64le
+            package: g++-powerpc64le-linux-gnu
+            compiler: powerpc64le-linux-gnu-g++
+            flags: -mcpu=power8
+          - arch: loongarch64
+            package: g++-14-loongarch64-linux-gnu
+            compiler: loongarch64-linux-gnu-g++-14
+            flags: -mlasx
+          - arch: riscv64
+            package: g++-14-riscv64-linux-gnu
+            compiler: riscv64-linux-gnu-g++-14
+            flags: -march=rv64gcv
+    name: cross-build (${{matrix.arch}})
+    steps:
+      - uses: actions/checkout@v6
+      - name: install cross compiler
+        run: |
+          sudo apt-get update -q -y
+          sudo apt-get install -y ${{matrix.package}}
+      - name: selective amalgamation
+        run: |
+          scripts/amalgamation_tests.py \
+             --warnings \
+             --standard 17 \
+             --compiler ${{matrix.compiler}} \
+             --flags="${{matrix.flags}}" \
+             --test-implicit-all \
+             --test-explicit-all \
+             --test-singles \
+             --test-pairs \
+             --test-all-but-one

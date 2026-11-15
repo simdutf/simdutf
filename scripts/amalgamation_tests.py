@@ -9,6 +9,7 @@ import datetime
 import itertools
 import math
 import random
+import shlex
 
 
 def test_one(args, features):
@@ -43,7 +44,8 @@ def test_one(args, features):
         warnings = []
     subprocess.run(
         [args.compiler, "-c", "simdutf.cpp", "-I", ".", f"-std=c++{args.standard}"]
-        + warnings,
+        + warnings
+        + shlex.split(args.flags),
         check=True,
         cwd=builddir.name,
     )
@@ -88,6 +90,12 @@ def main():
     parser.add_argument("--keep-tmpdirs", action="store_true")
     parser.add_argument("--compiler", type=str, default="c++")
     parser.add_argument("--warnings", action="store_true")
+    parser.add_argument(
+        "--flags",
+        type=str,
+        default="",
+        help="extra compiler flags, e.g. the target architecture",
+    )
     parser.add_argument(
         "--test-implicit-all",
         action="store_true",
