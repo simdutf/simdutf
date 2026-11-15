@@ -2,6 +2,16 @@
 
 #include <tests/helpers/test.h>
 
+TEST(encoding_names) {
+  ASSERT_EQUAL(simdutf::to_string(simdutf::UTF8), "UTF8");
+  ASSERT_EQUAL(simdutf::to_string(simdutf::UTF16_LE), "UTF16 little-endian");
+  ASSERT_EQUAL(simdutf::to_string(simdutf::UTF16_BE), "UTF16 big-endian");
+  ASSERT_EQUAL(simdutf::to_string(simdutf::UTF32_LE), "UTF32 little-endian");
+  ASSERT_EQUAL(simdutf::to_string(simdutf::UTF32_BE), "UTF32 big-endian");
+  ASSERT_EQUAL(simdutf::to_string(simdutf::Latin1), "Latin1");
+  ASSERT_EQUAL(simdutf::to_string(simdutf::unspecified), "unknown");
+}
+
 #ifdef SIMDUTF_HAS_STD_TEXT_ENCODING
 
 TEST(to_std_encoding_unspecified) {

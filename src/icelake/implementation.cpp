@@ -102,6 +102,140 @@ namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 
 #if SIMDUTF_FEATURE_DETECT_ENCODING
+namespace {
+namespace encoding_detection {
+
+struct utf16le_checker {
+  uint32_t error = 0;
+  uint32_t ends_with_high = 0;
+
+  simdutf_really_inline void check(const __m512i data) {
+    const __m512i diff =
+        _mm512_sub_epi16(data, _mm512_set1_epi16(uint16_t(0xD800)));
+    const __mmask32 surrogates =
+        _mm512_cmplt_epu16_mask(diff, _mm512_set1_epi16(uint16_t(0x0800)));
+    const __mmask32 highsurrogates =
+        _mm512_cmplt_epu16_mask(diff, _mm512_set1_epi16(uint16_t(0x0400)));
+    const __mmask32 lowsurrogates = surrogates ^ highsurrogates;
+    error |= (((uint32_t(highsurrogates) << 1) | ends_with_high) !=
+              uint32_t(lowsurrogates));
+    ends_with_high = uint32_t(highsurrogates) >> 31;
+  }
+
+  simdutf_really_inline void check_ascii() {
+    error |= ends_with_high;
+    ends_with_high = 0;
+  }
+
+  simdutf_really_inline bool errors() const { return error != 0; }
+};
+
+struct utf32le_checker {
+  __m512i currentmax = _mm512_setzero_si512();
+  __m512i currentoffsetmax = _mm512_setzero_si512();
+
+  simdutf_really_inline void check(const __m512i data) {
+    const __m512i offset = _mm512_set1_epi32((uint32_t)0xffff2000);
+    currentoffsetmax =
+        _mm512_max_epu32(_mm512_add_epi32(data, offset), currentoffsetmax);
+    currentmax = _mm512_max_epu32(data, currentmax);
+  }
+
+  simdutf_really_inline bool errors() const {
+    const __mmask16 too_large = _mm512_cmpgt_epu32_mask(
+        currentmax, _mm512_set1_epi32((uint32_t)0x10ffff));
+    const __mmask16 surrogate = _mm512_cmpgt_epu32_mask(
+        currentoffsetmax, _mm512_set1_epi32((uint32_t)0xfffff7ff));
+    return (too_large | surrogate) != 0;
+  }
+};
+
+struct checkers {
+  avx512_utf8_checker utf8{};
+  utf16le_checker utf16{};
+  utf32le_checker utf32{};
+
+  template <bool check_utf8, bool check_utf16, bool check_utf32>
+  simdutf_really_inline void check_block(const __m512i in) {
+    if constexpr (check_utf8) {
+      const bool ascii = utf8.check_next_input(in);
+      if constexpr (check_utf16) {
+        if (ascii) {
+          utf16.check_ascii();
+        } else {
+          utf16.check(in);
+        }
+      }
+    } else if constexpr (check_utf16) {
+      utf16.check(in);
+    }
+    if constexpr (check_utf32) {
+      utf32.check(in);
+    }
+  }
+
+  simdutf_really_inline int still_valid(int active) const {
+    if ((active & encoding_type::UTF8) && utf8.errors()) {
+      active &= ~encoding_type::UTF8;
+    }
+    if ((active & encoding_type::UTF16_LE) && utf16.errors()) {
+      active &= ~encoding_type::UTF16_LE;
+    }
+    if ((active & encoding_type::UTF32_LE) && utf32.errors()) {
+      active &= ~encoding_type::UTF32_LE;
+    }
+    return active;
+  }
+};
+
+constexpr size_t stride = 16 * 64;
+
+template <bool check_utf8, bool check_utf16, bool check_utf32>
+size_t check_blocks(checkers &c, const char *input, size_t idx, size_t end,
+                    int &active) {
+  while (true) {
+    const size_t stop = (end - idx > stride) ? idx + stride : end;
+    for (; idx < stop; idx += 64) {
+      const __m512i in = _mm512_loadu_si512((const __m512i *)(input + idx));
+      c.check_block<check_utf8, check_utf16, check_utf32>(in);
+    }
+    const int valid = c.still_valid(active);
+    if (idx >= end || valid != active) {
+      active = valid;
+      return idx;
+    }
+  }
+}
+
+template <bool check_utf32>
+simdutf_really_inline int detect_short(const char *input, size_t length) {
+  checkers c{};
+  size_t idx = 0;
+  for (; length - idx >= 64; idx += 64) {
+    const __m512i in = _mm512_loadu_si512((const __m512i *)(input + idx));
+    c.check_block<true, true, check_utf32>(in);
+  }
+  const __mmask64 read_mask = (__mmask64(1) << (length - idx)) - 1;
+  const __m512i in =
+      _mm512_maskz_loadu_epi8(read_mask, (const __m512i *)(input + idx));
+  c.check_block<true, true, check_utf32>(in);
+  c.utf8.check_eof();
+  int out = 0;
+  if (!c.utf8.errors()) {
+    out |= encoding_type::UTF8;
+  }
+  if (!c.utf16.errors()) {
+    out |= encoding_type::UTF16_LE;
+  }
+  if (check_utf32 && !c.utf32.errors()) {
+    out |= encoding_type::UTF32_LE;
+  }
+  return out;
+}
+
+} // namespace encoding_detection
+} // unnamed namespace
+
 simdutf_warn_unused int
 implementation::detect_encodings(const char *input,
                                  size_t length) const noexcept {
@@ -110,75 +244,79 @@ implementation::detect_encodings(const char *input,
   if (bom_encoding != encoding_type::unspecified) {
     return bom_encoding;
   }
+  if (length < encoding_detection::stride) {
+    if (length % 2 == 1) {
+      return validate_utf8(input, length) ? encoding_type::UTF8 : 0;
+    }
+    return length % 4 == 0
+               ? encoding_detection::detect_short<true>(input, length)
+               : encoding_detection::detect_short<false>(input, length);
+  }
+  int active = encoding_type::UTF8;
+  if (length % 2 == 0) {
+    active |= encoding_type::UTF16_LE;
+  }
+  if (length % 4 == 0) {
+    active |= encoding_type::UTF32_LE;
+  }
+  constexpr int utf8 = encoding_type::UTF8;
+  constexpr int utf16 = encoding_type::UTF16_LE;
+  constexpr int utf32 = encoding_type::UTF32_LE;
 
-  int out = 0;
-  uint32_t utf16_err = (length % 2);
-  uint32_t utf32_err = (length % 4);
-  uint32_t ends_with_high = 0;
-  avx512_utf8_checker checker{};
-  const __m512i offset = _mm512_set1_epi32((uint32_t)0xffff2000);
-  __m512i currentmax = _mm512_setzero_si512();
-  __m512i currentoffsetmax = _mm512_setzero_si512();
-  const char *ptr = input;
-  const char *end = ptr + length;
-  for (; end - ptr >= 64; ptr += 64) {
-    // utf8 checks
-    const __m512i data = _mm512_loadu_si512((const __m512i *)ptr);
-    checker.check_next_input(data);
-
-    // utf16le_checks
-    __m512i diff = _mm512_sub_epi16(data, _mm512_set1_epi16(uint16_t(0xD800)));
-    __mmask32 surrogates =
-        _mm512_cmplt_epu16_mask(diff, _mm512_set1_epi16(uint16_t(0x0800)));
-    __mmask32 highsurrogates =
-        _mm512_cmplt_epu16_mask(diff, _mm512_set1_epi16(uint16_t(0x0400)));
-    __mmask32 lowsurrogates = surrogates ^ highsurrogates;
-    utf16_err |= (((highsurrogates << 1) | ends_with_high) != lowsurrogates);
-    ends_with_high = ((highsurrogates & 0x80000000) != 0);
-
-    // utf32le checks
-    currentoffsetmax =
-        _mm512_max_epu32(_mm512_add_epi32(data, offset), currentoffsetmax);
-    currentmax = _mm512_max_epu32(data, currentmax);
+  encoding_detection::checkers c{};
+  const size_t end = length - length % 64;
+  size_t idx = 0;
+  while (idx < end) {
+    switch (active) {
+    case utf8 | utf16 | utf32:
+    case utf8 | utf32:
+      idx = encoding_detection::check_blocks<true, true, true>(c, input, idx,
+                                                               end, active);
+      break;
+    case utf8 | utf16:
+      idx = encoding_detection::check_blocks<true, true, false>(c, input, idx,
+                                                                end, active);
+      break;
+    case utf8:
+      if (idx != 0) {
+        const size_t start = scalar::utf8::trim_partial_utf8(input, idx);
+        return validate_utf8(input + start, length - start) ? utf8 : 0;
+      }
+      idx = encoding_detection::check_blocks<true, false, false>(
+          c, input, idx, detail::min(end, encoding_detection::stride), active);
+      break;
+    case utf16 | utf32:
+      idx = encoding_detection::check_blocks<false, true, true>(c, input, idx,
+                                                                end, active);
+      break;
+    case utf16:
+      idx = encoding_detection::check_blocks<false, true, false>(c, input, idx,
+                                                                 end, active);
+      break;
+    case utf32:
+      idx = encoding_detection::check_blocks<false, false, true>(c, input, idx,
+                                                                 end, active);
+      break;
+    default:
+      return 0;
+    }
   }
 
   // last block with 0 <= len < 64
-  __mmask64 read_mask = (__mmask64(1) << (end - ptr)) - 1;
-  const __m512i data = _mm512_maskz_loadu_epi8(read_mask, (const __m512i *)ptr);
-  checker.check_next_input(data);
-
-  __m512i diff = _mm512_sub_epi16(data, _mm512_set1_epi16(uint16_t(0xD800)));
-  __mmask32 surrogates =
-      _mm512_cmplt_epu16_mask(diff, _mm512_set1_epi16(uint16_t(0x0800)));
-  __mmask32 highsurrogates =
-      _mm512_cmplt_epu16_mask(diff, _mm512_set1_epi16(uint16_t(0x0400)));
-  __mmask32 lowsurrogates = surrogates ^ highsurrogates;
-  utf16_err |= (((highsurrogates << 1) | ends_with_high) != lowsurrogates);
-
-  currentoffsetmax =
-      _mm512_max_epu32(_mm512_add_epi32(data, offset), currentoffsetmax);
-  currentmax = _mm512_max_epu32(data, currentmax);
-
-  const __m512i standardmax = _mm512_set1_epi32((uint32_t)0x10ffff);
-  const __m512i standardoffsetmax = _mm512_set1_epi32((uint32_t)0xfffff7ff);
-  __m512i is_zero =
-      _mm512_xor_si512(_mm512_max_epu32(currentmax, standardmax), standardmax);
-  utf32_err |= (_mm512_test_epi8_mask(is_zero, is_zero) != 0);
-  is_zero = _mm512_xor_si512(
-      _mm512_max_epu32(currentoffsetmax, standardoffsetmax), standardoffsetmax);
-  utf32_err |= (_mm512_test_epi8_mask(is_zero, is_zero) != 0);
-  checker.check_eof();
-  bool is_valid_utf8 = !checker.errors();
-  if (is_valid_utf8) {
-    out |= encoding_type::UTF8;
+  const __mmask64 read_mask = (__mmask64(1) << (length - idx)) - 1;
+  const __m512i data =
+      _mm512_maskz_loadu_epi8(read_mask, (const __m512i *)(input + idx));
+  if (active & utf8) {
+    c.utf8.check_next_input(data);
+    c.utf8.check_eof();
   }
-  if (utf16_err == 0) {
-    out |= encoding_type::UTF16_LE;
+  if (active & utf16) {
+    c.utf16.check(data);
   }
-  if (utf32_err == 0) {
-    out |= encoding_type::UTF32_LE;
+  if (active & utf32) {
+    c.utf32.check(data);
   }
-  return out;
+  return c.still_valid(active);
 }
 #endif // SIMDUTF_FEATURE_DETECT_ENCODING
 
