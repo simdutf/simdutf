@@ -27,12 +27,10 @@ using namespace simd;
   #include "icelake/icelake_utf8_validation.inl.cpp"
 #endif // SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 
-#if SIMDUTF_FEATURE_UTF8 &&                                                    \
-    (SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_LATIN1)
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
   #include "icelake/icelake_from_valid_utf8.inl.cpp"
   #include "icelake/icelake_from_utf8.inl.cpp"
-#endif // SIMDUTF_FEATURE_UTF8 && (SIMDUTF_FEATURE_UTF16 ||
-       // SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_LATIN1)
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF16
   #include "icelake/icelake_utf16fix.cpp"
@@ -56,9 +54,9 @@ using namespace simd;
   #include "icelake/icelake_convert_utf16_to_utf32.inl.cpp"
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 
-#if SIMDUTF_FEATURE_UTF32
+#if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
   #include "icelake/icelake_convert_utf32_to_latin1.inl.cpp"
-#endif // SIMDUTF_FEATURE_UTF32
+#endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
   #include "icelake/icelake_convert_utf32_to_utf8.inl.cpp"
@@ -74,15 +72,15 @@ using namespace simd;
 #if SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
   #include "icelake/icelake_utf32_validation.inl.cpp"
 #endif // SIMDUTF_FEATURE_UTF32 || SIMDUTF_FEATURE_DETECT_ENCODING
-#if SIMDUTF_FEATURE_UTF8
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
   #include "icelake/icelake_convert_latin1_to_utf8.inl.cpp"
-#endif // SIMDUTF_FEATURE_UTF8
+#endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 #if SIMDUTF_FEATURE_UTF16
   #include "icelake/icelake_convert_latin1_to_utf16.inl.cpp"
 #endif // SIMDUTF_FEATURE_UTF16
-#if SIMDUTF_FEATURE_UTF32
+#if SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
   #include "icelake/icelake_convert_latin1_to_utf32.inl.cpp"
-#endif // SIMDUTF_FEATURE_UTF32
+#endif // SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1
 #if SIMDUTF_FEATURE_BASE64
   #include "icelake/icelake_base64.inl.cpp"
   #include "icelake/icelake_find.inl.cpp"

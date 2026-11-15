@@ -266,6 +266,8 @@ template <typename T> struct simd16x32 {
   }
 }; // struct simd16x32<T>
 
+#if SIMDUTF_FEATURE_UTF16
 simd16<uint16_t> min(const simd16<uint16_t> a, simd16<uint16_t> b) {
   return _mm256_min_epu16(a.value, b.value);
 }
+#endif // SIMDUTF_FEATURE_UTF16

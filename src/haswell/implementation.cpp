@@ -8,13 +8,11 @@ namespace {
 #endif
 using namespace simd;
 
-#if SIMDUTF_FEATURE_ASCII || SIMDUTF_FEATURE_DETECT_ENCODING ||                \
-    SIMDUTF_FEATURE_UTF8
+#if SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 simdutf_really_inline bool is_ascii(const simd8x64<uint8_t> &input) {
   return input.reduce_or().is_ascii();
 }
-#endif // SIMDUTF_FEATURE_ASCII || SIMDUTF_FEATURE_DETECT_ENCODING ||
-       // SIMDUTF_FEATURE_UTF8
+#endif // SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 simdutf_really_inline simd8<bool>

@@ -37,13 +37,11 @@ simdutf_really_inline __m128i lsx_swap_bytes(__m128i vec) {
 }
 #endif // SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_UTF32
 
-#if SIMDUTF_FEATURE_ASCII || SIMDUTF_FEATURE_DETECT_ENCODING ||                \
-    SIMDUTF_FEATURE_UTF8
+#if SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 simdutf_really_inline bool is_ascii(const simd8x64<uint8_t> &input) {
   return input.is_ascii();
 }
-#endif // SIMDUTF_FEATURE_ASCII || SIMDUTF_FEATURE_DETECT_ENCODING ||
-       // SIMDUTF_FEATURE_UTF8
+#endif // SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 simdutf_really_inline simd8<bool>

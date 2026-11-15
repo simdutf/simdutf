@@ -613,6 +613,7 @@ simdutf_really_inline size_t utf32_to_utf16(const __m512i byteflip,
   return count + static_cast<unsigned int>(count_ones(sp_mask));
 }
 
+#if SIMDUTF_FEATURE_UTF32
 /*
     expanded_utf8_to_utf32 converts expanded UTF-8 characters (`utf8`)
     stored at separate 32-bit lanes.
@@ -757,6 +758,7 @@ simdutf_really_inline __m512i expand_utf8_to_utf32(__m512i input) {
       _mm512_ternarylogic_epi32(char_class, v_0000_000f, v_8080_8000, 0xea);
   return expanded_utf8_to_utf32(char_class, input);
 }
+#endif // SIMDUTF_FEATURE_UTF32
 
 simdutf_really_inline size_t utf8_count_continuations(__m512i input) {
   __m512i mask_c0c0_c0c0 = _mm512_set1_epi32(0xc0c0c0c0);

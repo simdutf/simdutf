@@ -46,6 +46,7 @@ simdutf_really_inline bool validate(const char32_t *input, size_t size) {
   return scalar::utf32::validate(input, end - input);
 }
 
+#if SIMDUTF_FEATURE_UTF32
 simdutf_really_inline result validate_with_errors(const char32_t *input,
                                                   size_t size) {
   if (simdutf_unlikely(size == 0)) {
@@ -92,6 +93,7 @@ simdutf_really_inline result validate_with_errors(const char32_t *input,
 
   return sr;
 }
+#endif // SIMDUTF_FEATURE_UTF32
 
 } // namespace utf32
 } // unnamed namespace
