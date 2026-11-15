@@ -112,7 +112,9 @@ simdutf_warn_unused simdutf_constexpr23 result base64_to_binary_safe_impl(
     return {r.error, input_position};
   }
 
-  if (done_with_partial) {
+  const bool ignore_garbage = (options & base64_default_accept_garbage) != 0;
+  if (done_with_partial || (ignore_garbage && input_position > 0 &&
+                            input[input_position - 1] == '=')) {
     // We are done. We have decoded everything.
     outlen = output_position;
     return {simdutf::error_code::SUCCESS, input_position};
@@ -137,7 +139,8 @@ simdutf_warn_unused simdutf_constexpr23 result base64_to_binary_safe_impl(
     outlen = output_position;
     return {r.error, input_position};
   }
-  if (input_position < length) {
+  if (input_position < length && !(ignore_garbage && input_position > 0 &&
+                                   input[input_position - 1] == '=')) {
     // We cannot process the entire input in one go, so we need to
     // process it in two steps: first the fast path, then the slow path.
     // In some cases, the processing might 'eat up' trailing ignorable
