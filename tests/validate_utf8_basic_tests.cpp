@@ -276,4 +276,26 @@ TEST(tail_non_ascii_in_multibyte_text) {
   }
 }
 
+TEST(errors_in_long_inputs) {
+  constexpr size_t len = 5000;
+  const std::string base_inputs[] = {
+      std::string(len, 'a'), repeat("\xc3\xa9", len),
+      repeat("\xe4\xb8\xad", len), repeat("\xf0\x9f\x98\x80", len),
+      repeat(std::string(1500, 'a') + repeat("\xe4\xb8\xad", 1500), len)};
+  for (const std::string &base : base_inputs) {
+    for (std::string_view pattern : tail_patterns) {
+      for (size_t pos = 0; pos < len; pos++) {
+        const size_t near_checkpoint = (pos + 70) % 1024;
+        if (near_checkpoint >= 140 && pos % 61 != 0) {
+          continue;
+        }
+        std::string s = base;
+        s.replace(pos, std::min(pattern.size(), len - pos), pattern.data(),
+                  std::min(pattern.size(), len - pos));
+        check_tail(implementation, s);
+      }
+    }
+  }
+}
+
 TEST_MAIN

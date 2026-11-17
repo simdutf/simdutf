@@ -46,9 +46,16 @@ template <class checker>
 bool generic_validate_utf8(const uint8_t *input, size_t length) {
   checker c{};
   buf_block_reader<64> reader(input, length);
+  size_t next_check = 1024;
   while (reader.has_full_block()) {
     simd::simd8x64<uint8_t> in(reader.full_block());
-    c.check_next_input(in);
+    if (!c.check_next_input(in) &&
+        simdutf_unlikely(reader.block_index() >= next_check)) {
+      if (c.errors()) {
+        return false;
+      }
+      next_check = reader.block_index() + 1024;
+    }
     reader.advance();
   }
   check_remainder(c, input, length, reader.block_index());
