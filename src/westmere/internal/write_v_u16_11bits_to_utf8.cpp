@@ -52,6 +52,7 @@ inline void write_v_u16_11bits_to_utf8(const __m128i v_u16, char *&utf8_output,
   utf8_output += row[0];
 }
 
+#if SIMDUTF_FEATURE_LATIN1
 inline void write_v_u16_11bits_to_utf8(const __m128i v_u16, char *&utf8_output,
                                        const __m128i v_0000,
                                        const __m128i v_ff80) {
@@ -64,3 +65,4 @@ inline void write_v_u16_11bits_to_utf8(const __m128i v_u16, char *&utf8_output,
   write_v_u16_11bits_to_utf8(v_u16, utf8_output, one_byte_bytemask,
                              one_byte_bitmask);
 }
+#endif // SIMDUTF_FEATURE_LATIN1

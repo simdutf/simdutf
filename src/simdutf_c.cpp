@@ -1,6 +1,13 @@
 #include "simdutf_c.h"
 #include "simdutf/implementation.h"
 
+/* The C wrapper depends on the library features. Only expose the C API
+   (and the conversion helpers it uses) when all relevant features are
+   enabled. This helps the single-header generator to omit the C wrapper
+   when features are disabled, and avoids unused-function warnings. */
+// clang-format off
+#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1 && SIMDUTF_FEATURE_ASCII && SIMDUTF_FEATURE_BASE64 && SIMDUTF_FEATURE_DETECT_ENCODING
+// clang-format on
 static simdutf_result to_c_result(const simdutf::result &r) {
   simdutf_result out;
   out.error = static_cast<simdutf_error_code>(r.error);
@@ -59,13 +66,6 @@ from_c_utf8_to_utf16_result(const simdutf_utf8_to_utf16_result *r) {
   return out;
 }
 
-/* The C wrapper depends on the library features. Only expose the C API
-   when all relevant feature is enabled. This helps the
-   single-header generator to omit the C wrapper when features are
-   disabled. */
-// clang-format off
-#if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32 && SIMDUTF_FEATURE_LATIN1 && SIMDUTF_FEATURE_ASCII && SIMDUTF_FEATURE_BASE64 && SIMDUTF_FEATURE_DETECT_ENCODING
-// clang-format on
 extern "C" {
 
 bool simdutf_validate_utf8(const char *buf, size_t len) {

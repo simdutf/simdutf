@@ -5,7 +5,8 @@ namespace utf8 {
 
 using namespace simd;
 
-simdutf_really_inline size_t count_code_points(const char *in, size_t size) {
+simdutf_unused simdutf_really_inline size_t count_code_points(const char *in,
+                                                              size_t size) {
   size_t pos = 0;
   size_t count = 0;
   for (; pos + 64 <= size; pos += 64) {
@@ -69,8 +70,8 @@ count_code_points_bytemask(const char *in, size_t size) {
 }
 #endif // SIMDUTF_SIMD_HAS_BYTEMASK
 
-simdutf_really_inline size_t utf16_length_from_utf8(const char *in,
-                                                    size_t size) {
+simdutf_unused simdutf_really_inline size_t
+utf16_length_from_utf8(const char *in, size_t size) {
   size_t pos = 0;
   size_t count = 0;
   // This algorithm could no doubt be improved!

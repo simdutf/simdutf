@@ -10,6 +10,7 @@ namespace {
 #endif
 using namespace simd;
 
+#if SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 simdutf_really_inline bool is_ascii(const simd8x64<uint8_t> &input) {
   // careful: 0x80 is not ascii.
   return input.reduce_or().saturating_sub(0b01111111u).bits_not_set_anywhere();
@@ -26,6 +27,7 @@ must_be_2_3_continuation(const simd8<uint8_t> prev2,
   // will be <= 64, so signed comparison is fine.
   return simd8<bool>(is_third_byte | is_fourth_byte);
 }
+#endif // SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 /// ErrorReporting describes behaviour of a vectorized procedure regarding error
 /// checking

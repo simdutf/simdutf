@@ -67,6 +67,7 @@ bool generic_validate_utf8(const char *input, size_t length) {
       reinterpret_cast<const uint8_t *>(input), length);
 }
 
+#if SIMDUTF_FEATURE_UTF8
 /**
  * Validates that the string is actual UTF-8 and stops on errors.
  */
@@ -162,11 +163,12 @@ utf8_result generic_validate_utf8_with_counts(const uint8_t *input,
   }
 }
 
-simdutf_really_inline utf8_result
+simdutf_unused simdutf_really_inline utf8_result
 generic_validate_utf8_with_counts(const char *input, size_t length) {
   return generic_validate_utf8_with_counts<utf8_segmenter>(
       reinterpret_cast<const uint8_t *>(input), length);
 }
+#endif // SIMDUTF_FEATURE_UTF8
 
 } // namespace utf8_validation
 } // unnamed namespace
