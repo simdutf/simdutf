@@ -420,6 +420,40 @@ TEST_LOOP(surrogate_error) {
   }
 }
 
+TEST(output_before_error_is_kept) {
+  const std::vector<std::vector<unsigned char>> errors = {
+      {0xff}, {0x80}, {0xed, 0xa0, 0x80}, {0xc3}};
+  for (const auto &error : errors) {
+    for (size_t tail : {0, 10}) {
+      for (size_t prefix = 0; prefix < 260; prefix++) {
+        std::vector<unsigned char> input;
+        std::vector<char16_t> expected;
+        while (input.size() < prefix) {
+          if ((input.size() % 7 == 3 || input.size() + 2 == prefix) &&
+              input.size() + 1 < prefix) {
+            input.push_back(0xc3);
+            input.push_back(0xa9);
+            expected.push_back(to_utf16le(char16_t(0xe9)));
+          } else {
+            input.push_back(uint8_t('a' + input.size() % 26));
+            expected.push_back(to_utf16le(char16_t(input.back())));
+          }
+        }
+        const size_t error_pos = input.size();
+        input.insert(input.end(), error.begin(), error.end());
+        input.insert(input.end(), tail, 'c');
+        std::vector<char16_t> output(implementation.utf16_length_from_utf8(
+            (const char *)input.data(), input.size()));
+        const auto r = implementation.convert_utf8_to_utf16le_with_errors(
+            (const char *)input.data(), input.size(), output.data());
+        ASSERT_TRUE(r.error != simdutf::error_code::SUCCESS);
+        ASSERT_EQUAL(r.count, error_pos);
+        ASSERT_BYTES_EQUAL(output, expected, expected.size());
+      }
+    }
+  }
+}
+
 #if SIMDUTF_CPLUSPLUS23
 
 namespace {
