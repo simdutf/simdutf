@@ -55,8 +55,33 @@ namespace BOM {
  * @return the corresponding encoding
  */
 
-simdutf_warn_unused encoding_type check_bom(const uint8_t *byte, size_t length);
-simdutf_warn_unused encoding_type check_bom(const char *byte, size_t length);
+template <typename BytePtr>
+simdutf_warn_unused simdutf_constexpr23 encoding_type check_bom(BytePtr byte,
+                                                                size_t length) {
+  // Cast to uint8_t to handle signed char comparisons correctly
+  if (length >= 2 && uint8_t(byte[0]) == 0xff && uint8_t(byte[1]) == 0xfe) {
+    if (length >= 4 && uint8_t(byte[2]) == 0x00 && uint8_t(byte[3]) == 0x00) {
+      return encoding_type::UTF32_LE;
+    } else {
+      return encoding_type::UTF16_LE;
+    }
+  } else if (length >= 2 && uint8_t(byte[0]) == 0xfe &&
+             uint8_t(byte[1]) == 0xff) {
+    return encoding_type::UTF16_BE;
+  } else if (length >= 4 && uint8_t(byte[0]) == 0x00 &&
+             uint8_t(byte[1]) == 0x00 && uint8_t(byte[2]) == 0xfe &&
+             uint8_t(byte[3]) == 0xff) {
+    return encoding_type::UTF32_BE;
+  } else if (length >= 3 && uint8_t(byte[0]) == 0xef &&
+             uint8_t(byte[1]) == 0xbb && uint8_t(byte[2]) == 0xbf) {
+    return encoding_type::UTF8;
+  }
+  return encoding_type::unspecified;
+}
+
+simdutf_really_inline encoding_type check_bom(const char *byte, size_t length) {
+  return check_bom(reinterpret_cast<const uint8_t *>(byte), length);
+}
 /**
  * Returns the size, in bytes, of the BOM for a given encoding type.
  * Note that UTF8 BOM are discouraged.
