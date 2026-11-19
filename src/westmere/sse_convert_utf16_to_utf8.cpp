@@ -60,9 +60,7 @@ sse_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_output) {
   const __m128i v_0000 = _mm_setzero_si128();
   const __m128i v_f800 = _mm_set1_epi16((int16_t)0xf800);
   const __m128i v_d800 = _mm_set1_epi16((int16_t)0xd800);
-  const size_t safety_margin =
-      12; // to avoid overruns, see issue
-          // https://github.com/simdutf/simdutf/issues/92
+  const size_t safety_margin = 12; // proved in formal/safety_margins
 
   while (end - buf >= std::ptrdiff_t(16 + safety_margin)) {
     __m128i in = _mm_loadu_si128((__m128i *)buf);
@@ -289,9 +287,7 @@ sse_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
   const __m128i v_0000 = _mm_setzero_si128();
   const __m128i v_f800 = _mm_set1_epi16((int16_t)0xf800);
   const __m128i v_d800 = _mm_set1_epi16((int16_t)0xd800);
-  const size_t safety_margin =
-      12; // to avoid overruns, see issue
-          // https://github.com/simdutf/simdutf/issues/92
+  const size_t safety_margin = 12; // proved in formal/safety_margins
 
   while (end - buf >= std::ptrdiff_t(16 + safety_margin)) {
     __m128i in = _mm_loadu_si128((__m128i *)buf);

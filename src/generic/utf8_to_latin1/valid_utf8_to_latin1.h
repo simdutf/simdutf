@@ -4,6 +4,18 @@ namespace {
 namespace utf8_to_latin1 {
 using namespace simd;
 
+// Leading bytes counted back from the end of the input for the dynamic
+// safety margin of convert_valid: the least value proved in
+// formal/safety_margins (ValidLatin1.lean) for the valid,
+// Latin-1-representable input this function requires. The LoongArch stores
+// need 0, but the 16-byte loads at pos + 51 need at least 2; the other
+// kernels' stores need 3.
+#if defined(SIMDUTF_IS_LSX) || defined(SIMDUTF_IS_LASX)
+constexpr size_t valid_latin1_leading_bytes = 2;
+#else
+constexpr size_t valid_latin1_leading_bytes = 3;
+#endif
+
 simdutf_really_inline size_t convert_valid(const char *in, size_t size,
                                            char *latin1_output) {
   size_t pos = 0;
@@ -11,16 +23,16 @@ simdutf_really_inline size_t convert_valid(const char *in, size_t size,
   // In the worst case, we have the haswell kernel which can cause an overflow
   // of 4 bytes when calling convert_masked_utf8_to_latin1. If you skip the last
   // 16 bytes, then it is entirely safe because 16 valid UTF-8 bytes generate
-  // at least 4 bytes. We go back from the end counting 8 leading bytes, which
-  // gives us a good margin.
+  // at least 4 bytes. We go back from the end counting
+  // valid_latin1_leading_bytes leading bytes.
   size_t leading_byte = 0;
   size_t margin = size;
-  for (; margin > 0 && leading_byte < 8; margin--) {
+  for (; margin > 0 && leading_byte < valid_latin1_leading_bytes; margin--) {
     leading_byte += (int8_t(in[margin - 1]) >
                      -65); // twos complement of -65 is 1011 1111 ...
   }
-  // If the input is long enough, then we have that margin is the eighth last
-  // leading byte.
+  // If the input is long enough, then margin is the position of the
+  // valid_latin1_leading_bytes-th last leading byte.
   const size_t safety_margin = size - margin + 1; // to avoid overruns!
   while (pos + 64 + safety_margin <= size) {
     simd8x64<int8_t> input(reinterpret_cast<const int8_t *>(in + pos));

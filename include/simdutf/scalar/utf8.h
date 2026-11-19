@@ -418,8 +418,10 @@ inline simdutf_warn_unused utf8_result rewind_and_validate_with_counts(
   // ending exactly on the boundary; the fourth step then lands on its leading
   // byte. Note that the sibling rewind_and_validate_with_errors needs five
   // steps only because it tests the byte before stepping back, whereas we step
-  // back first. Callers pass a block boundary at least 64 bytes into the
-  // stream, so stepping back four bytes stays in bounds.
+  // back first. The scan stays in bounds: the first byte of the stream is not
+  // a continuation byte (checked above), so the loop stops at it at the
+  // latest, even when buf is fewer than four bytes into the stream (the
+  // icelake validate_utf8_with_counts can pass 1, 2 or 3).
   for (int i = 0; i < 4; i++) {
     // We rewind at least one byte to find the actual previous leading byte.
     // We do so to backtrack into the last chunk in case the utf8 error happened

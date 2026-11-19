@@ -45,9 +45,11 @@ simdutf_really_inline result convert_with_errors_prefix(
 
 // Haswell stores 16 bytes and then commits as few as 4 char16_t, leaving up
 // to 8 bytes past the valid prefix. The caller may size the buffer to exactly
-// the replacement length. Holding back 32 input bytes leaves at least 16
-// char16_t of that buffer (4-byte UTF-8 becomes 2 char16_t), which covers the
-// spill. The cut is on a character boundary when the input is valid.
+// the replacement length. Holding back 32 input bytes leaves at least 11
+// char16_t of that buffer (a replacement character consumes at most 3 bytes,
+// and a valid character gives at least one char16_t per 3 bytes; see
+// Replacement.count_ge_11 in formal/safety_margins), which covers the spill.
+// The cut is on a character boundary when the input is valid.
 constexpr size_t kernel_overflow_tail = 32;
 
 simdutf_really_inline size_t utf8_boundary_before(const char *input,

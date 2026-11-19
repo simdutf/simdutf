@@ -57,9 +57,7 @@ lasx_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_out) {
   uint8_t *utf8_output = reinterpret_cast<uint8_t *>(utf8_out);
   const char16_t *end = buf + len;
 
-  const size_t safety_margin =
-      12; // to avoid overruns, see issue
-          // https://github.com/simdutf/simdutf/issues/92
+  const size_t safety_margin = 12; // proved in formal/safety_margins
 
   __m256i v_07ff = __lasx_xvreplgr2vr_h(uint16_t(0x7ff));
   __m256i zero = __lasx_xvldi(0);
@@ -309,9 +307,7 @@ lasx_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
   const char16_t *start = buf;
   const char16_t *end = buf + len;
 
-  const size_t safety_margin =
-      12; // to avoid overruns, see issue
-          // https://github.com/simdutf/simdutf/issues/92
+  const size_t safety_margin = 12; // proved in formal/safety_margins
 
   __m256i v_07ff = __lasx_xvreplgr2vr_h(uint16_t(0x7ff));
   __m256i zero = __lasx_xvldi(0);
