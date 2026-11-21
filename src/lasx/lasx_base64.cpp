@@ -681,7 +681,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
 
   constexpr size_t block_size = 6;
   static_assert(block_size >= 2, "block_size must be at least two");
-  char buffer[block_size * 64];
+  simdutf_indeterminate char buffer[block_size * 64];
   char *bufferptr = buffer;
   // See src/generic/base64.h: wide stores inside a group of four clean
   // blocks, exact tail on the fourth.

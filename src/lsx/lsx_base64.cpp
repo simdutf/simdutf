@@ -669,7 +669,7 @@ compress_decode_base64(char *dst, const char_type *src, size_t srclen,
   const char_type *srcend = src + srclen;
 
   constexpr size_t block_size = 10;
-  char buffer[block_size * 64];
+  simdutf_indeterminate char buffer[block_size * 64];
   char *bufferptr = buffer;
   if (srclen >= 64) {
     const char_type *const srcend64 = src + srclen - 64;
