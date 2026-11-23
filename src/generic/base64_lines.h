@@ -1,3 +1,9 @@
+/**
+ * Fast path for base64 split into lines of a fixed length (MIME, PEM).
+ *
+ * Inspired by ffbase64 by Peter Fors, a decoder specialized for MIME base64
+ * with 76-character CRLF lines: https://github.com/vtlmks/ffbase64
+ */
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 namespace {
