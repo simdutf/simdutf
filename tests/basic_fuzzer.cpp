@@ -353,6 +353,24 @@ private:
   }
 };
 
+// The length functions are an upper bound on stores, including when the
+// conversion rejects the input and returns 0. An exact-size buffer hides an
+// overrun unless ASan is on.
+constexpr size_t utf8_output_canary = 32;
+
+template <typename T> void fill_utf8_output_canary(T *output, size_t valid) {
+  for (size_t i = 0; i < utf8_output_canary; i++) {
+    output[valid + i] = static_cast<T>(0xA5A5u + i);
+  }
+}
+
+template <typename T>
+void assert_utf8_output_canary(const T *output, size_t valid) {
+  for (size_t i = 0; i < utf8_output_canary; i++) {
+    ASSERT_EQUAL(uint32_t(output[valid + i]), 0xA5A5u + uint32_t(i));
+  }
+}
+
 TEST(garbage_utf8_fuzz_with_errors) {
   // Here we generate fully random inputs and try transcoding from UTF-8.
   // The inputs are almost certainly *NOT* valid UTF-8.
@@ -373,12 +391,14 @@ TEST(garbage_utf8_fuzz_with_errors) {
     size_t expected_utf16_length =
         implementation.utf16_length_from_utf8(utf8_buffer.get(), length);
     std::unique_ptr<char16_t[]> utf16_buffer(
-        new char16_t[expected_utf16_length]);
+        new char16_t[expected_utf16_length + utf8_output_canary]);
+    fill_utf8_output_canary(utf16_buffer.get(), expected_utf16_length);
     auto r = implementation.convert_utf8_to_utf16le_with_errors(
         utf8_buffer.get(), length, utf16_buffer.get());
     // r.count: In case of error, indicates the position of the error in the
     // input. In case of success, indicates the number of code units
     // validated/written.
+    assert_utf8_output_canary(utf16_buffer.get(), expected_utf16_length);
     if (r.error == simdutf::SUCCESS) {
       ASSERT_EQUAL(r.count, expected_utf16_length);
     } else {
@@ -386,6 +406,7 @@ TEST(garbage_utf8_fuzz_with_errors) {
     }
     r = implementation.convert_utf8_to_utf16be_with_errors(
         utf8_buffer.get(), length, utf16_buffer.get());
+    assert_utf8_output_canary(utf16_buffer.get(), expected_utf16_length);
     if (r.error == simdutf::SUCCESS) {
       ASSERT_EQUAL(r.count, expected_utf16_length);
     } else {
@@ -394,9 +415,11 @@ TEST(garbage_utf8_fuzz_with_errors) {
     size_t expected_utf32_length =
         implementation.utf32_length_from_utf8(utf8_buffer.get(), length);
     std::unique_ptr<char32_t[]> utf32_buffer(
-        new char32_t[expected_utf32_length]);
+        new char32_t[expected_utf32_length + utf8_output_canary]);
+    fill_utf8_output_canary(utf32_buffer.get(), expected_utf32_length);
     r = implementation.convert_utf8_to_utf32_with_errors(
         utf8_buffer.get(), length, utf32_buffer.get());
+    assert_utf8_output_canary(utf32_buffer.get(), expected_utf32_length);
     if (r.error == simdutf::SUCCESS) {
       ASSERT_EQUAL(r.count, expected_utf32_length);
     } else {
@@ -425,23 +448,28 @@ TEST(garbage_utf8_fuzz) {
     size_t expected_utf16_length =
         implementation.utf16_length_from_utf8(utf8_buffer.get(), length);
     std::unique_ptr<char16_t[]> utf16_buffer(
-        new char16_t[expected_utf16_length]);
+        new char16_t[expected_utf16_length + utf8_output_canary]);
+    fill_utf8_output_canary(utf16_buffer.get(), expected_utf16_length);
     auto r = implementation.convert_utf8_to_utf16le(utf8_buffer.get(), length,
                                                     utf16_buffer.get());
+    assert_utf8_output_canary(utf16_buffer.get(), expected_utf16_length);
     if (r != 0) {
       ASSERT_EQUAL(r, expected_utf16_length);
     }
     r = implementation.convert_utf8_to_utf16be(utf8_buffer.get(), length,
                                                utf16_buffer.get());
+    assert_utf8_output_canary(utf16_buffer.get(), expected_utf16_length);
     if (r != 0) {
       ASSERT_EQUAL(r, expected_utf16_length);
     }
     size_t expected_utf32_length =
         implementation.utf32_length_from_utf8(utf8_buffer.get(), length);
     std::unique_ptr<char32_t[]> utf32_buffer(
-        new char32_t[expected_utf32_length]);
+        new char32_t[expected_utf32_length + utf8_output_canary]);
+    fill_utf8_output_canary(utf32_buffer.get(), expected_utf32_length);
     r = implementation.convert_utf8_to_utf32(utf8_buffer.get(), length,
                                              utf32_buffer.get());
+    assert_utf8_output_canary(utf32_buffer.get(), expected_utf32_length);
     if (r != 0) {
       ASSERT_EQUAL(r, expected_utf32_length);
     }
