@@ -238,7 +238,15 @@ utf16_length_from_utf8_with_replacement(const char *input,
                                         size_t length) noexcept {
   utf8_to_utf16_result out;
   size_t pos = 0;
+  int short_prefixes = 0;
   while (pos < length) {
+    if (short_prefixes >= 2 &&
+        out.error_count == utf8_to_utf16_result::max_errors) {
+      out.count += scalar::utf8_to_utf16::count_with_replacement(input + pos,
+                                                                 length - pos);
+      out.more_errors = true;
+      return out;
+    }
     const utf8_result validation =
         validate_utf8_with_counts(input + pos, length - pos);
     if (validation.error == error_code::SUCCESS) {
@@ -267,6 +275,11 @@ utf16_length_from_utf8_with_replacement(const char *input,
       out.error_count += 1;
     } else {
       out.more_errors = true;
+    }
+    if (validation.input_count >= dense_prefix_limit) {
+      short_prefixes = 0;
+    } else if (validation.input_count != 0) {
+      short_prefixes += 1;
     }
     pos = err + skip;
   }

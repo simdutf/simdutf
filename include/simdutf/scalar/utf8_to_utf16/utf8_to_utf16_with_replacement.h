@@ -125,6 +125,15 @@ simdutf_constexpr23 size_t transcode_with_replacement(
         }
       }
     }
+    if (needed == 0) {
+      while (i < len && uint8_t(static_cast<unsigned char>(data[i])) < 0x80) {
+        store(uint8_t(static_cast<unsigned char>(data[i])));
+        i++;
+      }
+      if (i == len) {
+        break;
+      }
+    }
     const uint8_t b = uint8_t(static_cast<unsigned char>(data[i]));
     if (needed == 0) {
       i++;
