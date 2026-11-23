@@ -31,6 +31,13 @@ simdutf_warn_unused size_t convert_valid(const char *input, size_t size,
       }
     }
   }
+  const size_t ascii =
+      validating_transcoder::convert_ascii_tail(input, pos, size, utf32_output);
+  pos += ascii;
+  utf32_output += ascii;
+  if (pos == size) {
+    return utf32_output - start;
+  }
   utf32_output += scalar::utf8_to_utf32::convert_valid(input + pos, size - pos,
                                                        utf32_output);
   return utf32_output - start;

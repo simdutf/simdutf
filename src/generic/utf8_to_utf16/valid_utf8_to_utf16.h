@@ -63,6 +63,13 @@ simdutf_warn_unused size_t convert_valid(const char *input, size_t size,
       // 85% to 90% efficiency.
     }
   }
+  const size_t ascii = validating_transcoder::convert_ascii_tail<endian>(
+      input, pos, size, utf16_output);
+  pos += ascii;
+  utf16_output += ascii;
+  if (pos == size) {
+    return utf16_output - start;
+  }
   utf16_output += scalar::utf8_to_utf16::convert_valid<endian>(
       input + pos, size - pos, utf16_output);
   return utf16_output - start;

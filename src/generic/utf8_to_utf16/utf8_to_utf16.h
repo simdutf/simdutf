@@ -126,9 +126,10 @@ struct validating_transcoder {
   }
 
   template <endianness endian>
-  simdutf_really_inline size_t convert_ascii_tail(const char *in, size_t pos,
-                                                  size_t size,
-                                                  char16_t *output) {
+  static simdutf_really_inline size_t convert_ascii_tail(const char *in,
+                                                         size_t pos,
+                                                         size_t size,
+                                                         char16_t *output) {
     // A cheap test on the first bytes avoids any SIMD work for most non-ASCII
     // tails.
     if (size - pos >= 8) {
