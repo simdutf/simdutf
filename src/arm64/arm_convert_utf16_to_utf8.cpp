@@ -671,69 +671,61 @@ arm64_utf8_length_from_utf16_with_replacement(const char16_t *in, size_t size) {
     any_surrogates = true;
   }
   size_t pos = 0;
-  // We will go through the input at least once.
-  for (; size - pos >= N + 1; pos += N) {
-    auto base_input = vld2q_u8(reinterpret_cast<const uint8_t *>(in + pos));
-    size_t idx = 1; // we use the second lane of the deinterleaved load
-    if constexpr (!match_system(big_endian)) {
-      idx = 0;
-    }
-    size_t idx_lsb = idx ^ 1;
-    auto is_surrogate = vcleq_u8(
-        vsubq_u8(base_input.val[idx], vdupq_n_u8(0xd8)), vdupq_n_u8(7));
-    // We count on the fact that most inputs do not have surrogates.
-    if (any_lane_set(vreinterpretq_u16_u8(is_surrogate)) ||
-        scalar::utf16::is_low_surrogate<big_endian>(in[pos + N])) {
-      any_surrogates = true;
-      // there is at least one surrogate in the block
-      // We use this to check that surrogates are paired correctly.
-      // It is the input shifted by one code unit (two bytes).
-      // We use it to detect *low* surrogates.
-      auto one_unit_offset_input =
-          vld2q_u8(reinterpret_cast<const uint8_t *>(in + pos + 1));
-      //
-
-      auto lb_masked = vandq_u8(base_input.val[idx], vdupq_n_u8(0xfc));
-      auto block_masked =
-          vandq_u8(one_unit_offset_input.val[idx], vdupq_n_u8(0xfc));
-      auto lb_is_high = vceqq_u8(lb_masked, vdupq_n_u8(0xd8));
-      auto block_is_low = vceqq_u8(block_masked, vdupq_n_u8(0xdc));
-
-      // illseq will mark every low surrogate in the offset block.
-      // that is not preceded by a high surrogate
-      //
-      // It will also mark every high surrogate in the main block
-      // that is not followed by a low surrogate
-      //
-      // This means that it will miss undetectable errors, like a high surrogate
-      // at the last index of the main block. And similarly a low surrogate
-      // at the index prior to the main block that was not preceded by a high
-      // surrogate.
-      //
-      // The interpretation of the values is that they start with the end value
-      // of the prior block, and end just before the end of the main block
-      // (minus one).
-      auto illseq = veorq_u8(lb_is_high, block_is_low);
-      number_of_unpaired_surrogates += vaddlvq_u8(vandq_u8(illseq, one));
-    }
-    auto c0 =
-        vminq_u8(vorrq_u8(vandq_u8(base_input.val[idx_lsb], vdupq_n_u8(0x80)),
-                          base_input.val[idx]),
-                 one);
-    auto c1 = vminq_u8(vandq_u8(base_input.val[idx], vdupq_n_u8(0xf8)), one);
-
-    auto v_count = vaddq_u8(c1, c0);
-    v_count = vaddq_u8(v_count, is_surrogate);
-    count += vaddlvq_u8(v_count); // sum the counts in the vector
-    /////////
-    // The vaddlvq_u8 instruction could be slow on some hardware. We could
-    // consider various alternatives if that is an issue such as accumulating
-    // into a vector of uint16_t or uint8_t and summing only at the end or
-    // periodically. However, on fast chipsets, like Apple Silicon, it is
-    // likely fast enough, or even faster than alternatives.
-    /////////
+  size_t idx = 1;
+  if constexpr (!match_system(big_endian)) {
+    idx = 0;
   }
-
+  const size_t idx_lsb = idx ^ 1;
+  while (size - pos >= N + 1) {
+    uint16x8_t acc = vdupq_n_u16(0);
+    size_t blocks = (size - pos - 1) / N;
+    if (blocks > 8192) {
+      blocks = 8192;
+    }
+    for (const size_t end = pos + blocks * N; pos < end; pos += N) {
+      const auto base_input =
+          vld2q_u8(reinterpret_cast<const uint8_t *>(in + pos));
+      const uint8x16_t high = base_input.val[idx];
+      const uint8x16_t is_surrogate =
+          vcleq_u8(vsubq_u8(high, vdupq_n_u8(0xd8)), vdupq_n_u8(7));
+      const bool next_is_low_surrogate =
+          scalar::utf16::is_low_surrogate<big_endian>(in[pos + N]);
+      uint8x16_t unpaired = vdupq_n_u8(0);
+      if (vmaxvq_u8(is_surrogate) != 0 || next_is_low_surrogate) {
+        any_surrogates = true;
+        const uint8x16_t high_masked = vandq_u8(high, vdupq_n_u8(0xfc));
+        const uint8x16_t is_high = vceqq_u8(high_masked, vdupq_n_u8(0xd8));
+        const uint8x16_t is_low = vceqq_u8(high_masked, vdupq_n_u8(0xdc));
+        const uint8x16_t next_is_low =
+            vextq_u8(is_low, vdupq_n_u8(next_is_low_surrogate ? 0xff : 0), 1);
+        // illseq will mark every low surrogate in the offset block.
+        // that is not preceded by a high surrogate
+        //
+        // It will also mark every high surrogate in the main block
+        // that is not followed by a low surrogate
+        //
+        // This means that it will miss undetectable errors, like a high
+        // surrogate at the last index of the main block. And similarly a low
+        // surrogate at the index prior to the main block that was not preceded
+        // by a high surrogate.
+        //
+        // The interpretation of the values is that they start with the end
+        // value of the prior block, and end just before the end of the main
+        // block (minus one).
+        const uint8x16_t illseq = veorq_u8(is_high, next_is_low);
+        unpaired = vandq_u8(illseq, one);
+      }
+      const uint8x16_t c0 = vminq_u8(
+          vorrq_u8(vandq_u8(base_input.val[idx_lsb], vdupq_n_u8(0x80)), high),
+          one);
+      const uint8x16_t c1 = vminq_u8(vandq_u8(high, vdupq_n_u8(0xf8)), one);
+      uint8x16_t v_count = vaddq_u8(c1, c0);
+      v_count = vaddq_u8(v_count, is_surrogate);
+      v_count = vaddq_u8(v_count, unpaired);
+      acc = vpadalq_u8(acc, v_count);
+    }
+    count += vaddlvq_u16(acc);
+  }
   //!!!!!!!!!!!!!!!
   // Here, we have processed up to pos - 1 (inclusive) code units. Except for
   // the case where the value at pos is a low surrogate not preceded by a high
