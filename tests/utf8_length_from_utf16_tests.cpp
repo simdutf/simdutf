@@ -60,6 +60,20 @@ TEST(utf16be_surrogate_pair) {
   }
 }
 
+TEST(trailing_lone_high_surrogate) {
+  for (size_t size = 1; size < 512; size++) {
+    std::vector<char16_t> le(size, u'a');
+    std::vector<char16_t> be(size, char16_t(0x6100));
+    le.back() = char16_t(0xd801);
+    be.back() = char16_t(0x01d8);
+    const size_t want = size + 1;
+    ASSERT_EQUAL(want,
+                 implementation.utf8_length_from_utf16le(le.data(), size));
+    ASSERT_EQUAL(want,
+                 implementation.utf8_length_from_utf16be(be.data(), size));
+  }
+}
+
 TEST(issue001) {
   // There are surrogates but they are well formed.
   std::vector<char16_t> input = {0x004e, 0x000e, 0xdbba, 0xdd90,
