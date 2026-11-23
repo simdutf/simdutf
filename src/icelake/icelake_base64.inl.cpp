@@ -732,7 +732,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
              (idx >= 2 || padding_characters == 0)) ||
             (last_chunk_options ==
                  last_chunk_handling_options::only_full_chunks &&
-             (idx >= 2 || padding_characters == 0))) {
+             (idx >= 2 || (idx != 0 && padding_characters == 0)))) {
           if (output_len > 0) {
             _mm512_mask_storeu_epi8((__m512i *)dst, output_mask, shuffled);
             dst += output_len;
