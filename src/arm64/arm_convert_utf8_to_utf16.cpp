@@ -1,3 +1,34 @@
+template <endianness big_endian>
+simdutf_really_inline size_t convert_1_2_byte_utf8_to_utf16_16(
+    const char *input, uint16_t leading_mask, char16_t *utf16_output) {
+  const uint8x16_t in = vld1q_u8(reinterpret_cast<const uint8_t *>(input));
+  const uint8x16_t next =
+      vld1q_u8(reinterpret_cast<const uint8_t *>(input + 1));
+  const uint8x16_t lead = vcgeq_u8(in, vdupq_n_u8(0xc0));
+  const uint8x16_t low = vbslq_u8(lead, vsliq_n_u8(next, in, 6), in);
+  const uint8x16_t high =
+      vandq_u8(lead, vandq_u8(vshrq_n_u8(in, 2), vdupq_n_u8(0x7)));
+  const uint8_t lo = uint8_t(leading_mask);
+  const uint8_t hi = uint8_t(leading_mask >> 8);
+  const uint8x16_t shuffle = vreinterpretq_u8_u64(vcombine_u64(
+      vcreate_u64(tables::utf8_to_latin1::pack_8[lo]),
+      vcreate_u64(tables::utf8_to_latin1::pack_8[hi] + 0x0808080808080808)));
+  const uint8x16_t packed_low = vqtbl1q_u8(low, shuffle);
+  const uint8x16_t packed_high = vqtbl1q_u8(high, shuffle);
+  uint8x16_t first, second;
+  if constexpr (big_endian == endianness::BIG) {
+    first = vzip1q_u8(packed_high, packed_low);
+    second = vzip2q_u8(packed_high, packed_low);
+  } else {
+    first = vzip1q_u8(packed_low, packed_high);
+    second = vzip2q_u8(packed_low, packed_high);
+  }
+  const size_t lo_count = count_ones(lo);
+  vst1q_u8(reinterpret_cast<uint8_t *>(utf16_output), first);
+  vst1q_u8(reinterpret_cast<uint8_t *>(utf16_output + lo_count), second);
+  return lo_count + count_ones(hi);
+}
+
 // Convert up to 16 bytes from utf8 to utf16 using a mask indicating the
 // end of the code points. Only the least significant 12 bits of the mask
 // are accessed.

@@ -1,5 +1,42 @@
 // depends on "tables/utf8_to_utf16_tables.h"
 
+template <endianness big_endian>
+simdutf_really_inline size_t convert_1_2_byte_utf8_to_utf16_16(
+    const char *input, uint16_t leading_mask, char16_t *utf16_output) {
+  const auto in = vector_u8::load(input);
+  const auto next = vector_u8::load(input + 1);
+  const auto lead = in >= vector_u8(0xc0);
+  const vector_u8 low = vec_sel(
+      in.value, (in.shl<6>() | (next & uint8_t(0x3f))).value, lead.value);
+  const vector_u8 high = vec_and((vector_u8::vector_type)lead.value,
+                                 (in.shr<2>() & uint8_t(0x7)).value);
+  const uint8_t lo = uint8_t(leading_mask);
+  const uint8_t hi = uint8_t(leading_mask >> 8);
+  uint64_t indexes[2] = {tables::utf8_to_latin1::pack_8[lo],
+                         tables::utf8_to_latin1::pack_8[hi] +
+                             0x0808080808080808};
+#if SIMDUTF_IS_BIG_ENDIAN
+  indexes[0] = __builtin_bswap64(indexes[0]);
+  indexes[1] = __builtin_bswap64(indexes[1]);
+#endif
+  const auto shuffle = vector_u8::load(indexes);
+  const auto packed_low = shuffle.lookup_16(low);
+  const auto packed_high = shuffle.lookup_16(high);
+  uint8_t low_bytes[16];
+  uint8_t high_bytes[16];
+  packed_low.store(low_bytes);
+  packed_high.store(high_bytes);
+  uint8_t buffer[32];
+  for (size_t i = 0; i < 16; i++) {
+    buffer[2 * i + (big_endian == endianness::BIG)] = low_bytes[i];
+    buffer[2 * i + (big_endian != endianness::BIG)] = high_bytes[i];
+  }
+  const size_t lo_count = count_ones(lo);
+  std::memcpy(utf16_output, buffer, 16);
+  std::memcpy(utf16_output + lo_count, buffer + 16, 16);
+  return lo_count + count_ones(hi);
+}
+
 // Convert up to 12 bytes from utf8 to utf16 using a mask indicating the
 // end of the code points. Only the least significant 12 bits of the mask
 // are accessed.

@@ -4,6 +4,25 @@ namespace {
 namespace utf8_to_utf16 {
 using namespace simd;
 
+template <endianness endian>
+simdutf_really_inline size_t convert_1_2_byte_utf8_block_to_utf16(
+    const char *in, uint64_t utf8_leading_mask, char16_t *&utf16_output) {
+  size_t consumed = 64;
+  if (uint8_t(in[63]) >= 0xc0) {
+    utf8_leading_mask &= ~(uint64_t(1) << 63);
+    consumed = 63;
+  }
+  utf16_output += convert_1_2_byte_utf8_to_utf16_16<endian>(
+      in, uint16_t(utf8_leading_mask), utf16_output);
+  utf16_output += convert_1_2_byte_utf8_to_utf16_16<endian>(
+      in + 16, uint16_t(utf8_leading_mask >> 16), utf16_output);
+  utf16_output += convert_1_2_byte_utf8_to_utf16_16<endian>(
+      in + 32, uint16_t(utf8_leading_mask >> 32), utf16_output);
+  utf16_output += convert_1_2_byte_utf8_to_utf16_16<endian>(
+      in + 48, uint16_t(utf8_leading_mask >> 48), utf16_output);
+  return consumed;
+}
+
 simdutf_really_inline simd8<uint8_t>
 check_special_cases(const simd8<uint8_t> input, const simd8<uint8_t> prev1) {
   // Bit 0 = Too Short (lead byte/ASCII followed by lead byte/ASCII)
@@ -209,6 +228,12 @@ struct validating_transcoder {
         if (utf8_continuation_mask & 1) {
           return 0; // error
         }
+        if (utf8_continuation_mask != 0xaaaaaaaaaaaaaaaa &&
+            input.gteq_unsigned(0xe0) == 0) {
+          pos += convert_1_2_byte_utf8_block_to_utf16<endian>(
+              in + pos, ~utf8_continuation_mask, utf16_output);
+          continue;
+        }
         uint64_t utf8_leading_mask = ~utf8_continuation_mask;
         uint64_t utf8_end_of_code_point_mask = utf8_leading_mask >> 1;
         // We process in blocks of up to 12 bytes except possibly
@@ -313,6 +338,12 @@ struct validating_transcoder {
                   pos, in + pos, size - pos, utf16_output);
           res.count += pos;
           return res;
+        }
+        if (utf8_continuation_mask != 0xaaaaaaaaaaaaaaaa &&
+            input.gteq_unsigned(0xe0) == 0) {
+          pos += convert_1_2_byte_utf8_block_to_utf16<endian>(
+              in + pos, ~utf8_continuation_mask, utf16_output);
+          continue;
         }
         uint64_t utf8_leading_mask = ~utf8_continuation_mask;
         uint64_t utf8_end_of_code_point_mask = utf8_leading_mask >> 1;

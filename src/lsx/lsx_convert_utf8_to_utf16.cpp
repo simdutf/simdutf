@@ -1,3 +1,35 @@
+template <endianness big_endian>
+simdutf_really_inline size_t convert_1_2_byte_utf8_to_utf16_16(
+    const char *input, uint16_t leading_mask, char16_t *utf16_output) {
+  const __m128i in = __lsx_vld(reinterpret_cast<const uint8_t *>(input), 0);
+  const __m128i next = __lsx_vld(reinterpret_cast<const uint8_t *>(input), 1);
+  const __m128i lead = __lsx_vsle_bu(__lsx_vldi(0xc0), in);
+  const __m128i low = __lsx_vbitsel_v(
+      in, __lsx_vbitsel_v(__lsx_vslli_b(in, 6), next, __lsx_vldi(0x3f)), lead);
+  const __m128i high =
+      __lsx_vand_v(lead, __lsx_vand_v(__lsx_vsrli_b(in, 2), __lsx_vldi(0x7)));
+  const uint8_t lo = uint8_t(leading_mask);
+  const uint8_t hi = uint8_t(leading_mask >> 8);
+  __m128i shuffle =
+      __lsx_vinsgr2vr_d(__lsx_vldi(0), tables::utf8_to_latin1::pack_8[lo], 0);
+  shuffle = __lsx_vinsgr2vr_d(
+      shuffle, tables::utf8_to_latin1::pack_8[hi] + 0x0808080808080808, 1);
+  const __m128i packed_low = __lsx_vshuf_b(__lsx_vldi(0), low, shuffle);
+  const __m128i packed_high = __lsx_vshuf_b(__lsx_vldi(0), high, shuffle);
+  __m128i first, second;
+  if constexpr (big_endian == endianness::BIG) {
+    first = __lsx_vilvl_b(packed_low, packed_high);
+    second = __lsx_vilvh_b(packed_low, packed_high);
+  } else {
+    first = __lsx_vilvl_b(packed_high, packed_low);
+    second = __lsx_vilvh_b(packed_high, packed_low);
+  }
+  const size_t lo_count = count_ones(lo);
+  __lsx_vst(first, reinterpret_cast<uint8_t *>(utf16_output), 0);
+  __lsx_vst(second, reinterpret_cast<uint8_t *>(utf16_output + lo_count), 0);
+  return lo_count + count_ones(hi);
+}
+
 // Convert up to 16 bytes from utf8 to utf16 using a mask indicating the
 // end of the code points. Only the least significant 12 bits of the mask
 // are accessed.

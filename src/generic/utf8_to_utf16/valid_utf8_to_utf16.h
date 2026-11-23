@@ -28,6 +28,12 @@ simdutf_warn_unused size_t convert_valid(const char *input, size_t size,
       uint64_t utf8_continuation_mask = in.lt(-65 + 1);
       // -65 is 0b10111111 in two-complement's, so largest possible continuation
       // byte
+      if (utf8_continuation_mask != 0xaaaaaaaaaaaaaaaa &&
+          in.gteq_unsigned(0xe0) == 0) {
+        pos += convert_1_2_byte_utf8_block_to_utf16<endian>(
+            input + pos, ~utf8_continuation_mask, utf16_output);
+        continue;
+      }
       uint64_t utf8_leading_mask = ~utf8_continuation_mask;
       // The *start* of code points is not so useful, rather, we want the *end*
       // of code points.

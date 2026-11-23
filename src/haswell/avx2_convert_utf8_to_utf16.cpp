@@ -1,5 +1,43 @@
 // depends on "tables/utf8_to_utf16_tables.h"
 
+template <endianness big_endian>
+simdutf_really_inline size_t convert_1_2_byte_utf8_to_utf16_16(
+    const char *input, uint16_t leading_mask, char16_t *utf16_output) {
+  const __m128i in = _mm_loadu_si128(reinterpret_cast<const __m128i *>(input));
+  const __m128i next =
+      _mm_loadu_si128(reinterpret_cast<const __m128i *>(input + 1));
+  const __m128i lead = _mm_and_si128(in, _mm_add_epi8(in, in));
+  const __m128i low =
+      _mm_blendv_epi8(in,
+                      _mm_or_si128(_mm_and_si128(_mm_slli_epi16(in, 6),
+                                                 _mm_set1_epi8(char(0xc0))),
+                                   _mm_and_si128(next, _mm_set1_epi8(0x3f))),
+                      lead);
+  const __m128i high = _mm_blendv_epi8(
+      _mm_setzero_si128(),
+      _mm_and_si128(_mm_srli_epi16(in, 2), _mm_set1_epi8(0x7)), lead);
+  const uint8_t lo = uint8_t(leading_mask);
+  const uint8_t hi = uint8_t(leading_mask >> 8);
+  const __m128i shuffle = _mm_set_epi64x(
+      int64_t(tables::utf8_to_latin1::pack_8[hi] + 0x0808080808080808),
+      int64_t(tables::utf8_to_latin1::pack_8[lo]));
+  const __m128i packed_low = _mm_shuffle_epi8(low, shuffle);
+  const __m128i packed_high = _mm_shuffle_epi8(high, shuffle);
+  __m128i first, second;
+  if (big_endian) {
+    first = _mm_unpacklo_epi8(packed_high, packed_low);
+    second = _mm_unpackhi_epi8(packed_high, packed_low);
+  } else {
+    first = _mm_unpacklo_epi8(packed_low, packed_high);
+    second = _mm_unpackhi_epi8(packed_low, packed_high);
+  }
+  const size_t lo_count = count_ones(lo);
+  _mm_storeu_si128(reinterpret_cast<__m128i *>(utf16_output), first);
+  _mm_storeu_si128(reinterpret_cast<__m128i *>(utf16_output + lo_count),
+                   second);
+  return lo_count + count_ones(hi);
+}
+
 // Convert up to 12 bytes from utf8 to utf16 using a mask indicating the
 // end of the code points. Only the least significant 12 bits of the mask
 // are accessed.
