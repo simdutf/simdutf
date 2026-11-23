@@ -105,16 +105,16 @@ must_be_2_3_continuation(const simd8<uint8_t> prev2,
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
   // transcoding from UTF-8 to UTF-16
-  #include "generic/utf8_to_utf16/valid_utf8_to_utf16.h"
   #include "generic/utf8_to_utf16/utf8_to_utf16.h"
+  #include "generic/utf8_to_utf16/valid_utf8_to_utf16.h"
   #include "generic/utf8/utf16_length_from_utf8_bytemask.h"
   // transcoding from UTF-16 to UTF-8
   #include "generic/utf16_to_utf8/utf16_to_utf8_with_replacement.h"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
-  #include "generic/utf8_to_utf32/valid_utf8_to_utf32.h"
   #include "generic/utf8_to_utf32/utf8_to_utf32.h"
+  #include "generic/utf8_to_utf32/valid_utf8_to_utf32.h"
   #include "generic/utf32.h"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 

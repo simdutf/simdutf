@@ -62,6 +62,10 @@ simdutf_really_inline size_t convert_valid(const char *in, size_t size,
       // 85% to 90% efficiency.
     }
   }
+  const size_t ascii =
+      validating_transcoder::convert_ascii_tail(in, pos, size, latin1_output);
+  pos += ascii;
+  latin1_output += ascii;
   if (pos < size) {
     size_t howmany = scalar::utf8_to_latin1::convert_valid(in + pos, size - pos,
                                                            latin1_output);
