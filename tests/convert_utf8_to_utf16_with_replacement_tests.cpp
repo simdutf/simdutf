@@ -322,6 +322,74 @@ TEST(long_valid_and_sparse_and_dense) {
   check(std::string(100, '\x80'));
 }
 
+// Sixteen "abc"+0xFF fill the error list with short prefixes. The scalar
+// tail must not set more_errors unless it finds another ill-formed byte.
+TEST(error_cap_scalar_tail) {
+  std::string sixteen;
+  for (int i = 0; i < 16; i++) {
+    sixteen += "abc";
+    sixteen += char(0xFF);
+  }
+  auto expect_cap = [](const std::string &input, size_t count, bool more) {
+    check(input);
+    const simdutf::utf8_to_utf16_result length_result =
+        simdutf::utf16_length_from_utf8_with_replacement(input.data(),
+                                                         input.size());
+    ASSERT_EQUAL(length_result.error_count,
+                 simdutf::utf8_to_utf16_result::max_errors);
+    ASSERT_EQUAL(length_result.count, count);
+    ASSERT_EQUAL(length_result.more_errors, more);
+    for (size_t i = 0; i < length_result.error_count; i++) {
+      ASSERT_EQUAL(length_result.error_offset[i], 3 + 4 * i);
+    }
+  };
+
+  std::string valid_tail = sixteen;
+  valid_tail.append(10000, 'Z');
+  expect_cap(valid_tail, 10064, false);
+
+  std::string multibyte_tail = sixteen;
+  for (int i = 0; i < 1000; i++) {
+    multibyte_tail += "\xC2\xA9";
+  }
+  expect_cap(multibyte_tail, 1064, false);
+
+  std::string another = valid_tail;
+  another += char(0xFF);
+  expect_cap(another, 10065, true);
+
+  std::string truncated = valid_tail;
+  truncated += '\xC2';
+  expect_cap(truncated, 10065, true);
+
+  // The 17th error is seen before the scalar tail, and the tail is valid.
+  // The flag set for that error has to stay set.
+  std::string prior(15, char(0xFF));
+  prior += "abc";
+  prior += char(0xFF);
+  prior += "abc";
+  prior += char(0xFF);
+  prior.append(10000, 'Z');
+  check(prior);
+  const simdutf::utf8_to_utf16_result prior_length =
+      simdutf::utf16_length_from_utf8_with_replacement(prior.data(),
+                                                       prior.size());
+  ASSERT_EQUAL(prior_length.error_count,
+               simdutf::utf8_to_utf16_result::max_errors);
+  ASSERT_EQUAL(prior_length.count, size_t(10023));
+  ASSERT_TRUE(prior_length.more_errors);
+
+  std::string one(100000, 'A');
+  one[50000] = char(0xFF);
+  check(one);
+  const simdutf::utf8_to_utf16_result one_length =
+      simdutf::utf16_length_from_utf8_with_replacement(one.data(), one.size());
+  ASSERT_EQUAL(one_length.error_count, size_t(1));
+  ASSERT_EQUAL(one_length.error_offset[0], size_t(50000));
+  ASSERT_EQUAL(one_length.count, one.size());
+  ASSERT_FALSE(one_length.more_errors);
+}
+
 TEST(random_bytes) {
   std::mt19937 rng(1234);
   std::uniform_int_distribution<int> length_dist(0, 280);
