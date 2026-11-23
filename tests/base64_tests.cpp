@@ -4473,10 +4473,10 @@ TEST(base64_tc39_read_includes_trailing_whitespace) {
         simdutf::base64_default_or_url, simdutf::base64_default_accept_garbage,
         simdutf::base64_url_accept_garbage,
         simdutf::base64_default_or_url_accept_garbage}) {
-    for (auto lc :
-         {simdutf::last_chunk_handling_options::loose,
-          simdutf::last_chunk_handling_options::strict,
-          simdutf::last_chunk_handling_options::stop_before_partial}) {
+    for (auto lc : {simdutf::last_chunk_handling_options::loose,
+                    simdutf::last_chunk_handling_options::strict,
+                    simdutf::last_chunk_handling_options::stop_before_partial,
+                    simdutf::last_chunk_handling_options::only_full_chunks}) {
       check_tc39_read_includes_trailing_whitespace<char>(implementation,
                                                          options, lc, false);
       check_tc39_read_includes_trailing_whitespace<char16_t>(
