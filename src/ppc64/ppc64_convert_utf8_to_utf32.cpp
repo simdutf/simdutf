@@ -21,7 +21,7 @@ size_t convert_masked_utf8_to_utf32(const char *input,
   const auto in = vector_u8::load(input);
   const uint16_t input_utf8_end_of_code_point_mask =
       utf8_end_of_code_point_mask & 0xfff;
-  if (utf8_end_of_code_point_mask == 0xfff) {
+  if ((utf8_end_of_code_point_mask & 0xfff) == 0xfff) {
     // We process the data in chunks of 12 bytes.
     in.store_bytes_as_utf32(utf32_output);
     utf32_output += 12; // We wrote 12 32-bit characters.

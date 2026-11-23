@@ -22,7 +22,7 @@ size_t convert_masked_utf8_to_utf16(const char *input,
   const auto in = vector_u8::load(input);
   const uint16_t input_utf8_end_of_code_point_mask =
       utf8_end_of_code_point_mask & 0xfff;
-  if (utf8_end_of_code_point_mask == 0xfff) {
+  if ((utf8_end_of_code_point_mask & 0xfff) == 0xfff) {
     // We process the data in chunks of 12 bytes.
     // Note: using 16 bytes is unsafe, see issue_ossfuzz_71218
     in.store_bytes_as_utf16<big_endian>(utf16_output);
