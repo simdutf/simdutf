@@ -173,6 +173,9 @@ struct validating_transcoder {
         input.store((int8_t *)latin1_output);
         latin1_output += 64;
         pos += 64;
+        if ((pos & 1023) < 64 && errors()) {
+          return 0;
+        }
       } else {
         // you might think that a for-loop would work, but under Visual Studio,
         // it is not good enough.
@@ -193,7 +196,7 @@ struct validating_transcoder {
         uint64_t utf8_continuation_mask =
             input.lt(-65 + 1); // -64 is 1100 0000 in twos complement. Note: in
                                // this case, we also have ASCII to account for.
-        if (utf8_continuation_mask & 1) {
+        if ((utf8_continuation_mask & 1) || ((pos & 1023) < 64 && errors())) {
           return 0; // error
         }
         uint64_t utf8_leading_mask = ~utf8_continuation_mask;
