@@ -312,7 +312,7 @@ virtual const char16_t *&#160;</td><td class="memItemRight" valign="bottom"><b>f
 <div class="textblock"><p>An implementation of simdutf for a particular CPU architecture. </p>
 <p>Also used to maintain the currently active implementation. The active implementation is automatically initialized on first use to the most advanced implementation supported by the host. </p>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05622">5622</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05631">5631</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="afd306a0bc3e221964af3f31a64784b12" name="afd306a0bc3e221964af3f31a64784b12"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#afd306a0bc3e221964af3f31a64784b12">&#9670;&#160;</a></span>autodetect_encoding()</h2>
@@ -3279,7 +3279,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </pre><p> impl-&gt;<a class="el" href="#a5fd0fb7f897b97624a8a4a4079f276ef" title="The description of this implementation.">description()</a> &lt;&lt; ")" &lt;&lt; endl;</p>
 <dl class="section return"><dt>Returns</dt><dd>the name of the implementation, e.g. "haswell", "westmere", "arm64" </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05644">5644</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05653">5653</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -3401,7 +3401,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-16LE string as Latin1 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l07114">7114</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l07127">7127</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -3438,7 +3438,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-32 string as Latin1 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l07077">7077</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l07090">7090</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -3593,7 +3593,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </pre><p> impl-&gt;<a class="el" href="#a5fd0fb7f897b97624a8a4a4079f276ef" title="The description of this implementation.">description()</a> &lt;&lt; ")" &lt;&lt; endl;</p>
 <dl class="section return"><dt>Returns</dt><dd>the name of the implementation, e.g. "haswell", "westmere", "arm64" </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05633">5633</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l05642">5642</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -3742,7 +3742,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-16 string as Latin1 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l06889">6889</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l06902">6902</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -3814,7 +3814,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </div><div class="memdoc">
 
 <p>Compute the number of 2-byte code units that this UTF-8 string would require in UTF-16LE format. </p>
-<p>This function does not validate the input. It is acceptable to pass invalid UTF-8 strings but in such cases the result is implementation defined.</p>
+<p>This function does not validate the input. It is acceptable to pass invalid UTF-8 strings. The result is then implementation defined, but it remains a safe buffer size for convert_utf8_to_utf16le, convert_utf8_to_utf16be and their _with_errors variants, even when they reject the input.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>the UTF-8 string to process </td></tr>
@@ -3858,7 +3858,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>the number of bytes required to encode the UTF-32 string as Latin1 </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l07147">7147</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="implementation_8h_source.html#l07160">7160</a> of file <a class="el" href="implementation_8h_source.html">implementation.h</a>.</p>
 
 </div>
 </div>
@@ -3974,7 +3974,7 @@ cout &lt;&lt; "simdutf is optimized for " &lt;&lt; impl-&gt;name() &lt;&lt; "(" 
 </div><div class="memdoc">
 
 <p>Compute the number of 4-byte code units that this UTF-8 string would require in UTF-32 format. </p>
-<p>This function is equivalent to count_utf8. It is acceptable to pass invalid UTF-8 strings but in such cases the result is implementation defined.</p>
+<p>This function is equivalent to count_utf8. It is acceptable to pass invalid UTF-8 strings. The result is then implementation defined, but it remains a safe buffer size for convert_utf8_to_utf32 and convert_utf8_to_utf32_with_errors, even when they reject the input.</p>
 <p>This function does not validate the input.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
