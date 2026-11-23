@@ -1818,7 +1818,7 @@ simdutf_warn_unused result atomic_base64_to_binary_safe_impl(
   // Arbitrary block sizes: 4KB for input.
   constexpr size_t buffer_size = 4096;
     #endif
-  std::array<char, buffer_size> temp_buffer;
+  simdutf_indeterminate std::array<char, buffer_size> temp_buffer;
   const char_type *const input_init = input;
   size_t actual_out = 0;
   bool last_chunk = false;
@@ -2674,7 +2674,7 @@ size_t atomic_binary_to_base64(const char *input, size_t length, char *output,
   // Arbitrary block sizes: 3KB for input which produces 4KB in output.
   constexpr size_t input_block_size = 1024 * 3;
     #endif
-  std::array<char, input_block_size> inbuf;
+  simdutf_indeterminate std::array<char, input_block_size> inbuf;
   for (size_t i = 0; i < length; i += input_block_size) {
     const size_t current_block_size = detail::min(input_block_size, length - i);
     simdutf::scalar::memcpy_atomic_read(inbuf.data(), input + i,

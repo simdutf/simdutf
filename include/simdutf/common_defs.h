@@ -184,4 +184,18 @@
   #define simdutf_maybe_unused
 #endif
 
+#if SIMDUTF_CPLUSPLUS > 202302L && defined(__has_cpp_attribute)
+  #if __has_cpp_attribute(indeterminate)
+    #define simdutf_indeterminate [[indeterminate]]
+  #endif
+#endif
+#if !defined(simdutf_indeterminate) && defined(__has_attribute)
+  #if __has_attribute(uninitialized)
+    #define simdutf_indeterminate __attribute__((uninitialized))
+  #endif
+#endif
+#ifndef simdutf_indeterminate
+  #define simdutf_indeterminate
+#endif
+
 #endif // SIMDUTF_COMMON_DEFS_H

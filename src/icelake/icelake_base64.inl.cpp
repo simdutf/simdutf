@@ -460,7 +460,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
 
   // figure out why block_size == 2 is sometimes best???
   constexpr size_t block_size = 6;
-  char buffer[block_size * 64];
+  simdutf_indeterminate char buffer[block_size * 64];
   char *bufferptr = buffer;
   if (srclen >= 64) {
     const chartype *const srcend64 = src + srclen - 64;

@@ -67,7 +67,7 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
 
   constexpr size_t block_size = 6;
   static_assert(block_size >= 2, "block_size must be at least two");
-  char buffer[block_size * 64];
+  simdutf_indeterminate char buffer[block_size * 64];
   char *bufferptr = buffer;
   // A wide block store writes 4 bytes past its 48. That is safe when the next
   // store starts 48 bytes later. Pairs of clean blocks wide-store the first
