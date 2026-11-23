@@ -152,6 +152,8 @@ must_be_2_3_continuation(const simd8<uint8_t> prev2,
 // Implementation-specific overrides
 //
 
+#include "generic/aligned_split.h"
+
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {
 
@@ -169,29 +171,53 @@ implementation::detect_encodings(const char *input,
 #endif // SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
+simdutf_really_inline bool validate_utf8_unsplit(const char *buf,
+                                                 size_t len) noexcept {
+  return westmere::utf8_validation::generic_validate_utf8(buf, len);
+}
+
 simdutf_warn_unused bool
 implementation::validate_utf8(const char *buf, size_t len) const noexcept {
-  return westmere::utf8_validation::generic_validate_utf8(buf, len);
+  return aligned_split::all<validate_utf8_unsplit>(
+      buf, len, aligned_split::utf8_head(buf, len));
 }
 #endif // SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_UTF8
+simdutf_really_inline result
+validate_utf8_with_errors_unsplit(const char *buf, size_t len) noexcept {
+  return westmere::utf8_validation::generic_validate_utf8_with_errors(buf, len);
+}
+
 simdutf_warn_unused result implementation::validate_utf8_with_errors(
     const char *buf, size_t len) const noexcept {
-  return westmere::utf8_validation::generic_validate_utf8_with_errors(buf, len);
+  return aligned_split::first_error<validate_utf8_with_errors_unsplit>(
+      buf, len, aligned_split::utf8_head(buf, len));
 }
 #endif // SIMDUTF_FEATURE_UTF8
 
 #if SIMDUTF_FEATURE_ASCII
+simdutf_really_inline bool validate_ascii_unsplit(const char *buf,
+                                                  size_t len) noexcept {
+  return westmere::ascii_validation::generic_validate_ascii(buf, len);
+}
+
 simdutf_warn_unused bool
 implementation::validate_ascii(const char *buf, size_t len) const noexcept {
-  return westmere::ascii_validation::generic_validate_ascii(buf, len);
+  return aligned_split::all<validate_ascii_unsplit>(
+      buf, len, aligned_split::head(buf, len));
+}
+
+simdutf_really_inline result
+validate_ascii_with_errors_unsplit(const char *buf, size_t len) noexcept {
+  return westmere::ascii_validation::generic_validate_ascii_with_errors(buf,
+                                                                        len);
 }
 
 simdutf_warn_unused result implementation::validate_ascii_with_errors(
     const char *buf, size_t len) const noexcept {
-  return westmere::ascii_validation::generic_validate_ascii_with_errors(buf,
-                                                                        len);
+  return aligned_split::first_error<validate_ascii_with_errors_unsplit>(
+      buf, len, aligned_split::head(buf, len));
 }
 #endif // SIMDUTF_FEATURE_ASCII
 
@@ -214,9 +240,8 @@ implementation::validate_utf16be_as_ascii(const char16_t *buf,
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_ASCII
 
 #if SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
-simdutf_warn_unused bool
-implementation::validate_utf16le(const char16_t *buf,
-                                 size_t len) const noexcept {
+simdutf_really_inline bool validate_utf16le_unsplit(const char16_t *buf,
+                                                    size_t len) noexcept {
   if (simdutf_unlikely(len == 0)) {
     // empty input is valid UTF-16. protect the implementation from
     // handling nullptr
@@ -234,12 +259,18 @@ implementation::validate_utf16le(const char16_t *buf,
   return scalar::utf16::validate<endianness::LITTLE>(buf + res.count,
                                                      len - res.count);
 }
+
+simdutf_warn_unused bool
+implementation::validate_utf16le(const char16_t *buf,
+                                 size_t len) const noexcept {
+  return aligned_split::all<validate_utf16le_unsplit>(
+      buf, len, aligned_split::utf16_head<endianness::LITTLE>(buf, len));
+}
 #endif // SIMDUTF_FEATURE_UTF16 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_UTF16
-simdutf_warn_unused bool
-implementation::validate_utf16be(const char16_t *buf,
-                                 size_t len) const noexcept {
+simdutf_really_inline bool validate_utf16be_unsplit(const char16_t *buf,
+                                                    size_t len) noexcept {
   if (simdutf_unlikely(len == 0)) {
     // empty input is valid UTF-16. protect the implementation from
     // handling nullptr
@@ -258,8 +289,15 @@ implementation::validate_utf16be(const char16_t *buf,
                                                   len - res.count);
 }
 
-simdutf_warn_unused result implementation::validate_utf16le_with_errors(
-    const char16_t *buf, size_t len) const noexcept {
+simdutf_warn_unused bool
+implementation::validate_utf16be(const char16_t *buf,
+                                 size_t len) const noexcept {
+  return aligned_split::all<validate_utf16be_unsplit>(
+      buf, len, aligned_split::utf16_head<endianness::BIG>(buf, len));
+}
+
+simdutf_really_inline result
+validate_utf16le_with_errors_unsplit(const char16_t *buf, size_t len) noexcept {
   const result res =
       westmere::utf16::validate_utf16_with_errors<endianness::LITTLE>(buf, len);
   if (res.count != len) {
@@ -272,8 +310,14 @@ simdutf_warn_unused result implementation::validate_utf16le_with_errors(
   }
 }
 
-simdutf_warn_unused result implementation::validate_utf16be_with_errors(
+simdutf_warn_unused result implementation::validate_utf16le_with_errors(
     const char16_t *buf, size_t len) const noexcept {
+  return aligned_split::first_error<validate_utf16le_with_errors_unsplit>(
+      buf, len, aligned_split::utf16_head<endianness::LITTLE>(buf, len));
+}
+
+simdutf_really_inline result
+validate_utf16be_with_errors_unsplit(const char16_t *buf, size_t len) noexcept {
   const result res =
       westmere::utf16::validate_utf16_with_errors<endianness::BIG>(buf, len);
   if (res.count != len) {
@@ -283,6 +327,12 @@ simdutf_warn_unused result implementation::validate_utf16be_with_errors(
   } else {
     return res;
   }
+}
+
+simdutf_warn_unused result implementation::validate_utf16be_with_errors(
+    const char16_t *buf, size_t len) const noexcept {
+  return aligned_split::first_error<validate_utf16be_with_errors_unsplit>(
+      buf, len, aligned_split::utf16_head<endianness::BIG>(buf, len));
 }
 
 void implementation::to_well_formed_utf16le(const char16_t *input, size_t len,
@@ -991,13 +1041,25 @@ simdutf_warn_unused size_t implementation::count_utf16be(
 #endif // SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF8
-simdutf_warn_unused size_t
-implementation::count_utf8(const char *input, size_t length) const noexcept {
+simdutf_really_inline size_t count_utf8_unsplit(const char *input,
+                                                size_t length) noexcept {
   return utf8::count_code_points_bytemask(input, length);
 }
+
+simdutf_warn_unused size_t
+implementation::count_utf8(const char *input, size_t length) const noexcept {
+  return aligned_split::sum<count_utf8_unsplit>(
+      input, length, aligned_split::head(input, length));
+}
+simdutf_really_inline utf8_result
+validate_utf8_with_counts_unsplit(const char *buf, size_t len) noexcept {
+  return westmere::utf8_validation::generic_validate_utf8_with_counts(buf, len);
+}
+
 simdutf_warn_unused utf8_result implementation::validate_utf8_with_counts(
     const char *buf, size_t len) const noexcept {
-  return westmere::utf8_validation::generic_validate_utf8_with_counts(buf, len);
+  return aligned_split::with_counts<validate_utf8_with_counts_unsplit>(
+      buf, len, aligned_split::utf8_head(buf, len));
 }
 
 #endif // SIMDUTF_FEATURE_UTF8
@@ -1023,8 +1085,8 @@ simdutf_warn_unused size_t implementation::utf8_length_from_utf16be(
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
-simdutf_warn_unused size_t implementation::utf8_length_from_latin1(
-    const char *input, size_t len) const noexcept {
+simdutf_really_inline size_t
+utf8_length_from_latin1_unsplit(const char *input, size_t len) noexcept {
   const uint8_t *str = reinterpret_cast<const uint8_t *>(input);
   size_t answer = len / sizeof(__m128i) * sizeof(__m128i);
   size_t i = 0;
@@ -1081,6 +1143,12 @@ simdutf_warn_unused size_t implementation::utf8_length_from_latin1(
   }
   return answer + scalar::latin1::utf8_length_from_latin1(
                       reinterpret_cast<const char *>(str + i), len - i);
+}
+
+simdutf_warn_unused size_t implementation::utf8_length_from_latin1(
+    const char *input, size_t len) const noexcept {
+  return aligned_split::sum<utf8_length_from_latin1_unsplit>(
+      input, len, aligned_split::head(input, len));
 }
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 
@@ -1166,9 +1234,15 @@ simdutf_warn_unused size_t implementation::utf16_length_from_utf32(
 #endif // SIMDUTF_FEATURE_UTF16 && SIMDUTF_FEATURE_UTF32
 
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
+simdutf_really_inline size_t
+utf32_length_from_utf8_unsplit(const char *input, size_t length) noexcept {
+  return utf8::count_code_points(input, length);
+}
+
 simdutf_warn_unused size_t implementation::utf32_length_from_utf8(
     const char *input, size_t length) const noexcept {
-  return utf8::count_code_points(input, length);
+  return aligned_split::sum<utf32_length_from_utf8_unsplit>(
+      input, length, aligned_split::head(input, length));
 }
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
 
