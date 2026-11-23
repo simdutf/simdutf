@@ -357,7 +357,7 @@ TEST(garbage_utf8_fuzz_with_errors) {
   // Here we generate fully random inputs and try transcoding from UTF-8.
   // The inputs are almost certainly *NOT* valid UTF-8.
   std::mt19937 gen((std::mt19937::result_type)(seed));
-  std::uniform_int_distribution<size_t> length_generator{1, 65};
+  std::uniform_int_distribution<size_t> length_generator{1, 300};
   std::uniform_int_distribution<uint32_t> byte_generator{0, 256};
 
   for (size_t counter = 0; counter < trials; counter++) {
@@ -409,7 +409,7 @@ TEST(garbage_utf8_fuzz) {
   // Here we generate fully random inputs and try transcoding from UTF-8.
   // The inputs are almost certainly *NOT* valid UTF-8.
   std::mt19937 gen((std::mt19937::result_type)(seed));
-  std::uniform_int_distribution<size_t> length_generator{1, 65};
+  std::uniform_int_distribution<size_t> length_generator{1, 300};
   std::uniform_int_distribution<uint32_t> byte_generator{0, 256};
 
   for (size_t counter = 0; counter < trials; counter++) {

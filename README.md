@@ -840,7 +840,7 @@ simdutf_warn_unused size_t count_utf8(const char * input, size_t length) noexcep
 
 ```
 
-Prior to transcoding an input, you need to allocate enough memory to receive the result. We have fast function that scan the input and compute the size of the output. These include `utf8_length_from_latin1`, `latin1_length_from_utf8`, `utf16_length_from_utf8`, `utf32_length_from_utf8`, `utf8_length_from_utf16` (and LE/BE variants), `utf16_length_from_utf32`, `utf32_length_from_utf16` (LE/BE), and several others. Most functions do not validate the input and may return implementation-defined results for invalid strings. Special `_with_replacement` variants for UTF-16 to UTF-8 length computation return a `simdutf::result` struct containing both the required byte count and a `SURROGATE` flag when the input contains surrogates (matched or not), allowing safe handling with the replacement character `U+FFFD` while still providing the correct output length. `utf16_length_from_utf8_with_replacement` returns a `simdutf::utf8_to_utf16_result`: `count` is the exact UTF-16 length, `error` is the first UTF-8 error code (or `SUCCESS`), and `error_offset` stores the byte index of up to 16 ill-formed subsequences. Pass that value to `convert_utf8_to_utf16_with_replacement`. These helper functions are designed to be called before actual transcoding to pre-allocate properly sized output buffers.
+Prior to transcoding an input, you need to allocate enough memory to receive the result. We have fast function that scan the input and compute the size of the output. These include `utf8_length_from_latin1`, `latin1_length_from_utf8`, `utf16_length_from_utf8`, `utf32_length_from_utf8`, `utf8_length_from_utf16` (and LE/BE variants), `utf16_length_from_utf32`, `utf32_length_from_utf16` (LE/BE), and several others. Most functions do not validate the input and may return implementation-defined results for invalid strings. For UTF-8 input, `utf16_length_from_utf8` and `utf32_length_from_utf8` still return a safe buffer size on invalid input: the validating conversions (`convert_utf8_to_utf16`, `convert_utf8_to_utf32` and their variants) reject such input without writing past that size. Special `_with_replacement` variants for UTF-16 to UTF-8 length computation return a `simdutf::result` struct containing both the required byte count and a `SURROGATE` flag when the input contains surrogates (matched or not), allowing safe handling with the replacement character `U+FFFD` while still providing the correct output length. `utf16_length_from_utf8_with_replacement` returns a `simdutf::utf8_to_utf16_result`: `count` is the exact UTF-16 length, `error` is the first UTF-8 error code (or `SUCCESS`), and `error_offset` stores the byte index of up to 16 ill-formed subsequences. Pass that value to `convert_utf8_to_utf16_with_replacement`. These helper functions are designed to be called before actual transcoding to pre-allocate properly sized output buffers.
 
 
 
@@ -906,8 +906,11 @@ simdutf_warn_unused size_t latin1_length_from_utf32(size_t length) noexcept;
 /**
  * Compute the number of 2-byte code units that this UTF-8 string would require in UTF-16 format.
  *
- * This function does not validate the input. It is acceptable to pass invalid UTF-8 strings but in such cases
- * the result is implementation defined.
+ * This function does not validate the input. It is acceptable to pass invalid UTF-8 strings. The result is then
+ * implementation defined, but it remains a safe buffer size: convert_utf8_to_utf16, convert_utf8_to_utf16le,
+ * convert_utf8_to_utf16be and their _with_errors variants never write more char16_t than this function returns,
+ * even when they reject the input. To transcode invalid input instead of rejecting it, use
+ * utf16_length_from_utf8_with_replacement and convert_utf8_to_utf16_with_replacement.
  *
  * @param input         the UTF-8 string to process
  * @param length        the length of the string in bytes
@@ -921,8 +924,10 @@ simdutf_warn_unused size_t utf16_length_from_utf8(const char * input, size_t len
  *
  * This function is equivalent to count_utf8
  *
- * This function does not validate the input. It is acceptable to pass invalid UTF-8 strings but in such cases
- * the result is implementation defined.
+ * This function does not validate the input. It is acceptable to pass invalid UTF-8 strings. The result is then
+ * implementation defined, but it remains a safe buffer size: convert_utf8_to_utf32 and
+ * convert_utf8_to_utf32_with_errors never write more char32_t than this function returns, even when they reject
+ * the input.
  *
  * This function is not BOM-aware.
  *
