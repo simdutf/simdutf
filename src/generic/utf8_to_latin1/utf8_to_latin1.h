@@ -4,6 +4,24 @@ namespace {
 namespace utf8_to_latin1 {
 using namespace simd;
 
+simdutf_really_inline size_t convert_1_2_byte_utf8_block_to_latin1(
+    const char *in, uint64_t utf8_leading_mask, char *&latin1_output) {
+  size_t consumed = 64;
+  if (uint8_t(in[63]) >= 0xc0) {
+    utf8_leading_mask &= ~(uint64_t(1) << 63);
+    consumed = 63;
+  }
+  latin1_output += convert_1_2_byte_utf8_to_latin1_16(
+      in, uint16_t(utf8_leading_mask), latin1_output);
+  latin1_output += convert_1_2_byte_utf8_to_latin1_16(
+      in + 16, uint16_t(utf8_leading_mask >> 16), latin1_output);
+  latin1_output += convert_1_2_byte_utf8_to_latin1_16(
+      in + 32, uint16_t(utf8_leading_mask >> 32), latin1_output);
+  latin1_output += convert_1_2_byte_utf8_to_latin1_16(
+      in + 48, uint16_t(utf8_leading_mask >> 48), latin1_output);
+  return consumed;
+}
+
 simdutf_really_inline simd8<uint8_t>
 check_special_cases(const simd8<uint8_t> input, const simd8<uint8_t> prev1) {
   // For UTF-8 to Latin 1, we can allow any ASCII character, and any
@@ -152,8 +170,8 @@ struct validating_transcoder {
     }
     size_t pos = 0;
     char *start{latin1_output};
-    // In the worst case, we have the haswell kernel which can cause an overflow
-    // of 4 bytes when calling convert_masked_utf8_to_latin1. If you skip the
+    // The kernel can write up to 8 bytes past its output
+    // when calling convert_1_2_byte_utf8_to_latin1_16. If you skip the
     // last 16 bytes, and if the data is valid, then it is entirely safe because
     // 16 UTF-8 bytes generate at least 4 bytes. However, you cannot
     // generally assume that you have valid UTF-8 input, so we are going to go
@@ -199,32 +217,8 @@ struct validating_transcoder {
         if ((utf8_continuation_mask & 1) || ((pos & 1023) < 64 && errors())) {
           return 0; // error
         }
-        uint64_t utf8_leading_mask = ~utf8_continuation_mask;
-        uint64_t utf8_end_of_code_point_mask = utf8_leading_mask >> 1;
-        // We process in blocks of up to 12 bytes except possibly
-        // for fast paths which may process up to 16 bytes. For the
-        // slow path to work, we should have at least 12 input bytes left.
-        size_t max_starting_point = (pos + 64) - 12;
-        // Next loop is going to run at least five times.
-        while (pos < max_starting_point) {
-          // Performance note: our ability to compute 'consumed' and
-          // then shift and recompute is critical. If there is a
-          // latency of, say, 4 cycles on getting 'consumed', then
-          // the inner loop might have a total latency of about 6 cycles.
-          // Yet we process between 6 to 12 inputs bytes, thus we get
-          // a speed limit between 1 cycle/byte and 0.5 cycle/byte
-          // for this section of the code. Hence, there is a limit
-          // to how much we can further increase this latency before
-          // it seriously harms performance.
-          size_t consumed = convert_masked_utf8_to_latin1(
-              in + pos, utf8_end_of_code_point_mask, latin1_output);
-          pos += consumed;
-          utf8_end_of_code_point_mask >>= consumed;
-        }
-        // At this point there may remain between 0 and 12 bytes in the
-        // 64-byte block. These bytes will be processed again. So we have an
-        // 80% efficiency (in the worst case). In practice we expect an
-        // 85% to 90% efficiency.
+        pos += convert_1_2_byte_utf8_block_to_latin1(
+            in + pos, ~utf8_continuation_mask, latin1_output);
       }
     }
     if (errors()) {
@@ -253,8 +247,8 @@ struct validating_transcoder {
     }
     size_t pos = 0;
     char *start{latin1_output};
-    // In the worst case, we have the haswell kernel which can cause an overflow
-    // of 4 bytes when calling convert_masked_utf8_to_latin1. If you skip the
+    // The kernel can write up to 8 bytes past its output
+    // when calling convert_1_2_byte_utf8_to_latin1_16. If you skip the
     // last 16 bytes, and if the data is valid, then it is entirely safe because
     // 16 UTF-8 bytes generate at least 4 bytes. However, you cannot
     // generally assume that you have valid UTF-8 input, so we are going to go
@@ -301,32 +295,8 @@ struct validating_transcoder {
           return res;
         }
         uint64_t utf8_continuation_mask = input.lt(-65 + 1);
-        uint64_t utf8_leading_mask = ~utf8_continuation_mask;
-        uint64_t utf8_end_of_code_point_mask = utf8_leading_mask >> 1;
-        // We process in blocks of up to 12 bytes except possibly
-        // for fast paths which may process up to 16 bytes. For the
-        // slow path to work, we should have at least 12 input bytes left.
-        size_t max_starting_point = (pos + 64) - 12;
-        // Next loop is going to run at least five times.
-        while (pos < max_starting_point) {
-          // Performance note: our ability to compute 'consumed' and
-          // then shift and recompute is critical. If there is a
-          // latency of, say, 4 cycles on getting 'consumed', then
-          // the inner loop might have a total latency of about 6 cycles.
-          // Yet we process between 6 to 12 inputs bytes, thus we get
-          // a speed limit between 1 cycle/byte and 0.5 cycle/byte
-          // for this section of the code. Hence, there is a limit
-          // to how much we can further increase this latency before
-          // it seriously harms performance.
-          size_t consumed = convert_masked_utf8_to_latin1(
-              in + pos, utf8_end_of_code_point_mask, latin1_output);
-          pos += consumed;
-          utf8_end_of_code_point_mask >>= consumed;
-        }
-        // At this point there may remain between 0 and 12 bytes in the
-        // 64-byte block. These bytes will be processed again. So we have an
-        // 80% efficiency (in the worst case). In practice we expect an
-        // 85% to 90% efficiency.
+        pos += convert_1_2_byte_utf8_block_to_latin1(
+            in + pos, ~utf8_continuation_mask, latin1_output);
       }
     }
     const size_t ascii = convert_ascii_tail(in, pos, size, latin1_output);
