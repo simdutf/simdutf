@@ -2026,7 +2026,13 @@ latin1_length_from_utf8(
  * in UTF-16LE format.
  *
  * This function does not validate the input. It is acceptable to pass invalid
- * UTF-8 strings but in such cases the result is implementation defined.
+ * UTF-8 strings. The result is then implementation defined, but it remains a
+ * safe buffer size: convert_utf8_to_utf16, convert_utf8_to_utf16le,
+ * convert_utf8_to_utf16be and their _with_errors variants never write more
+ * char16_t than this function returns, even when they reject the input. To
+ * transcode invalid input instead of rejecting it, use
+ * utf16_length_from_utf8_with_replacement and
+ * convert_utf8_to_utf16_with_replacement.
  *
  * This function is not BOM-aware.
  *
@@ -2115,7 +2121,10 @@ simdutf_really_inline
  * This function is equivalent to count_utf8
  *
  * This function does not validate the input. It is acceptable to pass invalid
- * UTF-8 strings but in such cases the result is implementation defined.
+ * UTF-8 strings. The result is then implementation defined, but it remains a
+ * safe buffer size: convert_utf8_to_utf32 and convert_utf8_to_utf32_with_errors
+ * never write more char32_t than this function returns, even when they reject
+ * the input.
  *
  * This function is not BOM-aware.
  *
@@ -6191,7 +6200,9 @@ public:
    * require in UTF-16LE format.
    *
    * This function does not validate the input. It is acceptable to pass invalid
-   * UTF-8 strings but in such cases the result is implementation defined.
+   * UTF-8 strings. The result is then implementation defined, but it remains a
+   * safe buffer size for convert_utf8_to_utf16le, convert_utf8_to_utf16be and
+   * their _with_errors variants, even when they reject the input.
    *
    * @param input         the UTF-8 string to process
    * @param length        the length of the string in bytes
@@ -6208,7 +6219,9 @@ public:
    * require in UTF-32 format.
    *
    * This function is equivalent to count_utf8. It is acceptable to pass invalid
-   * UTF-8 strings but in such cases the result is implementation defined.
+   * UTF-8 strings. The result is then implementation defined, but it remains a
+   * safe buffer size for convert_utf8_to_utf32 and
+   * convert_utf8_to_utf32_with_errors, even when they reject the input.
    *
    * This function does not validate the input.
    *
