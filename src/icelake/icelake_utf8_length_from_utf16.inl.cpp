@@ -5,10 +5,7 @@ simdutf_really_inline size_t icelake_utf8_length_from_utf16(const char16_t *in,
   using vector_u16 = simd16<uint16_t>;
   constexpr size_t N = vector_u16::ELEMENTS; // 32 on AVX-512
   if (N + 1 > size) {
-    result scalar_result =
-        scalar::utf16::utf8_length_from_utf16_with_replacement<big_endian>(
-            in, size);
-    return scalar_result.count;
+    return scalar::utf16::utf8_length_from_utf16<big_endian>(in, size);
   } // special case for short inputs
   size_t pos = 0;
 

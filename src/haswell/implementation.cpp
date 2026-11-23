@@ -1132,8 +1132,7 @@ simdutf_really_inline size_t utf8_length_from_utf16le_unsplit(
 simdutf_warn_unused size_t implementation::utf8_length_from_utf16le(
     const char16_t *input, size_t length) const noexcept {
   return aligned_split::sum<utf8_length_from_utf16le_unsplit>(
-      input, length,
-      aligned_split::utf16_head<endianness::LITTLE>(input, length));
+      input, length, aligned_split::head(input, length));
 }
 
 simdutf_really_inline size_t utf8_length_from_utf16be_unsplit(
@@ -1144,7 +1143,7 @@ simdutf_really_inline size_t utf8_length_from_utf16be_unsplit(
 simdutf_warn_unused size_t implementation::utf8_length_from_utf16be(
     const char16_t *input, size_t length) const noexcept {
   return aligned_split::sum<utf8_length_from_utf16be_unsplit>(
-      input, length, aligned_split::utf16_head<endianness::BIG>(input, length));
+      input, length, aligned_split::head(input, length));
 }
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 

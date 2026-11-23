@@ -207,6 +207,16 @@ void check_utf16(const simdutf::implementation &implementation) {
               same(be ? implementation.validate_utf16be_with_errors(q, n)
                       : implementation.validate_utf16le_with_errors(q, n),
                    simdutf::scalar::utf16::validate_with_errors<E>(q, n)));
+          ASSERT_EQUAL(be ? implementation.utf8_length_from_utf16be(q, n)
+                          : implementation.utf8_length_from_utf16le(q, n),
+                       simdutf::scalar::utf16::utf8_length_from_utf16<E>(q, n));
+          ASSERT_EQUAL(be ? implementation.count_utf16be(q, n)
+                          : implementation.count_utf16le(q, n),
+                       simdutf::scalar::utf16::count_code_points<E>(q, n));
+          ASSERT_EQUAL(
+              be ? implementation.utf32_length_from_utf16be(q, n)
+                 : implementation.utf32_length_from_utf16le(q, n),
+              simdutf::scalar::utf16::utf32_length_from_utf16<E>(q, n));
           ASSERT_TRUE(same(
               be ? implementation.utf8_length_from_utf16be_with_replacement(q,
                                                                             n)
