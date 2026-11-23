@@ -70,8 +70,6 @@ simdutf_constexpr23 size_t maximal_subpart(InputPtr ptr, size_t n) noexcept {
 
 // WHATWG / Unicode substitution of maximal subparts. One U+FFFD per subpart.
 // `write == false` counts UTF-16 code units and does not store.
-// `record_error` reports, through saw_error, that a subpart was replaced.
-// The count alone cannot: an ASCII byte and U+FFFD are both one code unit.
 template <endianness endian, bool write, bool record_error = false,
           typename InputPtr>
 #if SIMDUTF_CPLUSPLUS20
@@ -228,7 +226,6 @@ simdutf_constexpr23 size_t count_with_replacement(InputPtr data,
                                                                nullptr);
 }
 
-// saw_error is set when data contains an ill-formed subsequence.
 template <typename InputPtr>
 #if SIMDUTF_CPLUSPLUS20
   requires simdutf::detail::indexes_into_byte_like<InputPtr>

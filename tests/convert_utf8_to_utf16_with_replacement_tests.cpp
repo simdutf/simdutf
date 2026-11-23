@@ -322,8 +322,6 @@ TEST(long_valid_and_sparse_and_dense) {
   check(std::string(100, '\x80'));
 }
 
-// Sixteen "abc"+0xFF fill the error list with short prefixes. The scalar
-// tail must not set more_errors unless it finds another ill-formed byte.
 TEST(error_cap_scalar_tail) {
   std::string sixteen;
   for (int i = 0; i < 16; i++) {
@@ -362,8 +360,6 @@ TEST(error_cap_scalar_tail) {
   truncated += '\xC2';
   expect_cap(truncated, 10065, true);
 
-  // The 17th error is seen before the scalar tail, and the tail is valid.
-  // The flag set for that error has to stay set.
   std::string prior(15, char(0xFF));
   prior += "abc";
   prior += char(0xFF);

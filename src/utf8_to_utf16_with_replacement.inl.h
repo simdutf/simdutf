@@ -240,9 +240,6 @@ utf16_length_from_utf8_with_replacement(const char *input,
   size_t pos = 0;
   int short_prefixes = 0;
   while (pos < length) {
-    // Slots are full and the valid runs are short, so the rest is scalar.
-    // more_errors stays clear when that tail is well-formed: the count
-    // alone cannot tell a replacement from an ASCII byte.
     if (short_prefixes >= 2 &&
         out.error_count == utf8_to_utf16_result::max_errors) {
       bool tail_error = false;
