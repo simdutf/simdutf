@@ -133,6 +133,7 @@ convert_utf8_1_to_2_byte_to_utf16(uint8x16_t in, size_t shufutf8_idx) {
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_LATIN1
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
   #include "arm64/arm_convert_utf8_to_utf16.cpp"
+  #include "arm64/arm_utf16_length_from_utf8.cpp"
 #endif // SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF32
   #include "arm64/arm_convert_utf8_to_utf32.cpp"
@@ -1177,7 +1178,7 @@ simdutf_warn_unused size_t implementation::utf32_length_from_utf16be(
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
 simdutf_warn_unused size_t implementation::utf16_length_from_utf8(
     const char *input, size_t length) const noexcept {
-  return utf8::utf16_length_from_utf8(input, length);
+  return arm64_utf16_length_from_utf8(input, length);
 }
 simdutf_warn_unused result
 implementation::utf8_length_from_utf16le_with_replacement(
