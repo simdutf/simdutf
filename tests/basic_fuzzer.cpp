@@ -367,7 +367,8 @@ template <typename T> void fill_utf8_output_canary(T *output, size_t valid) {
 template <typename T>
 void assert_utf8_output_canary(const T *output, size_t valid) {
   for (size_t i = 0; i < utf8_output_canary; i++) {
-    ASSERT_EQUAL(uint32_t(output[valid + i]), 0xA5A5u + uint32_t(i));
+    ASSERT_EQUAL(uint32_t(output[valid + i]),
+                 uint32_t(static_cast<T>(0xA5A5u + i)));
   }
 }
 
@@ -425,6 +426,19 @@ TEST(garbage_utf8_fuzz_with_errors) {
     } else {
       ASSERT_TRUE(r.count < length);
     }
+    size_t expected_latin1_length =
+        implementation.latin1_length_from_utf8(utf8_buffer.get(), length);
+    std::unique_ptr<char[]> latin1_buffer(
+        new char[expected_latin1_length + utf8_output_canary]);
+    fill_utf8_output_canary(latin1_buffer.get(), expected_latin1_length);
+    r = implementation.convert_utf8_to_latin1_with_errors(
+        utf8_buffer.get(), length, latin1_buffer.get());
+    assert_utf8_output_canary(latin1_buffer.get(), expected_latin1_length);
+    if (r.error == simdutf::SUCCESS) {
+      ASSERT_EQUAL(r.count, expected_latin1_length);
+    } else {
+      ASSERT_TRUE(r.count < length);
+    }
   }
 }
 
@@ -472,6 +486,66 @@ TEST(garbage_utf8_fuzz) {
     assert_utf8_output_canary(utf32_buffer.get(), expected_utf32_length);
     if (r != 0) {
       ASSERT_EQUAL(r, expected_utf32_length);
+    }
+    size_t expected_latin1_length =
+        implementation.latin1_length_from_utf8(utf8_buffer.get(), length);
+    std::unique_ptr<char[]> latin1_buffer(
+        new char[expected_latin1_length + utf8_output_canary]);
+    fill_utf8_output_canary(latin1_buffer.get(), expected_latin1_length);
+    r = implementation.convert_utf8_to_latin1(utf8_buffer.get(), length,
+                                              latin1_buffer.get());
+    assert_utf8_output_canary(latin1_buffer.get(), expected_latin1_length);
+    if (r != 0) {
+      ASSERT_EQUAL(r, expected_latin1_length);
+    }
+  }
+}
+
+TEST(garbage_utf16_fuzz) {
+  std::mt19937 gen((std::mt19937::result_type)(seed));
+  std::uniform_int_distribution<size_t> length_generator{1, 300};
+  std::uniform_int_distribution<uint32_t> unit_generator{0, 0xffff};
+  std::uniform_int_distribution<uint32_t> kind_generator{0, 3};
+
+  for (size_t counter = 0; counter < trials; counter++) {
+    if ((counter % 10000) == 0) {
+      printf("-");
+      fflush(NULL);
+    }
+    size_t length = length_generator(gen);
+    std::unique_ptr<char16_t[]> utf16_buffer(new char16_t[length]);
+    for (size_t i = 0; i < length; i++) {
+      uint32_t unit = unit_generator(gen);
+      switch (kind_generator(gen)) {
+      case 0:
+        unit &= 0x7f;
+        break;
+      case 1:
+        unit = 0xd800 | (unit & 0x7ff);
+        break;
+      default:
+        break;
+      }
+      utf16_buffer.get()[i] = char16_t(unit);
+    }
+    size_t expected_utf8_length =
+        implementation.utf8_length_from_utf16le(utf16_buffer.get(), length);
+    std::unique_ptr<char[]> utf8_buffer(
+        new char[expected_utf8_length + utf8_output_canary]);
+    fill_utf8_output_canary(utf8_buffer.get(), expected_utf8_length);
+    size_t written = implementation.convert_utf16le_to_utf8(
+        utf16_buffer.get(), length, utf8_buffer.get());
+    assert_utf8_output_canary(utf8_buffer.get(), expected_utf8_length);
+    if (written != 0) {
+      ASSERT_EQUAL(written, expected_utf8_length);
+    }
+    auto r = implementation.convert_utf16le_to_utf8_with_errors(
+        utf16_buffer.get(), length, utf8_buffer.get());
+    assert_utf8_output_canary(utf8_buffer.get(), expected_utf8_length);
+    if (r.error == simdutf::SUCCESS) {
+      ASSERT_EQUAL(r.count, expected_utf8_length);
+    } else {
+      ASSERT_TRUE(r.count < length);
     }
   }
 }

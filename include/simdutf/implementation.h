@@ -1384,7 +1384,7 @@ convert_utf8_to_utf16be(const detail::input_span_of_byte_like auto &utf8_input,
  * @param latin1_output  the pointer to buffer that can hold conversion result
  * @return a result pair struct (of type simdutf::result containing the two
  * fields error and count) with an error code and either position of the error
- * (in the input in code units) if any, or the number of code units validated if
+ * (in the input in code units) if any, or the number of bytes written if
  * successful.
  */
 simdutf_warn_unused result convert_utf8_to_latin1_with_errors(
@@ -2027,7 +2027,10 @@ utf8_length_from_latin1(
  * format.
  *
  * This function does not validate the input. It is acceptable to pass invalid
- * UTF-8 strings but in such cases the result is implementation defined.
+ * UTF-8 strings. The result is then implementation defined, but it remains a
+ * safe buffer size: convert_utf8_to_latin1 and
+ * convert_utf8_to_latin1_with_errors never write more bytes than this
+ * function returns, even when they reject the input.
  *
  * This function is not BOM-aware.
  *
@@ -3437,7 +3440,10 @@ convert_valid_utf16be_to_utf32(std::span<const char16_t> valid_utf16_input,
  * string would require in UTF-8 format.
  *
  * This function does not validate the input. It is acceptable to pass invalid
- * UTF-16 strings but in such cases the result is implementation defined.
+ * UTF-16 strings. The result is then implementation defined, but it remains a
+ * safe buffer size: convert_utf16_to_utf8 and convert_utf16_to_utf8_with_errors
+ * never write more bytes than this function returns, even when they reject
+ * the input.
  *
  * @param input         the UTF-16 string to convert
  * @param length        the length of the string in 2-byte code units (char16_t)
@@ -3503,7 +3509,10 @@ utf8_length_from_utf16_with_replacement(
  * format.
  *
  * This function does not validate the input. It is acceptable to pass invalid
- * UTF-16 strings but in such cases the result is implementation defined.
+ * UTF-16 strings. The result is then implementation defined, but it remains a
+ * safe buffer size: convert_utf16le_to_utf8 and
+ * convert_utf16le_to_utf8_with_errors never write more bytes than this function
+ * returns, even when they reject the input.
  *
  * @param input         the UTF-16LE string to convert
  * @param length        the length of the string in 2-byte code units (char16_t)
@@ -3532,7 +3541,10 @@ utf8_length_from_utf16le(std::span<const char16_t> valid_utf16_input) noexcept {
  * format.
  *
  * This function does not validate the input. It is acceptable to pass invalid
- * UTF-16 strings but in such cases the result is implementation defined.
+ * UTF-16 strings. The result is then implementation defined, but it remains a
+ * safe buffer size: convert_utf16be_to_utf8 and
+ * convert_utf16be_to_utf8_with_errors never write more bytes than this function
+ * returns, even when they reject the input.
  *
  * @param input         the UTF-16BE string to convert
  * @param length        the length of the string in 2-byte code units (char16_t)
@@ -6036,7 +6048,7 @@ public:
    * @param latin1_output  the pointer to buffer that can hold conversion result
    * @return a result pair struct (of type simdutf::result containing the two
    * fields error and count) with an error code and either position of the error
-   * (in the input in code units) if any, or the number of code units validated
+   * (in the input in code units) if any, or the number of bytes written
    * if successful.
    */
   simdutf_warn_unused virtual result
@@ -6112,7 +6124,7 @@ public:
    * @param utf16_output  the pointer to buffer that can hold conversion result
    * @return a result pair struct (of type simdutf::result containing the two
    * fields error and count) with an error code and either position of the error
-   * (in the input in code units) if any, or the number of code units validated
+   * (in the input in code units) if any, or the number of char16_t written
    * if successful.
    */
   simdutf_warn_unused virtual result convert_utf8_to_utf16le_with_errors(
@@ -6131,7 +6143,7 @@ public:
    * @param utf16_output  the pointer to buffer that can hold conversion result
    * @return a result pair struct (of type simdutf::result containing the two
    * fields error and count) with an error code and either position of the error
-   * (in the input in code units) if any, or the number of code units validated
+   * (in the input in code units) if any, or the number of char16_t written
    * if successful.
    */
   simdutf_warn_unused virtual result convert_utf8_to_utf16be_with_errors(
@@ -6725,7 +6737,10 @@ public:
    * UTF-8 format.
    *
    * This function does not validate the input. It is acceptable to pass invalid
-   * UTF-16 strings but in such cases the result is implementation defined.
+   * UTF-16 strings. The result is then implementation defined, but it remains a
+   * safe buffer size: convert_utf16le_to_utf8 and
+   * convert_utf16le_to_utf8_with_errors never write more bytes than this
+   * function returns, even when they reject the input.
    *
    * This function is not BOM-aware.
    *
@@ -6743,7 +6758,10 @@ public:
    * UTF-8 format.
    *
    * This function does not validate the input. It is acceptable to pass invalid
-   * UTF-16 strings but in such cases the result is implementation defined.
+   * UTF-16 strings. The result is then implementation defined, but it remains a
+   * safe buffer size: convert_utf16be_to_utf8 and
+   * convert_utf16be_to_utf8_with_errors never write more bytes than this
+   * function returns, even when they reject the input.
    *
    * This function is not BOM-aware.
    *
@@ -7098,7 +7116,10 @@ public:
    * format.
    *
    * This function does not validate the input. It is acceptable to pass invalid
-   * UTF-8 strings but in such cases the result is implementation defined.
+   * UTF-8 strings. The result is then implementation defined, but it remains a
+   * safe buffer size: convert_utf8_to_latin1 and
+   * convert_utf8_to_latin1_with_errors never write more bytes than this
+   * function returns, even when they reject the input.
    *
    * @param input         the UTF-8 string to convert
    * @param length        the length of the string in byte
