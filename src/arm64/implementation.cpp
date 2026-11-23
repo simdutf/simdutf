@@ -1,4 +1,7 @@
 #include "simdutf/arm64/begin.h"
+#if SIMDUTF_FEATURE_BASE64
+  #include "generic/base64_lines.h"
+#endif // SIMDUTF_FEATURE_BASE64
 #include "simdutf/implementation.h"
 namespace simdutf {
 namespace SIMDUTF_IMPLEMENTATION {

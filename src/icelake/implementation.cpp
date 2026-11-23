@@ -3,6 +3,9 @@
 #include "simdutf/icelake/intrinsics.h"
 
 #include "simdutf/icelake/begin.h"
+#if SIMDUTF_FEATURE_BASE64
+  #include "generic/base64_lines.h"
+#endif // SIMDUTF_FEATURE_BASE64
 #if SIMDUTF_FEATURE_UTF8 && SIMDUTF_FEATURE_UTF16
   // transcoding from UTF-16 to UTF-8 (self-wrapping generic header; must be
   // included at namespace scope zero, unlike icelake's own .inl.cpp files which
