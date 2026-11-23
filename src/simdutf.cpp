@@ -11,6 +11,7 @@ SIMDUTF_DISABLE_UNUSED_WARNING
 // The large tables should be included once and they
 // should not depend on a kernel.
 #include "tables/utf8_to_utf16_tables.h"
+#include "tables/utf8_to_latin1_tables.h"
 #include "tables/utf16_to_utf8_tables.h"
 #include "tables/utf32_to_utf16_tables.h"
 // End of tables.
