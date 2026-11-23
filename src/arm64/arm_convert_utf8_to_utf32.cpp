@@ -20,7 +20,7 @@ size_t convert_masked_utf8_to_utf32(const char *input,
   // higher speeds.
   //
   // We first try a few fast paths.
-  if (utf8_end_of_code_point_mask == 0xfff) {
+  if ((utf8_end_of_code_point_mask & 0xfff) == 0xfff) {
     // We process in chunks of 12 bytes.
     // use fast implementation in src/simdutf/arm64/simd.h
     // Ideally the compiler can keep the tables in registers.
