@@ -525,6 +525,31 @@ void load_block(block64 *b, const char *src) {
   b->chunks[3] = vld1q_u8(reinterpret_cast<const uint8_t *>(src) + 48);
 }
 
+alignas(64) static const uint8_t line_gap_masks[128] = {
+    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+    0,    0,    0,    0,    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+
+simdutf_really_inline const uint8_t *gap_mask(const base64_lines::step &s) {
+  return line_gap_masks + 64 - s.gap;
+}
+
+void load_block(block64 *b, const char *src, size_t eol, const uint8_t *mask) {
+  const uint8_t *in = reinterpret_cast<const uint8_t *>(src);
+  for (size_t i = 0; i < 4; i++) {
+    b->chunks[i] = vbslq_u8(vld1q_u8(mask + 16 * i),
+                            vld1q_u8(in + 16 * i + eol), vld1q_u8(in + 16 * i));
+  }
+}
+
 // The caller of this function is responsible to ensure that there are 32 bytes
 // available from reading at data. It returns a 16-byte value, narrowing with
 // saturation the 16-bit words.
@@ -655,6 +680,58 @@ static size_t compress_block_single(block64 *b, uint64_t mask, char *output) {
 
 template <typename T> bool is_power_of_two(T x) { return (x & (x - 1)) == 0; }
 
+template <bool base64_url, bool default_or_url>
+simdutf_really_inline void decode_fixed_lines_impl(char *&dst, const char *&src,
+                                                   const char *srcend) {
+  base64_lines::plan plan;
+  if (!base64_lines::make_plan(src, size_t(srcend - src), plan, 256)) {
+    return;
+  }
+  constexpr size_t batch = 8;
+  char local[batch * 64];
+  size_t n = 0;
+  size_t i = 0;
+  while (base64_lines::has_room(src, srcend)) {
+    const base64_lines::step &s = plan.steps[i];
+    block64 b;
+    load_block(&b, src, plan.eol, gap_mask(s));
+    bool error = false;
+    const uint64_t m = to_base64_mask<base64_url, default_or_url>(&b, &error);
+    if (m != 0 || base64_lines::check_eol(src, s) != 0) {
+      break;
+    }
+    copy_block(&b, local + 64 * n);
+    src += s.advance;
+    i = i + 1 == plan.cycle ? 0 : i + 1;
+    if (++n == batch) {
+      for (size_t k = 0; k < batch; k++) {
+        base64_decode_block(dst + 48 * k, local + 64 * k);
+      }
+      dst += 48 * batch;
+      n = 0;
+    }
+  }
+  for (size_t k = 0; k < n; k++) {
+    base64_decode_block(dst + 48 * k, local + 64 * k);
+  }
+  dst += 48 * n;
+}
+
+template <bool base64_url, bool default_or_url>
+static inline base64_lines::progress
+decode_fixed_lines(char *dst, const char *src, const char *srcend) {
+  char *out = dst;
+  const char *in = src;
+  decode_fixed_lines_impl<base64_url, default_or_url>(out, in, srcend);
+  return {size_t(in - src), size_t(out - dst)};
+}
+
+template <bool base64_url, bool default_or_url>
+static inline base64_lines::progress
+decode_fixed_lines(char *, const char16_t *, const char16_t *) {
+  return {0, 0};
+}
+
 template <bool base64_url, bool ignore_garbage, bool default_or_url,
           typename char_type>
 full_result
@@ -686,8 +763,14 @@ compress_decode_base64(char *dst, const char_type *src, size_t srclen,
   constexpr size_t block_size = 10;
   simdutf_indeterminate char buffer[block_size * 64];
   char *bufferptr = buffer;
-  if (srclen >= 64) {
-    const char_type *const srcend64 = src + srclen - 64;
+  {
+    const base64_lines::progress p =
+        decode_fixed_lines<base64_url, default_or_url>(dst, src, srcend);
+    src += p.read;
+    dst += p.written;
+  }
+  if (size_t(srcend - src) >= 64) {
+    const char_type *const srcend64 = srcend - 64;
     while (src <= srcend64) {
       block64 b;
       load_block(&b, src);

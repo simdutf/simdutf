@@ -4467,6 +4467,69 @@ void check_tc39_read_includes_trailing_whitespace(
   }
 }
 
+TEST(base64_decode_fixed_line_lengths) {
+  std::mt19937 gen((std::mt19937::result_type)(seed));
+  std::uniform_int_distribution<int> byte_generator{0, 255};
+  for (size_t line : {64, 65, 72, 76, 77, 100, 128, 200}) {
+    for (const char *eol : {"\n", "\r\n"}) {
+      for (size_t len : {200, 1000, 3001}) {
+        std::vector<char> source(len);
+        for (char &c : source) {
+          c = char(byte_generator(gen));
+        }
+        std::string encoded(simdutf::base64_length_from_binary(len), '\0');
+        encoded.resize(
+            implementation.binary_to_base64(source.data(), len, &encoded[0]));
+        std::string input;
+        std::vector<size_t> breaks;
+        for (size_t i = 0; i < encoded.size(); i += line) {
+          input += encoded.substr(i, line);
+          breaks.push_back(input.size());
+          input += eol;
+        }
+        auto decode = [&](const std::string &s) {
+          std::vector<char> out(len + 64);
+          simdutf::full_result r = implementation.base64_to_binary_details(
+              s.data(), s.size(), out.data());
+          out.resize(r.output_count);
+          return std::make_pair(r, out);
+        };
+        auto clean = decode(input);
+        ASSERT_EQUAL(clean.first.error, simdutf::error_code::SUCCESS);
+        ASSERT_TRUE(clean.second == source);
+        for (size_t b : breaks) {
+          for (size_t pos : {b - 1, b, b + 1}) {
+            if (pos >= input.size()) {
+              continue;
+            }
+            std::string spaced = input;
+            spaced.insert(pos, 1, ' ');
+            auto r = decode(spaced);
+            ASSERT_EQUAL(r.first.error, simdutf::error_code::SUCCESS);
+            ASSERT_TRUE(r.second == source);
+            if (simdutf::scalar::base64::is_eight_byte(input[pos]) &&
+                input[pos] != '\r' && input[pos] != '\n' && input[pos] != '=') {
+              std::string bad = input;
+              bad[pos] = '*';
+              auto e = decode(bad);
+              ASSERT_EQUAL(e.first.error,
+                           simdutf::error_code::INVALID_BASE64_CHARACTER);
+              ASSERT_EQUAL(e.first.input_count, pos);
+            }
+          }
+          if (eol[1] == '\n' && b + 1 < input.size()) {
+            std::string lf = input;
+            lf.erase(b, 1);
+            auto r = decode(lf);
+            ASSERT_EQUAL(r.first.error, simdutf::error_code::SUCCESS);
+            ASSERT_TRUE(r.second == source);
+          }
+        }
+      }
+    }
+  }
+}
+
 TEST(base64_tc39_read_includes_trailing_whitespace) {
   for (auto options :
        {simdutf::base64_default, simdutf::base64_url,

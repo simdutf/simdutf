@@ -419,6 +419,82 @@ static inline void load_base64_lookups(__m512i &lookup0, __m512i &lookup1) {
   }
 }
 
+static simdutf_really_inline __m512i
+load_gap_block(const char *src, size_t eol, const base64_lines::step &s) {
+  return _mm512_mask_blend_epi8(s.blend, _mm512_loadu_si512(src),
+                                _mm512_loadu_si512(src + eol));
+}
+
+simdutf_really_inline void decode_fixed_lines_impl(char *&dst, const char *&src,
+                                                   const char *srcend,
+                                                   const __m512i lookup0,
+                                                   const __m512i lookup1) {
+  base64_lines::plan plan;
+  if (!base64_lines::make_plan(src, size_t(srcend - src), plan, 2048)) {
+    return;
+  }
+  const size_t cycle = plan.cycle;
+  size_t i = 0;
+  for (;;) {
+    const base64_lines::step &s0 = plan.steps[i];
+    const base64_lines::step &s1 = plan.steps[i + 1];
+    const base64_lines::step &s2 = plan.steps[i + 2];
+    const base64_lines::step &s3 = plan.steps[i + 3];
+    const size_t a1 = s0.advance;
+    const size_t a2 = a1 + s1.advance;
+    const size_t a3 = a2 + s2.advance;
+    if (!base64_lines::has_room(src, srcend, a3)) {
+      return;
+    }
+    const char *src1 = src + a1;
+    const char *src2 = src + a2;
+    const char *src3 = src + a3;
+    const __m512i v0 = load_gap_block(src, plan.eol, s0);
+    const __m512i v1 = load_gap_block(src1, plan.eol, s1);
+    const __m512i v2 = load_gap_block(src2, plan.eol, s2);
+    const __m512i v3 = load_gap_block(src3, plan.eol, s3);
+    const __m512i t0 = _mm512_permutex2var_epi8(lookup0, v0, lookup1);
+    const __m512i t1 = _mm512_permutex2var_epi8(lookup0, v1, lookup1);
+    const __m512i t2 = _mm512_permutex2var_epi8(lookup0, v2, lookup1);
+    const __m512i t3 = _mm512_permutex2var_epi8(lookup0, v3, lookup1);
+    const __m512i any =
+        _mm512_ternarylogic_epi32(_mm512_ternarylogic_epi32(t0, t1, t2, 0xfe),
+                                  _mm512_ternarylogic_epi32(v0, v1, v2, 0xfe),
+                                  _mm512_or_si512(t3, v3), 0xfe);
+    const uint32_t eol_error = uint32_t(
+        base64_lines::check_eol(src, s0) | base64_lines::check_eol(src1, s1) |
+        base64_lines::check_eol(src2, s2) | base64_lines::check_eol(src3, s3));
+    if (simdutf_unlikely((_mm512_movepi8_mask(any) | eol_error) != 0)) {
+      return;
+    }
+    _mm512_storeu_si512(dst, base64_pack(t0));
+    _mm512_storeu_si512(dst + 48, base64_pack(t1));
+    _mm512_storeu_si512(dst + 96, base64_pack(t2));
+    _mm512_mask_storeu_epi8(dst + 144, 0xffffffffffff, base64_pack(t3));
+    src = src3 + s3.advance;
+    dst += 192;
+    i += 4;
+    while (i >= cycle) {
+      i -= cycle;
+    }
+  }
+}
+
+static inline base64_lines::progress
+decode_fixed_lines(char *dst, const char *src, const char *srcend,
+                   const __m512i lookup0, const __m512i lookup1) {
+  char *out = dst;
+  const char *in = src;
+  decode_fixed_lines_impl(out, in, srcend, lookup0, lookup1);
+  return {size_t(in - src), size_t(out - dst)};
+}
+
+static inline base64_lines::progress
+decode_fixed_lines(char *, const char16_t *, const char16_t *, const __m512i,
+                   const __m512i) {
+  return {0, 0};
+}
+
 template <bool base64_url, bool ignore_garbage, bool default_or_url,
           typename chartype>
 full_result
@@ -462,8 +538,14 @@ compress_decode_base64(char *dst, const chartype *src, size_t srclen,
   constexpr size_t block_size = 6;
   simdutf_indeterminate char buffer[block_size * 64];
   char *bufferptr = buffer;
-  if (srclen >= 64) {
-    const chartype *const srcend64 = src + srclen - 64;
+  {
+    const base64_lines::progress p =
+        decode_fixed_lines(dst, src, srcend, lookup0, lookup1);
+    src += p.read;
+    dst += p.written;
+  }
+  if (size_t(srcend - src) >= 64) {
+    const chartype *const srcend64 = srcend - 64;
     // 512 input bytes / iteration, matching Turbo's DS256×2 inner loop.
     // DNS messages are ~350 bytes so they never enter; a whitespace hit in
     // the first group would throw the work away.
