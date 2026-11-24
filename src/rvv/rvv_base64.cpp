@@ -75,7 +75,12 @@ size_t encode_base64_rvv(char *dst, const char *src, size_t srclen,
       }
 
       // 4-way interleaved store
+#if defined(__clang__) && __clang_major__ < 18
+      // Clang 17 does not provide tuple vundefined intrinsics.
+      vuint8m2x4_t output_tuple{};
+#else
       vuint8m2x4_t output_tuple = __riscv_vundefined_u8m2x4();
+#endif
       output_tuple = __riscv_vset_v_u8m2_u8m2x4(output_tuple, 0, out0);
       output_tuple = __riscv_vset_v_u8m2_u8m2x4(output_tuple, 1, out1);
       output_tuple = __riscv_vset_v_u8m2_u8m2x4(output_tuple, 2, out2);
@@ -95,7 +100,12 @@ size_t encode_base64_rvv(char *dst, const char *src, size_t srclen,
       }
     } else {
       // 4-way interleaved store
+#if defined(__clang__) && __clang_major__ < 18
+      // Clang 17 does not provide tuple vundefined intrinsics.
+      vuint8m2x4_t output_tuple{};
+#else
       vuint8m2x4_t output_tuple = __riscv_vundefined_u8m2x4();
+#endif
       output_tuple = __riscv_vset_v_u8m2_u8m2x4(output_tuple, 0, out0);
       output_tuple = __riscv_vset_v_u8m2_u8m2x4(output_tuple, 1, out1);
       output_tuple = __riscv_vset_v_u8m2_u8m2x4(output_tuple, 2, out2);
