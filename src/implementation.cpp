@@ -147,7 +147,8 @@ namespace internal {
   (SIMDUTF_IMPLEMENTATION_ICELAKE + SIMDUTF_IMPLEMENTATION_HASWELL +           \
        SIMDUTF_IMPLEMENTATION_WESTMERE + SIMDUTF_IMPLEMENTATION_ARM64 +        \
        SIMDUTF_IMPLEMENTATION_PPC64 + SIMDUTF_IMPLEMENTATION_LSX +             \
-       SIMDUTF_IMPLEMENTATION_LASX + SIMDUTF_IMPLEMENTATION_FALLBACK ==        \
+       SIMDUTF_IMPLEMENTATION_LASX + SIMDUTF_IMPLEMENTATION_RVV +              \
+       SIMDUTF_IMPLEMENTATION_FALLBACK ==                                      \
    1)
 
 #if SIMDUTF_IMPLEMENTATION_ICELAKE
@@ -273,6 +274,9 @@ simdutf_really_inline static const implementation *get_single_implementation() {
   #endif
   #if SIMDUTF_IMPLEMENTATION_LSX
   get_lsx_singleton();
+  #endif
+  #if SIMDUTF_IMPLEMENTATION_RVV
+  get_rvv_singleton();
   #endif
   #if SIMDUTF_IMPLEMENTATION_FALLBACK
   get_fallback_singleton();
