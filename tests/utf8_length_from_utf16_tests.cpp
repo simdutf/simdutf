@@ -62,10 +62,17 @@ TEST(utf16be_surrogate_pair) {
 
 TEST(trailing_lone_high_surrogate) {
   for (size_t size = 1; size < 512; size++) {
+#if SIMDUTF_IS_BIG_ENDIAN
+    std::vector<char16_t> le(size, char16_t(0x6100));
+    std::vector<char16_t> be(size, u'a');
+    le.back() = char16_t(0x01d8);
+    be.back() = char16_t(0xd801);
+#else
     std::vector<char16_t> le(size, u'a');
     std::vector<char16_t> be(size, char16_t(0x6100));
     le.back() = char16_t(0xd801);
     be.back() = char16_t(0x01d8);
+#endif
     const size_t want = size + 1;
     ASSERT_EQUAL(want,
                  implementation.utf8_length_from_utf16le(le.data(), size));
