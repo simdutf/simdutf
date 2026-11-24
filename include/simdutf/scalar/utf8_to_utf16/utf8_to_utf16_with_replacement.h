@@ -70,12 +70,14 @@ simdutf_constexpr23 size_t maximal_subpart(InputPtr ptr, size_t n) noexcept {
 
 // WHATWG / Unicode substitution of maximal subparts. One U+FFFD per subpart.
 // `write == false` counts UTF-16 code units and does not store.
-template <endianness endian, bool write, typename InputPtr>
+template <endianness endian, bool write, bool record_error = false,
+          typename InputPtr>
 #if SIMDUTF_CPLUSPLUS20
   requires simdutf::detail::indexes_into_byte_like<InputPtr>
 #endif
-simdutf_constexpr23 size_t transcode_with_replacement(
-    InputPtr data, size_t len, char16_t *utf16_output) noexcept {
+simdutf_constexpr23 size_t
+transcode_with_replacement(InputPtr data, size_t len, char16_t *utf16_output,
+                           bool *saw_error = nullptr) noexcept {
   size_t i = 0;
   size_t written = 0;
   uint32_t cp = 0;
@@ -83,6 +85,9 @@ simdutf_constexpr23 size_t transcode_with_replacement(
   size_t seen = 0;
   uint8_t lo = 0x80;
   uint8_t hi = 0xBF;
+  if constexpr (!record_error) {
+    (void)saw_error;
+  }
   auto store = [&](uint32_t c) {
     if (c >= 0x10000) {
       c -= 0x10000;
@@ -106,6 +111,12 @@ simdutf_constexpr23 size_t transcode_with_replacement(
       written += 1;
     }
   };
+  auto replace = [&]() {
+    if constexpr (record_error) {
+      *saw_error = true;
+    }
+    store(0xFFFD);
+  };
   while (i < len) {
     if (needed == 0 && i + 16 <= len) {
 #if SIMDUTF_CPLUSPLUS23
@@ -125,6 +136,15 @@ simdutf_constexpr23 size_t transcode_with_replacement(
         }
       }
     }
+    if (needed == 0) {
+      while (i < len && uint8_t(static_cast<unsigned char>(data[i])) < 0x80) {
+        store(uint8_t(static_cast<unsigned char>(data[i])));
+        i++;
+      }
+      if (i == len) {
+        break;
+      }
+    }
     const uint8_t b = uint8_t(static_cast<unsigned char>(data[i]));
     if (needed == 0) {
       i++;
@@ -134,7 +154,7 @@ simdutf_constexpr23 size_t transcode_with_replacement(
         store(b);
       } else if (b <= 0xDF) {
         if (b < 0xC2) {
-          store(0xFFFD);
+          replace();
         } else {
           needed = 1;
           cp = b & 0x1F;
@@ -156,7 +176,7 @@ simdutf_constexpr23 size_t transcode_with_replacement(
         needed = 3;
         cp = b & 0x07;
       } else {
-        store(0xFFFD);
+        replace();
       }
       continue;
     }
@@ -166,7 +186,7 @@ simdutf_constexpr23 size_t transcode_with_replacement(
       cp = 0;
       lo = 0x80;
       hi = 0xBF;
-      store(0xFFFD);
+      replace();
       continue;
     }
     i++;
@@ -182,7 +202,7 @@ simdutf_constexpr23 size_t transcode_with_replacement(
     }
   }
   if (needed != 0) {
-    store(0xFFFD);
+    replace();
   }
   return written;
 }
@@ -204,6 +224,17 @@ simdutf_constexpr23 size_t count_with_replacement(InputPtr data,
                                                   size_t len) noexcept {
   return transcode_with_replacement<endianness::LITTLE, false>(data, len,
                                                                nullptr);
+}
+
+template <typename InputPtr>
+#if SIMDUTF_CPLUSPLUS20
+  requires simdutf::detail::indexes_into_byte_like<InputPtr>
+#endif
+simdutf_constexpr23 size_t count_with_replacement(InputPtr data, size_t len,
+                                                  bool &saw_error) noexcept {
+  saw_error = false;
+  return transcode_with_replacement<endianness::LITTLE, false, true>(
+      data, len, nullptr, &saw_error);
 }
 
 template <typename InputPtr>
