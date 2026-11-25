@@ -326,138 +326,26 @@ implementation::detect_encodings(const char *input,
 #if SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 simdutf_warn_unused bool
 implementation::validate_utf8(const char *buf, size_t len) const noexcept {
-  if (simdutf_unlikely(len == 0)) {
-    return true;
-  }
-  avx512_utf8_checker checker{};
-  const char *ptr = buf;
-  const char *end = ptr + len;
-  // Get the 512-bit reads onto a 64-byte boundary. A load whose address
-  // straddles a cache line costs two accesses, and callers rarely hand us an
-  // aligned buffer.
-  //
-  // We cannot simply mask-load a short head block to reach the boundary: the
-  // checker carries state from one block to the next, and zero padding in the
-  // middle of a character would read as a truncated sequence. Instead we
-  // consume one full (unaligned) block and re-seed the cross-block state from
-  // the three bytes preceding the aligned start. Those three bytes must lie
-  // inside the buffer, hence the requirement that the adjustment be at least
-  // three. Below a couple of kilobytes the fixed cost of the prologue is not
-  // repaid.
-  if (len >= 2048) {
-    const uintptr_t misalignment = reinterpret_cast<uintptr_t>(ptr) % 64;
-    if (misalignment != 0 && misalignment <= 61) {
-      const size_t adjustment = 64 - misalignment;
-      checker.check_next_input(_mm512_loadu_si512((const __m512i *)ptr));
-      ptr += adjustment;
-      // Only the top three lanes are read. Masked-out lanes never fault, so
-      // this is safe even though ptr - 64 may point before buf.
-      const __m512i prev3 = _mm512_maskz_loadu_epi8(
-          UINT64_C(0xE000000000000000), (const __m512i *)(ptr - 64));
-      checker.prev_input_block = prev3;
-      checker.prev_incomplete = is_incomplete(prev3);
-    }
-  }
-  ptrdiff_t left_at_next_check = (end - ptr) - 1024;
-  for (; end - ptr >= 64; ptr += 64) {
-    const __m512i utf8 = _mm512_loadu_si512((const __m512i *)ptr);
-    if (!checker.check_next_input(utf8) &&
-        simdutf_unlikely(end - ptr <= left_at_next_check)) {
-      if (checker.errors()) {
-        return false;
-      }
-      left_at_next_check = (end - ptr) - 1024;
-    }
-  }
-  if (end != ptr) {
-    const __m512i utf8 = _mm512_maskz_loadu_epi8(
-        ~UINT64_C(0) >> (64 - (end - ptr)), (const __m512i *)ptr);
-    checker.check_next_input(utf8);
-  }
-  checker.check_eof();
-  return !checker.errors();
+  return utf8_fast_validation::find_error_block(
+             reinterpret_cast<const uint8_t *>(buf), len) == nullptr;
 }
 #endif // SIMDUTF_FEATURE_UTF8 || SIMDUTF_FEATURE_DETECT_ENCODING
 
 #if SIMDUTF_FEATURE_UTF8
 simdutf_warn_unused result implementation::validate_utf8_with_errors(
     const char *buf, size_t len) const noexcept {
-  if (simdutf_unlikely(len == 0)) {
+  const uint8_t *error_block = utf8_fast_validation::find_error_block(
+      reinterpret_cast<const uint8_t *>(buf), len);
+  if (error_block == nullptr) {
     return result(error_code::SUCCESS, len);
   }
-  avx512_utf8_checker checker{};
-  const char *ptr = buf;
-  const char *end = ptr + len;
-  size_t count{0};
-  // Largest prefix that a clean error check has already cleared. On failure it
-  // is handed to the scalar rewind, which re-validates forward from there to
-  // the end of the buffer, so naming a position earlier than the error only
-  // costs scalar work on the error path.
-  size_t safe{0};
-  // Get the 512-bit reads onto a 64-byte boundary. A load whose address is not
-  // aligned touches two cache lines and costs two accesses, and callers rarely
-  // hand us an aligned buffer.
-  //
-  // The head has to be a full block rather than a masked one: the checker
-  // carries state from one block to the next, and zero padding in the middle
-  // of a character would read as a truncated sequence. The cross-block state
-  // is then re-seeded from the three bytes preceding the aligned start, which
-  // must be inside the buffer, hence the misalignment <= 61 guard.
-  if (len >= 2048) {
-    const uintptr_t misalignment = reinterpret_cast<uintptr_t>(ptr) % 64;
-    if (misalignment != 0 && misalignment <= 61) {
-      const size_t adjustment = 64 - misalignment;
-      checker.check_next_input(_mm512_loadu_si512((const __m512i *)ptr));
-      if (simdutf_unlikely(checker.errors())) {
-        SIMDUTF_VZEROUPPER();
-        return scalar::utf8::rewind_and_validate_with_errors(buf, buf, len);
-      }
-      ptr += adjustment;
-      count = adjustment;
-      // Only the top three lanes are read. Masked-out lanes never fault, so
-      // this is safe even though ptr - 64 may point before buf.
-      const __m512i prev3 = _mm512_maskz_loadu_epi8(
-          UINT64_C(0xE000000000000000), (const __m512i *)(ptr - 64));
-      checker.prev_input_block = prev3;
-      checker.prev_incomplete = is_incomplete(prev3);
-    }
-  }
-  // checker.error is a sticky OR-accumulator, so it does not have to be tested
-  // every 64 bytes. Testing it every eighth block takes a vptestmb, a ktest
-  // and a branch out of the hot loop; an error is then handed to the scalar
-  // rewind at most nine blocks early, which only lengthens the rare error
-  // path.
-  unsigned since = 0;
-  for (; end - ptr >= 64; ptr += 64) {
-    const __m512i utf8 = _mm512_loadu_si512((const __m512i *)ptr);
-    checker.check_next_input(utf8);
-    count += 64;
-    if (++since == 8) {
-      since = 0;
-      if (simdutf_unlikely(checker.errors())) {
-        break;
-      }
-      safe = count >= 64 ? count - 64 : 0;
-    }
-  }
-  if (!checker.errors() && end != ptr) {
-    const __m512i utf8 = _mm512_maskz_loadu_epi8(
-        ~UINT64_C(0) >> (64 - (end - ptr)), (const __m512i *)ptr);
-    checker.check_next_input(utf8);
-  }
-  checker.check_eof();
-  if (checker.errors()) {
-    if (safe != 0) {
-      safe--;
-    } // Sometimes the error is only detected in the next chunk
-    SIMDUTF_VZEROUPPER();
-    result res = scalar::utf8::rewind_and_validate_with_errors(
-        reinterpret_cast<const char *>(buf),
-        reinterpret_cast<const char *>(buf + safe), len - safe);
-    res.count += safe;
-    return res;
-  }
-  return result(error_code::SUCCESS, len);
+  SIMDUTF_VZEROUPPER();
+  const size_t safe =
+      size_t(error_block - reinterpret_cast<const uint8_t *>(buf));
+  result res = scalar::utf8::rewind_and_validate_with_errors(buf, buf + safe,
+                                                             len - safe);
+  res.count += safe;
+  return res;
 }
 
 simdutf_warn_unused utf8_result implementation::validate_utf8_with_counts(

@@ -114,3 +114,189 @@ struct avx512_utf8_checker {
     return _mm512_test_epi8_mask(this->error, this->error) != 0;
   }
 }; // struct avx512_utf8_checker
+
+/*
+ * Adapted from ffutf by Peter Fors (MIT licensed):
+ * https://github.com/vtlmks/ffutf
+ */
+namespace utf8_fast_validation {
+
+alignas(64) constexpr uint8_t second_bounds[64] = {
+    0xc0, 0xc0, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
+    0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
+    0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0xa0,
+    0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
+    0x80, 0x20, 0x80, 0x80, 0x90, 0x80, 0x80, 0x80, 0x10, 0xc0, 0xc0,
+    0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0};
+
+alignas(64) constexpr uint8_t next_index[64] = {
+    1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16,
+    17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
+    33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48,
+    49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 0};
+
+simdutf_really_inline uint64_t check_span(__m512i bytes, __m512i next,
+                                          uint64_t &carry) {
+  const uint64_t lead =
+      _mm512_cmpge_epu8_mask(bytes, _mm512_set1_epi8(char(0xc0)));
+  const uint64_t three =
+      _mm512_cmpge_epu8_mask(bytes, _mm512_set1_epi8(char(0xe0)));
+  const uint64_t four =
+      _mm512_cmpge_epu8_mask(bytes, _mm512_set1_epi8(char(0xf0)));
+  const uint64_t cont =
+      _mm512_cmplt_epi8_mask(bytes, _mm512_set1_epi8(char(0xc0)));
+  const __m512i bounds = _mm512_permutexvar_epi8(
+      bytes, _mm512_load_si512((const __m512i *)second_bounds));
+  const __m512i delta = _mm512_maskz_sub_epi8(lead, next, bounds);
+  const uint64_t bad =
+      (cont ^ ((lead << 1) | (three << 2) | (four << 3) | carry)) |
+      _mm512_movepi8_mask(delta);
+  carry = (lead >> 63) | (three >> 62) | (four >> 61);
+  return bad;
+}
+
+simdutf_really_inline uint64_t check_block(__m512i bytes, uint64_t carry,
+                                           const uint8_t *input, size_t len) {
+  const uint64_t nonascii = _mm512_movepi8_mask(bytes);
+  if (!nonascii) {
+    return carry ? UINT64_MAX : 0;
+  }
+  const uint64_t lead =
+      _mm512_cmpge_epu8_mask(bytes, _mm512_set1_epi8(char(0xc0)));
+  const uint64_t three =
+      _mm512_cmpge_epu8_mask(bytes, _mm512_set1_epi8(char(0xe0)));
+  const uint64_t four =
+      _mm512_cmpge_epu8_mask(bytes, _mm512_set1_epi8(char(0xf0)));
+  if ((nonascii ^ lead) != ((lead << 1) | (three << 2) | (four << 3) | carry)) {
+    return UINT64_MAX;
+  }
+  const __m512i bounds = _mm512_permutexvar_epi8(
+      bytes, _mm512_load_si512((const __m512i *)second_bounds));
+  if (_mm512_mask_cmpneq_epi8_mask(lead, bounds,
+                                   _mm512_set1_epi8(char(0x80)))) {
+    const uint64_t active =
+        len > 64 ? UINT64_MAX : (UINT64_C(1) << (len - 1)) - 1;
+    const __m512i next =
+        _mm512_maskz_loadu_epi8(active, (const __m512i *)(input + 1));
+    const __m512i delta = _mm512_maskz_sub_epi8(lead, next, bounds);
+    if (_mm512_movepi8_mask(delta)) {
+      return UINT64_MAX;
+    }
+  }
+  return (lead >> 63) | (three >> 62) | (four >> 61);
+}
+
+simdutf_really_inline __m512i next_of_last(__m512i bytes) {
+  return _mm512_permutexvar_epi8(_mm512_load_si512((const __m512i *)next_index),
+                                 bytes);
+}
+
+simdutf_really_inline bool check_last(__m512i bytes, uint64_t carry) {
+  return (check_span(bytes, next_of_last(bytes), carry) | carry) == 0;
+}
+
+simdutf_really_inline const uint8_t *find_error_block(const uint8_t *input,
+                                                      size_t len) {
+  for (; len >= 256; input += 256, len -= 256) {
+    const __m512i first = _mm512_loadu_si512((const __m512i *)input);
+    const __m512i second = _mm512_loadu_si512((const __m512i *)(input + 64));
+    const __m512i third = _mm512_loadu_si512((const __m512i *)(input + 128));
+    const __m512i fourth = _mm512_loadu_si512((const __m512i *)(input + 192));
+    if (_mm512_movepi8_mask(_mm512_or_si512(
+            _mm512_ternarylogic_epi32(first, second, third, 0xfe), fourth))) {
+      break;
+    }
+  }
+  if (len == 0) {
+    return nullptr;
+  }
+  if (len < 64) {
+    const __m512i bytes = _mm512_maskz_loadu_epi8((UINT64_C(1) << len) - 1,
+                                                  (const __m512i *)input);
+    if (!_mm512_movepi8_mask(bytes) || check_last(bytes, 0)) {
+      return nullptr;
+    }
+    return input;
+  }
+  const __m512i head = _mm512_loadu_si512((const __m512i *)input);
+  if (len < 256 && !_mm512_movepi8_mask(head)) {
+    if (len == 64) {
+      return nullptr;
+    }
+    __m512i tail = _mm512_loadu_si512((const __m512i *)(input + len - 64));
+    if (len > 128) {
+      tail = _mm512_or_si512(tail,
+                             _mm512_loadu_si512((const __m512i *)(input + 64)));
+    }
+    if (len > 192) {
+      tail = _mm512_or_si512(
+          tail, _mm512_loadu_si512((const __m512i *)(input + 128)));
+    }
+    if (!_mm512_movepi8_mask(tail)) {
+      return nullptr;
+    }
+  }
+  uint64_t carry = 0;
+  __m512i bytes = head;
+  if (len <= 1024) {
+    const uint8_t *region = input;
+    uint64_t bad = 0;
+    for (; len >= 128; input += 64, len -= 64) {
+      bad |= check_span(bytes, _mm512_loadu_si512((const __m512i *)(input + 1)),
+                        carry);
+      bytes = _mm512_loadu_si512((const __m512i *)(input + 64));
+    }
+    if (len > 64) {
+      bad |= check_span(bytes, _mm512_loadu_si512((const __m512i *)(input + 1)),
+                        carry);
+      bytes = _mm512_maskz_loadu_epi8(UINT64_MAX >> (128 - len),
+                                      (const __m512i *)(input + 64));
+    }
+    bad |= check_span(bytes, next_of_last(bytes), carry);
+    return (bad | carry) == 0 ? nullptr : region;
+  }
+  carry = check_block(head, 0, input, len);
+  if (carry == UINT64_MAX) {
+    return input;
+  }
+  input += 64;
+  len -= 64;
+  for (; len >= 64; input += 64, len -= 64) {
+    const __m512i current = _mm512_loadu_si512((const __m512i *)input);
+    const __m512i previous = _mm512_loadu_si512((const __m512i *)(input - 1));
+    const uint64_t cont =
+        _mm512_cmplt_epi8_mask(current, _mm512_set1_epi8(char(0xc0)));
+    const uint64_t first =
+        _mm512_cmpge_epu8_mask(previous, _mm512_set1_epi8(char(0xc0)));
+    const uint64_t second =
+        _mm512_cmpge_epu8_mask(_mm512_loadu_si512((const __m512i *)(input - 2)),
+                               _mm512_set1_epi8(char(0xe0)));
+    const uint64_t third =
+        _mm512_cmpge_epu8_mask(_mm512_loadu_si512((const __m512i *)(input - 3)),
+                               _mm512_set1_epi8(char(0xf0)));
+    const __m512i bounds = _mm512_permutexvar_epi8(
+        previous, _mm512_load_si512((const __m512i *)second_bounds));
+    const __m512i delta = _mm512_maskz_sub_epi8(first, current, bounds);
+    if (((cont ^ (first | second | third)) | _mm512_movepi8_mask(delta)) != 0) {
+      return input - 1;
+    }
+  }
+  const uint8_t one = input[-1];
+  const uint8_t two = input[-2];
+  const uint8_t three = input[-3];
+  if (len && one >= 0xc0 &&
+      uint8_t(input[0] - second_bounds[one & 63]) >= 0x80) {
+    return input - 1;
+  }
+  carry = uint64_t(one >= 0xc0) | (uint64_t(one >= 0xe0) << 1) |
+          (uint64_t(one >= 0xf0) << 2) | uint64_t(two >= 0xe0) |
+          (uint64_t(two >= 0xf0) << 1) | uint64_t(three >= 0xf0);
+  if (len) {
+    const __m512i last = _mm512_maskz_loadu_epi8(UINT64_MAX >> (64 - len),
+                                                 (const __m512i *)input);
+    carry = check_block(last, carry, input, len);
+  }
+  return carry == 0 ? nullptr : input - 1;
+}
+
+} // namespace utf8_fast_validation
