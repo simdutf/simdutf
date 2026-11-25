@@ -5,8 +5,23 @@
 #include <string>
 
 int main() {
-  // This is just a demonstration, not actual testing required.
   std::string source = "La vie est belle.";
+  if (std::getenv("SIMDUTF_FORCE_IMPLEMENTATION") == nullptr) {
+    const auto *expected =
+        simdutf::get_available_implementations().detect_best_supported();
+    if (!simdutf::validate_utf8(source.c_str(), source.size())) {
+      return EXIT_FAILURE;
+    }
+    if (simdutf::get_active_implementation()->name() != expected->name()) {
+      fprintf(stderr, "Expected automatic implementation %.*s, got %.*s\n",
+              int(expected->name().size()), expected->name().data(),
+              int(simdutf::get_active_implementation()->name().size()),
+              simdutf::get_active_implementation()->name().data());
+      return EXIT_FAILURE;
+    }
+    printf("Automatically selected: %.*s\n", int(expected->name().size()),
+           expected->name().data());
+  }
   std::string chosen_implementation;
   for (auto &implementation : simdutf::get_available_implementations()) {
     if (!implementation->supported_by_runtime_system()) {
