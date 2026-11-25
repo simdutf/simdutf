@@ -200,6 +200,14 @@ simdutf_really_inline size_t convert_mixed(const uint8_t *input, size_t len,
   len -= 64;
   for (; len >= 64; input += 64, len -= 64) {
     bytes = _mm512_loadu_si512((const __m512i *)input);
+    if (!_mm512_movepi8_mask(bytes)) {
+      if (input[-1] >= 0xc0 || input[-2] >= 0xe0 || input[-3] >= 0xf0) {
+        goto invalid;
+      }
+      widen_ascii<big_endian>(bytes, UINT64_MAX, output + written);
+      written += 64;
+      continue;
+    }
     const __m512i prev1 = _mm512_loadu_si512((const __m512i *)(input - 1));
     const __m512i prev2 = _mm512_loadu_si512((const __m512i *)(input - 2));
     const __m512i prev3 = _mm512_loadu_si512((const __m512i *)(input - 3));
