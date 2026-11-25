@@ -48,6 +48,249 @@
 */
 
 /*
+ * The dense surrogate-pair and three-byte BMP paths are adapted from ffutf
+ * by Peter Fors (MIT licensed): https://github.com/vtlmks/ffutf
+ */
+static constexpr int32_t dense_surrogate_bias =
+    0x10000 - (0xD800 - 0x10000) * 1024 - (0xDC00 - 0x10000);
+
+simdutf_really_inline __m256i utf16_byte_swap_avx2() {
+  return _mm256_setr_epi8(1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14,
+                          1, 0, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 13, 12, 15, 14);
+}
+
+struct utf16_prefix {
+  size_t units;
+  size_t bytes;
+};
+
+simdutf_really_inline bool avx2_is_surrogate_pairs(__m256i words) {
+  const __m256i tags = _mm256_set1_epi32(static_cast<int32_t>(0xdc00d800u));
+  const __m256i mask = _mm256_set1_epi32(static_cast<int32_t>(0xfc00fc00u));
+  const __m256i got = _mm256_and_si256(words, mask);
+  return _mm256_movemask_epi8(_mm256_cmpeq_epi32(got, tags)) == -1;
+}
+
+simdutf_really_inline bool avx2_is_bmp3(__m256i words) {
+  const __m256i v_f800 = _mm256_set1_epi16(static_cast<int16_t>(0xf800));
+  const __m256i low = _mm256_cmpeq_epi16(_mm256_and_si256(words, v_f800),
+                                         _mm256_setzero_si256());
+  const __m256i surrogate =
+      _mm256_cmpeq_epi16(_mm256_and_si256(words, v_f800),
+                         _mm256_set1_epi16(static_cast<int16_t>(0xd800)));
+  const __m256i bad = _mm256_or_si256(low, surrogate);
+  return _mm256_testz_si256(bad, bad);
+}
+
+simdutf_really_inline void store_surrogate_pairs_avx2(__m256i words,
+                                                      char *output) {
+  const __m256i points =
+      _mm256_add_epi32(_mm256_madd_epi16(words, _mm256_set1_epi32(0x00010400)),
+                       _mm256_set1_epi32(dense_surrogate_bias));
+  const __m256i first = _mm256_srli_epi32(points, 18);
+  const __m256i second =
+      _mm256_and_si256(_mm256_srli_epi32(points, 4), _mm256_set1_epi32(0x3f00));
+  const __m256i third = _mm256_and_si256(_mm256_slli_epi32(points, 10),
+                                         _mm256_set1_epi32(0x3f0000));
+  const __m256i fourth = _mm256_and_si256(_mm256_slli_epi32(points, 24),
+                                          _mm256_set1_epi32(0x3f000000));
+  const __m256i payload = _mm256_or_si256(_mm256_or_si256(first, second),
+                                          _mm256_or_si256(third, fourth));
+  const __m256i bytes = _mm256_or_si256(
+      payload, _mm256_set1_epi32(static_cast<int32_t>(0x808080f0u)));
+  _mm256_storeu_si256(reinterpret_cast<__m256i *>(output), bytes);
+}
+
+simdutf_really_inline void
+write_utf8_triplets_avx2(__m128i first, __m128i second, char *output) {
+  _mm_storeu_si128(reinterpret_cast<__m128i *>(output),
+                   _mm_or_si128(first, _mm_slli_si128(second, 12)));
+  _mm_storel_epi64(reinterpret_cast<__m128i *>(output + 16),
+                   _mm_srli_si128(second, 4));
+}
+
+simdutf_really_inline void store_bmp3_avx2(__m256i words, char *output) {
+  const __m256i first = _mm256_srli_epi16(words, 12);
+  const __m256i second =
+      _mm256_and_si256(_mm256_slli_epi16(words, 2), _mm256_set1_epi16(0x3f00));
+  const __m256i third = _mm256_or_si256(
+      _mm256_and_si256(words, _mm256_set1_epi16(63)), _mm256_set1_epi16(0x80));
+  const __m256i head =
+      _mm256_or_si256(_mm256_or_si256(first, second),
+                      _mm256_set1_epi16(static_cast<int16_t>(0x80e0)));
+  const __m256i indices = _mm256_broadcastsi128_si256(
+      _mm_setr_epi8(0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14, -1, -1, -1, -1));
+  const __m256i lower =
+      _mm256_shuffle_epi8(_mm256_unpacklo_epi16(head, third), indices);
+  const __m256i upper =
+      _mm256_shuffle_epi8(_mm256_unpackhi_epi16(head, third), indices);
+  write_utf8_triplets_avx2(_mm256_castsi256_si128(lower),
+                           _mm256_castsi256_si128(upper), output);
+  write_utf8_triplets_avx2(_mm256_extracti128_si256(lower, 1),
+                           _mm256_extracti128_si256(upper, 1), output + 24);
+}
+
+template <endianness big_endian>
+simdutf_really_inline __m256i load_utf16_avx2(const char16_t *input) {
+  __m256i words = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(input));
+  if (big_endian) {
+    words = _mm256_shuffle_epi8(words, utf16_byte_swap_avx2());
+  }
+  return words;
+}
+
+template <endianness big_endian>
+size_t convert_surrogate_pairs_avx2(const char16_t *input, size_t len,
+                                    char *output) {
+  size_t consumed = 0;
+  if (len < 16) {
+    return 0;
+  }
+  if (len >= 64) {
+    __m256i a = load_utf16_avx2<big_endian>(input);
+    __m256i b = load_utf16_avx2<big_endian>(input + 16);
+    __m256i c = load_utf16_avx2<big_endian>(input + 32);
+    __m256i d = load_utf16_avx2<big_endian>(input + 48);
+    if (len >= 128) {
+      __m256i lead = load_utf16_avx2<big_endian>(input + 64);
+      while (len >= 128) {
+        if (!avx2_is_surrogate_pairs(a) || !avx2_is_surrogate_pairs(b) ||
+            !avx2_is_surrogate_pairs(c) || !avx2_is_surrogate_pairs(d)) {
+          break;
+        }
+        const __m256i nb = load_utf16_avx2<big_endian>(input + 80);
+        const __m256i nc = load_utf16_avx2<big_endian>(input + 96);
+        const __m256i nd = load_utf16_avx2<big_endian>(input + 112);
+        const __m256i na = lead;
+        if (len >= 144) {
+          lead = load_utf16_avx2<big_endian>(input + 128);
+        }
+        store_surrogate_pairs_avx2(a, output);
+        store_surrogate_pairs_avx2(b, output + 32);
+        store_surrogate_pairs_avx2(c, output + 64);
+        store_surrogate_pairs_avx2(d, output + 96);
+        output += 128;
+        input += 64;
+        len -= 64;
+        consumed += 64;
+        a = na;
+        b = nb;
+        c = nc;
+        d = nd;
+      }
+    }
+    if (len < 128 && avx2_is_surrogate_pairs(a) && avx2_is_surrogate_pairs(b) &&
+        avx2_is_surrogate_pairs(c) && avx2_is_surrogate_pairs(d)) {
+      store_surrogate_pairs_avx2(a, output);
+      store_surrogate_pairs_avx2(b, output + 32);
+      store_surrogate_pairs_avx2(c, output + 64);
+      store_surrogate_pairs_avx2(d, output + 96);
+      output += 128;
+      input += 64;
+      len -= 64;
+      consumed += 64;
+    }
+  }
+  if (len >= 32) {
+    __m256i words = load_utf16_avx2<big_endian>(input);
+    while (len >= 32) {
+      const __m256i next = load_utf16_avx2<big_endian>(input + 16);
+      if (!avx2_is_surrogate_pairs(words)) {
+        return consumed;
+      }
+      store_surrogate_pairs_avx2(words, output);
+      input += 16;
+      output += 32;
+      len -= 16;
+      consumed += 16;
+      words = next;
+    }
+    if (len >= 16 && avx2_is_surrogate_pairs(words)) {
+      store_surrogate_pairs_avx2(words, output);
+      consumed += 16;
+    }
+    return consumed;
+  }
+  if (len >= 16) {
+    const __m256i words = load_utf16_avx2<big_endian>(input);
+    if (avx2_is_surrogate_pairs(words)) {
+      store_surrogate_pairs_avx2(words, output);
+      consumed += 16;
+    }
+  }
+  return consumed;
+}
+
+template <endianness big_endian>
+size_t convert_bmp3_avx2(const char16_t *input, size_t len, char *output) {
+  size_t consumed = 0;
+  if (len < 16) {
+    return 0;
+  }
+  if (len >= 32) {
+    __m256i words = load_utf16_avx2<big_endian>(input);
+    while (len >= 32) {
+      const __m256i next = load_utf16_avx2<big_endian>(input + 16);
+      if (!avx2_is_bmp3(words)) {
+        return consumed;
+      }
+      store_bmp3_avx2(words, output);
+      input += 16;
+      output += 48;
+      len -= 16;
+      consumed += 16;
+      words = next;
+    }
+    if (len >= 16 && avx2_is_bmp3(words)) {
+      store_bmp3_avx2(words, output);
+      consumed += 16;
+    }
+    return consumed;
+  }
+  const __m256i words = load_utf16_avx2<big_endian>(input);
+  if (avx2_is_bmp3(words)) {
+    store_bmp3_avx2(words, output);
+    consumed = 16;
+  }
+  return consumed;
+}
+
+template <endianness big_endian>
+utf16_prefix consume_utf16_prefix(const char16_t *input, size_t len,
+                                  char *output) {
+  size_t units = 0;
+  size_t bytes = 0;
+  while (len != 0) {
+    const uint16_t u = scalar::utf16::swap_if_needed<big_endian>(input[0]);
+    if ((u & 0xFC00) == 0xD800) {
+      const size_t n =
+          convert_surrogate_pairs_avx2<big_endian>(input, len, output);
+      if (n == 0) {
+        break;
+      }
+      input += n;
+      output += n * 2;
+      len -= n;
+      units += n;
+      bytes += n * 2;
+    } else if (u >= 0x800 && (u & 0xF800) != 0xD800) {
+      const size_t n = convert_bmp3_avx2<big_endian>(input, len, output);
+      if (n == 0) {
+        break;
+      }
+      input += n;
+      output += n * 3;
+      len -= n;
+      units += n;
+      bytes += n * 3;
+    } else {
+      break;
+    }
+  }
+  return {units, bytes};
+}
+
+/*
   Returns a pair: the first unprocessed byte from buf and utf8_output
   A scalar routing should carry on the conversion of the tail.
 */
@@ -55,6 +298,12 @@ template <endianness big_endian>
 std::pair<const char16_t *, char *>
 avx2_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_output) {
   const char16_t *end = buf + len;
+  {
+    const utf16_prefix taken =
+        consume_utf16_prefix<big_endian>(buf, size_t(end - buf), utf8_output);
+    buf += taken.units;
+    utf8_output += taken.bytes;
+  }
   const __m256i v_0000 = _mm256_setzero_si256();
   const __m256i v_f800 = _mm256_set1_epi16((int16_t)0xf800);
   const __m256i v_d800 = _mm256_set1_epi16((int16_t)0xd800);
@@ -161,6 +410,12 @@ avx2_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_output) {
     // However, it is likely an uncommon occurrence.
     if (surrogates_bitmask == 0x00000000) {
       // case: code units from register produce either 1, 2 or 3 UTF-8 bytes
+      if (one_or_two_bytes_bitmask == 0) {
+        store_bmp3_avx2(in, utf8_output);
+        utf8_output += 48;
+        buf += 16;
+        continue;
+      }
       const __m256i dup_even = _mm256_setr_epi16(
           0x0000, 0x0202, 0x0404, 0x0606, 0x0808, 0x0a0a, 0x0c0c, 0x0e0e,
           0x0000, 0x0202, 0x0404, 0x0606, 0x0808, 0x0a0a, 0x0c0c, 0x0e0e);
@@ -277,6 +532,11 @@ avx2_convert_utf16_to_utf8(const char16_t *buf, size_t len, char *utf8_output) {
       utf8_output += row3[0];
       buf += 16;
       // surrogate pair(s) in a register
+    } else if (surrogates_bitmask == 0xffffffffu &&
+               avx2_is_surrogate_pairs(in)) {
+      store_surrogate_pairs_avx2(in, utf8_output);
+      utf8_output += 32;
+      buf += 16;
     } else {
       // Let us do a scalar fallback.
       // It may seem wasteful to use scalar code, but being efficient with SIMD
@@ -333,6 +593,12 @@ avx2_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
                                        char *utf8_output) {
   const char16_t *start = buf;
   const char16_t *end = buf + len;
+  {
+    const utf16_prefix taken =
+        consume_utf16_prefix<big_endian>(buf, size_t(end - buf), utf8_output);
+    buf += taken.units;
+    utf8_output += taken.bytes;
+  }
 
   const __m256i v_0000 = _mm256_setzero_si256();
   const __m256i v_f800 = _mm256_set1_epi16((int16_t)0xf800);
@@ -440,6 +706,12 @@ avx2_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
     // However, it is likely an uncommon occurrence.
     if (surrogates_bitmask == 0x00000000) {
       // case: code units from register produce either 1, 2 or 3 UTF-8 bytes
+      if (one_or_two_bytes_bitmask == 0) {
+        store_bmp3_avx2(in, utf8_output);
+        utf8_output += 48;
+        buf += 16;
+        continue;
+      }
       const __m256i dup_even = _mm256_setr_epi16(
           0x0000, 0x0202, 0x0404, 0x0606, 0x0808, 0x0a0a, 0x0c0c, 0x0e0e,
           0x0000, 0x0202, 0x0404, 0x0606, 0x0808, 0x0a0a, 0x0c0c, 0x0e0e);
@@ -556,6 +828,11 @@ avx2_convert_utf16_to_utf8_with_errors(const char16_t *buf, size_t len,
       utf8_output += row3[0];
       buf += 16;
       // surrogate pair(s) in a register
+    } else if (surrogates_bitmask == 0xffffffffu &&
+               avx2_is_surrogate_pairs(in)) {
+      store_surrogate_pairs_avx2(in, utf8_output);
+      utf8_output += 32;
+      buf += 16;
     } else {
       // Let us do a scalar fallback.
       // It may seem wasteful to use scalar code, but being efficient with SIMD
