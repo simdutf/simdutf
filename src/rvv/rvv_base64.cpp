@@ -42,9 +42,11 @@ size_t encode_base64_rvv(char *dst, const char *src, size_t srclen,
       break;
 
     // 3-way deinterleaved load: a[k]=src[3k], b[k]=src[3k+1], c[k]=src[3k+2]
-    vuint8m2_t a = __riscv_vlse8_v_u8m2((const uint8_t *)src + i, 3, vl);
-    vuint8m2_t b = __riscv_vlse8_v_u8m2((const uint8_t *)src + i + 1, 3, vl);
-    vuint8m2_t c = __riscv_vlse8_v_u8m2((const uint8_t *)src + i + 2, 3, vl);
+    const vuint8m2x3_t abc =
+        __riscv_vlseg3e8_v_u8m2x3((const uint8_t *)src + i, vl);
+    vuint8m2_t a = __riscv_vget_v_u8m2x3_u8m2(abc, 0);
+    vuint8m2_t b = __riscv_vget_v_u8m2x3_u8m2(abc, 1);
+    vuint8m2_t c = __riscv_vget_v_u8m2x3_u8m2(abc, 2);
 
     // Extract 6-bit indices from each triplet
     vuint8m2_t idx0 = __riscv_vsrl_vx_u8m2(a, 2, vl);
@@ -73,10 +75,17 @@ size_t encode_base64_rvv(char *dst, const char *src, size_t srclen,
       }
 
       // 4-way interleaved store
-      __riscv_vsse8_v_u8m2(out, 4, out0, vl);
-      __riscv_vsse8_v_u8m2(out + 1, 4, out1, vl);
-      __riscv_vsse8_v_u8m2(out + 2, 4, out2, vl);
-      __riscv_vsse8_v_u8m2(out + 3, 4, out3, vl);
+#if defined(__clang__) && __clang_major__ < 18
+      // Clang 17 does not provide tuple vundefined intrinsics.
+      vuint8m2x4_t output_tuple{};
+#else
+      vuint8m2x4_t output_tuple = __riscv_vundefined_u8m2x4();
+#endif
+      output_tuple = __riscv_vset_v_u8m2_u8m2x4(output_tuple, 0, out0);
+      output_tuple = __riscv_vset_v_u8m2_u8m2x4(output_tuple, 1, out1);
+      output_tuple = __riscv_vset_v_u8m2_u8m2x4(output_tuple, 2, out2);
+      output_tuple = __riscv_vset_v_u8m2_u8m2x4(output_tuple, 3, out3);
+      __riscv_vsseg4e8_v_u8m2x4(out, output_tuple, vl);
 
       if (offset + chunk <= line_length) {
         out += chunk;
@@ -91,10 +100,17 @@ size_t encode_base64_rvv(char *dst, const char *src, size_t srclen,
       }
     } else {
       // 4-way interleaved store
-      __riscv_vsse8_v_u8m2(out, 4, out0, vl);
-      __riscv_vsse8_v_u8m2(out + 1, 4, out1, vl);
-      __riscv_vsse8_v_u8m2(out + 2, 4, out2, vl);
-      __riscv_vsse8_v_u8m2(out + 3, 4, out3, vl);
+#if defined(__clang__) && __clang_major__ < 18
+      // Clang 17 does not provide tuple vundefined intrinsics.
+      vuint8m2x4_t output_tuple{};
+#else
+      vuint8m2x4_t output_tuple = __riscv_vundefined_u8m2x4();
+#endif
+      output_tuple = __riscv_vset_v_u8m2_u8m2x4(output_tuple, 0, out0);
+      output_tuple = __riscv_vset_v_u8m2_u8m2x4(output_tuple, 1, out1);
+      output_tuple = __riscv_vset_v_u8m2_u8m2x4(output_tuple, 2, out2);
+      output_tuple = __riscv_vset_v_u8m2_u8m2x4(output_tuple, 3, out3);
+      __riscv_vsseg4e8_v_u8m2x4(out, output_tuple, vl);
       out += chunk;
     }
 
