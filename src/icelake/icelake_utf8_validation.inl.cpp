@@ -197,6 +197,13 @@ simdutf_really_inline bool check_last(__m512i bytes, uint64_t carry) {
 
 simdutf_really_inline const uint8_t *find_error_block(const uint8_t *input,
                                                       size_t len) {
+  const uint8_t *const start = input;
+  const size_t offset = reinterpret_cast<uintptr_t>(input) & 63;
+  if (len >= 256 && offset &&
+      !_mm512_movepi8_mask(_mm512_loadu_si512((const __m512i *)input))) {
+    input += 64 - offset;
+    len -= 64 - offset;
+  }
   for (; len >= 256; input += 256, len -= 256) {
     const __m512i first = _mm512_loadu_si512((const __m512i *)input);
     const __m512i second = _mm512_loadu_si512((const __m512i *)(input + 64));
@@ -259,10 +266,27 @@ simdutf_really_inline const uint8_t *find_error_block(const uint8_t *input,
   if (carry == UINT64_MAX) {
     return input;
   }
-  input += 64;
-  len -= 64;
-  for (; len >= 64; input += 64, len -= 64) {
-    const __m512i current = _mm512_loadu_si512((const __m512i *)input);
+  size_t step = 64 - (reinterpret_cast<uintptr_t>(input) & 63);
+  if (input + step < start + 3) {
+    step = 64;
+  }
+  input += step;
+  len -= step;
+  const uint8_t *const end = input + len;
+  for (; end - input >= 64; input += 64) {
+    __m512i current = _mm512_loadu_si512((const __m512i *)input);
+    if (!_mm512_movepi8_mask(current)) {
+      if (input[-1] >= 0xc0 || input[-2] >= 0xe0 || input[-3] >= 0xf0) {
+        return input - 1;
+      }
+      do {
+        input += 64;
+        if (end - input < 64) {
+          goto tail;
+        }
+        current = _mm512_loadu_si512((const __m512i *)input);
+      } while (!_mm512_movepi8_mask(current));
+    }
     const __m512i previous = _mm512_loadu_si512((const __m512i *)(input - 1));
     const uint64_t cont =
         _mm512_cmplt_epi8_mask(current, _mm512_set1_epi8(char(0xc0)));
@@ -281,6 +305,8 @@ simdutf_really_inline const uint8_t *find_error_block(const uint8_t *input,
       return input - 1;
     }
   }
+tail:
+  len = size_t(end - input);
   const uint8_t one = input[-1];
   const uint8_t two = input[-2];
   const uint8_t three = input[-3];
