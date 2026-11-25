@@ -835,16 +835,23 @@ size_t convert_nonascii(const uint8_t *input, size_t len, char16_t *output,
     input += 32;
     len -= 32;
     for (; len >= 64; input += 32, len -= 32) {
-      const __m256i bytes =
+      __m256i bytes =
           _mm256_loadu_si256(reinterpret_cast<const __m256i *>(input));
       if (!_mm256_movemask_epi8(bytes)) {
         if (input[-1] >= 0xc0 || input[-2] >= 0xe0 || input[-3] >= 0xf0) {
           *fail = {input, written};
           return SIZE_MAX;
         }
-        widen_ascii<big_endian>(bytes, output + written);
-        written += 32;
-        continue;
+        do {
+          widen_ascii<big_endian>(bytes, output + written);
+          written += 32;
+          input += 32;
+          len -= 32;
+          if (len < 64) {
+            goto bulk_done;
+          }
+          bytes = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(input));
+        } while (!_mm256_movemask_epi8(bytes));
       }
       const __m256i prev1 =
           _mm256_loadu_si256(reinterpret_cast<const __m256i *>(input - 1));
@@ -860,6 +867,7 @@ size_t convert_nonascii(const uint8_t *input, size_t len, char16_t *output,
       }
       written += count;
     }
+  bulk_done:
     std::memcpy(&history, input - 4, 4);
   }
   const size_t count =
