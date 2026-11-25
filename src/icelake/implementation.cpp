@@ -1373,8 +1373,8 @@ simdutf_warn_unused size_t implementation::convert_valid_utf16le_to_latin1(
 simdutf_warn_unused size_t implementation::convert_utf16le_to_utf8(
     const char16_t *buf, size_t len, char *utf8_output) const noexcept {
   size_t outlen;
-  size_t inlen = utf16_to_utf8_avx512i<endianness::LITTLE>(
-      buf, len, (unsigned char *)utf8_output, &outlen);
+  size_t inlen = utf16_to_utf8_fast::convert<endianness::LITTLE>(
+      buf, len, utf8_output, &outlen);
   if (inlen != len) {
     return 0;
   }
@@ -1384,8 +1384,8 @@ simdutf_warn_unused size_t implementation::convert_utf16le_to_utf8(
 simdutf_warn_unused size_t implementation::convert_utf16be_to_utf8(
     const char16_t *buf, size_t len, char *utf8_output) const noexcept {
   size_t outlen;
-  size_t inlen = utf16_to_utf8_avx512i<endianness::BIG>(
-      buf, len, (unsigned char *)utf8_output, &outlen);
+  size_t inlen = utf16_to_utf8_fast::convert<endianness::BIG>(
+      buf, len, utf8_output, &outlen);
   if (inlen != len) {
     return 0;
   }
@@ -1396,8 +1396,8 @@ template <endianness big_endian>
 simdutf_really_inline full_result convert_utf16_to_utf8_with_details(
     const char16_t *buf, size_t len, char *utf8_output) {
   size_t outlen;
-  size_t inlen = utf16_to_utf8_avx512i<big_endian>(
-      buf, len, (unsigned char *)utf8_output, &outlen);
+  size_t inlen =
+      utf16_to_utf8_fast::convert<big_endian>(buf, len, utf8_output, &outlen);
   if (inlen != len) {
     full_result res =
         scalar::utf16_to_utf8::convert_with_errors<big_endian, false>(
