@@ -39,10 +39,16 @@ rvv_utf32_length_from_utf16(const char16_t *src, size_t len) {
   for (size_t vl; len > 0; len -= vl, src += vl) {
     vl = __riscv_vsetvl_e16m8(len);
     vuint16m8_t v = __riscv_vle16_v_u16m8((uint16_t *)src, vl);
-    v = simdutf_byteflip<bflip>(v, vl);
-    vbool2_t notHigh =
-        __riscv_vmor_mm_b2(__riscv_vmsgtu_vx_u16m8_b2(v, 0xDFFF, vl),
-                           __riscv_vmsltu_vx_u16m8_b2(v, 0xDC00, vl), vl);
+    vbool2_t notHigh;
+    if constexpr (bflip == simdutf_ByteFlip::V) {
+      notHigh = __riscv_vmsne_vx_u16m8_b2(
+          __riscv_vand_vx_u16m8(v, 0x00FC, vl), 0x00DC, vl);
+    } else {
+      v = simdutf_byteflip<bflip>(v, vl);
+      notHigh =
+          __riscv_vmor_mm_b2(__riscv_vmsgtu_vx_u16m8_b2(v, 0xDFFF, vl),
+                             __riscv_vmsltu_vx_u16m8_b2(v, 0xDC00, vl), vl);
+    }
     count += __riscv_vcpop_m_b2(notHigh, vl);
   }
   return count;
