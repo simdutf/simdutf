@@ -95,13 +95,24 @@ rvv_utf8_length_from_utf16(const char16_t *src, size_t len) {
   for (size_t vl; len > 0; len -= vl, src += vl) {
     vl = __riscv_vsetvl_e16m8(len);
     vuint16m8_t v = __riscv_vle16_v_u16m8((uint16_t *)src, vl);
-    v = simdutf_byteflip<bflip>(v, vl);
-    vbool2_t m234 = __riscv_vmsgtu_vx_u16m8_b2(v, 0x7F, vl);
-    vbool2_t m34 = __riscv_vmsgtu_vx_u16m8_b2(v, 0x7FF, vl);
-    vbool2_t notSur =
-        __riscv_vmor_mm_b2(__riscv_vmsltu_vx_u16m8_b2(v, 0xD800, vl),
-                           __riscv_vmsgtu_vx_u16m8_b2(v, 0xDFFF, vl), vl);
-    vbool2_t m3 = __riscv_vmand_mm_b2(m34, notSur, vl);
+    vbool2_t m234, m3;
+    if constexpr (bflip == simdutf_ByteFlip::V) {
+      // The original high byte is in bits 0..7 of each loaded code unit.
+      m234 = __riscv_vmsne_vx_u16m8_b2(
+          __riscv_vand_vx_u16m8(v, 0x80FF, vl), 0, vl);
+      vuint16m8_t high_group = __riscv_vand_vx_u16m8(v, 0x00F8, vl);
+      vbool2_t m34 = __riscv_vmsne_vx_u16m8_b2(high_group, 0, vl);
+      vbool2_t notSur = __riscv_vmsne_vx_u16m8_b2(high_group, 0x00D8, vl);
+      m3 = __riscv_vmand_mm_b2(m34, notSur, vl);
+    } else {
+      v = simdutf_byteflip<bflip>(v, vl);
+      m234 = __riscv_vmsgtu_vx_u16m8_b2(v, 0x7F, vl);
+      vbool2_t m34 = __riscv_vmsgtu_vx_u16m8_b2(v, 0x7FF, vl);
+      vbool2_t notSur =
+          __riscv_vmor_mm_b2(__riscv_vmsltu_vx_u16m8_b2(v, 0xD800, vl),
+                             __riscv_vmsgtu_vx_u16m8_b2(v, 0xDFFF, vl), vl);
+      m3 = __riscv_vmand_mm_b2(m34, notSur, vl);
+    }
     count += vl + __riscv_vcpop_m_b2(m234, vl) + __riscv_vcpop_m_b2(m3, vl);
   }
   return count;
